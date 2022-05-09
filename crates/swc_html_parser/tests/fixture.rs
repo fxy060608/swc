@@ -1,5 +1,7 @@
 #![deny(warnings)]
 #![allow(clippy::needless_update)]
+#![allow(clippy::redundant_clone)]
+#![allow(clippy::while_let_on_iterator)]
 
 use std::{fs, mem::take, path::PathBuf};
 
@@ -788,19 +790,19 @@ impl VisitMut for DomVisualizer<'_> {
         document_type.push_str("<!DOCTYPE ");
 
         if let Some(name) = &n.name {
-            document_type.push_str(&name);
+            document_type.push_str(name);
         }
 
         if let Some(public_id) = &n.public_id {
             document_type.push(' ');
             document_type.push('"');
-            document_type.push_str(&public_id);
+            document_type.push_str(public_id);
             document_type.push('"');
 
             if let Some(system_id) = &n.system_id {
                 document_type.push(' ');
                 document_type.push('"');
-                document_type.push_str(&system_id);
+                document_type.push_str(system_id);
                 document_type.push('"');
             } else {
                 document_type.push(' ');
@@ -813,7 +815,7 @@ impl VisitMut for DomVisualizer<'_> {
             document_type.push('"');
             document_type.push(' ');
             document_type.push('"');
-            document_type.push_str(&system_id);
+            document_type.push_str(system_id);
             document_type.push('"');
         }
 
@@ -845,6 +847,16 @@ impl VisitMut for DomVisualizer<'_> {
         element.push('>');
         element.push('\n');
 
+        let is_template = n.namespace == Namespace::HTML && &*n.tag_name == "template";
+
+        if is_template {
+            self.indent += 1;
+
+            element.push_str(&self.get_ident());
+            element.push_str("content");
+            element.push('\n');
+        }
+
         n.attributes
             .sort_by(|a, b| a.name.partial_cmp(&b.name).unwrap());
 
@@ -857,6 +869,10 @@ impl VisitMut for DomVisualizer<'_> {
         n.visit_mut_children_with(self);
 
         self.indent = old_indent;
+
+        if is_template {
+            self.indent -= 1;
+        }
     }
 
     fn visit_mut_attribute(&mut self, n: &mut Attribute) {
@@ -865,7 +881,7 @@ impl VisitMut for DomVisualizer<'_> {
         attribute.push_str(&self.get_ident());
 
         if let Some(prefix) = &n.prefix {
-            attribute.push_str(&prefix);
+            attribute.push_str(prefix);
             attribute.push(' ');
         }
 
@@ -874,7 +890,7 @@ impl VisitMut for DomVisualizer<'_> {
         attribute.push('"');
 
         if let Some(value) = &n.value {
-            attribute.push_str(&value);
+            attribute.push_str(value);
         }
 
         attribute.push('"');
@@ -961,13 +977,20 @@ fn html5lib_test_tree_construction(input: PathBuf) {
                 .find("#errors\n")
                 .expect("failed to get errors in test");
             let mut data = &test[data_start..data_end];
+
             if data.ends_with("\n") {
                 data = data
-                    .strip_suffix("\n")
+                    .strip_suffix('\n')
                     .expect("failed to strip last line in test");
             }
 
-            let html_path = dir.join(counter.to_string() + ".html");
+            let mut file_stem = counter.to_string();
+
+            if test.contains("#script-on\n") {
+                file_stem += ".script_on";
+            }
+
+            let html_path = dir.join(file_stem.clone() + ".html");
 
             fs::write(html_path, data).expect("Something went wrong when writing to the file");
 
@@ -975,8 +998,7 @@ fn html5lib_test_tree_construction(input: PathBuf) {
                 .find("#document\n")
                 .expect("failed to get errors in test");
             let dom_snapshot = &test[document_start..];
-
-            let dom_snapshot_path = dir.join(counter.to_string() + ".dom");
+            let dom_snapshot_path = dir.join(file_stem + ".dom");
 
             fs::write(dom_snapshot_path, dom_snapshot.trim_end().to_owned() + "\n")
                 .expect("Something went wrong when writing to the file");
@@ -987,7 +1009,6 @@ fn html5lib_test_tree_construction(input: PathBuf) {
         return;
     }
 
-    // TODO improve test for enabled/disabled js
     // TODO improve errors tests
     // TODO improve test for parsing `<template>`
     testing::run_test2(false, |cm, handler| {
@@ -997,10 +1018,12 @@ fn html5lib_test_tree_construction(input: PathBuf) {
         }
 
         let file_stem = input.file_stem().unwrap().to_str().unwrap().to_owned();
+
+        let scripting_enabled = file_stem.contains("script_on");
         let json_path = input.parent().unwrap().join(file_stem.clone() + ".json");
         let fm = cm.load_file(&input).unwrap();
         let lexer = Lexer::new(SourceFileInput::from(&*fm), Default::default());
-        let mut parser = Parser::new(lexer, Default::default());
+        let mut parser = Parser::new(lexer, ParserConfig { scripting_enabled });
 
         let document: PResult<Document> = parser.parse_document();
 
@@ -1012,7 +1035,7 @@ fn html5lib_test_tree_construction(input: PathBuf) {
 
                 actual_json.compare_to_file(&json_path).unwrap();
 
-                // Skip scrippted test, because we don't support ECMA execution
+                // Skip scripted test, because we don't support ECMA execution
                 if input
                     .parent()
                     .unwrap()
