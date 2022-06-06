@@ -1,9 +1,9 @@
 #![allow(clippy::needless_update)]
 
 use rayon::prelude::*;
-use swc_common::{pass::Repeated, util::take::Take, DUMMY_SP, GLOBALS};
+use swc_common::{pass::Repeated, util::take::Take, SyntaxContext, DUMMY_SP, GLOBALS};
 use swc_ecma_ast::*;
-use swc_ecma_utils::undefined;
+use swc_ecma_utils::{undefined, ExprCtx};
 use swc_ecma_visit::{noop_visit_mut_type, VisitMut, VisitMutWith, VisitWith};
 use tracing::{debug, span, Level};
 
@@ -54,6 +54,10 @@ pub(crate) fn pure_optimizer<'a>(
         options,
         config,
         marks,
+        expr_ctx: ExprCtx {
+            unresolved_ctxt: SyntaxContext::empty().apply_mark(marks.unresolved_mark),
+            is_unresolved_ref_safe: false,
+        },
         data,
         ctx: Ctx {
             top_level: true,
@@ -67,6 +71,7 @@ struct Pure<'a> {
     options: &'a CompressOptions,
     config: PureOptimizerConfig,
     marks: Marks,
+    expr_ctx: ExprCtx,
 
     #[allow(unused)]
     data: Option<&'a ProgramData>,
@@ -160,6 +165,7 @@ impl Pure<'_> {
         {
             for node in nodes {
                 let mut v = Pure {
+                    expr_ctx: self.expr_ctx.clone(),
                     changed: false,
                     ..*self
                 };
@@ -174,6 +180,7 @@ impl Pure<'_> {
                     .map(|node| {
                         GLOBALS.set(globals, || {
                             let mut v = Pure {
+                                expr_ctx: self.expr_ctx.clone(),
                                 ctx: Ctx {
                                     par_depth: self.ctx.par_depth + 1,
                                     ..self.ctx
@@ -326,8 +333,6 @@ impl VisitMut for Pure<'_> {
 
         self.swap_bin_operands(e);
 
-        self.handle_property_access(e);
-
         self.optimize_bools(e);
 
         self.drop_logical_operands(e);
@@ -359,6 +364,12 @@ impl VisitMut for Pure<'_> {
         self.lift_seqs_of_bin(e);
 
         self.lift_seqs_of_cond_assign(e);
+
+        self.optimize_nullish_coalescing(e);
+
+        self.compress_negated_bin_eq(e);
+
+        self.compress_useless_cond_expr(e);
     }
 
     fn visit_mut_expr_stmt(&mut self, s: &mut ExprStmt) {
@@ -376,6 +387,18 @@ impl VisitMut for Pure<'_> {
 
     fn visit_mut_exprs(&mut self, exprs: &mut Vec<Box<Expr>>) {
         self.visit_par(exprs);
+    }
+
+    fn visit_mut_fn_decl(&mut self, n: &mut FnDecl) {
+        #[cfg(feature = "debug")]
+        let _tracing = tracing::span!(
+            Level::ERROR,
+            "visit_mut_fn_decl",
+            id = tracing::field::display(&n.ident)
+        )
+        .entered();
+
+        n.visit_mut_children_with(self);
     }
 
     fn visit_mut_for_in_stmt(&mut self, n: &mut ForInStmt) {
@@ -436,6 +459,8 @@ impl VisitMut for Pure<'_> {
         s.visit_mut_children_with(self);
 
         self.optimize_expr_in_bool_ctx(&mut s.test, false);
+
+        self.merge_else_if(s);
     }
 
     fn visit_mut_member_expr(&mut self, e: &mut MemberExpr) {
@@ -573,6 +598,8 @@ impl VisitMut for Pure<'_> {
 
         self.merge_seq_call(e);
 
+        let can_drop_zero = matches!(&**e.exprs.last().unwrap(), Expr::Arrow(..));
+
         let len = e.exprs.len();
         for (idx, e) in e.exprs.iter_mut().enumerate() {
             let is_last = idx == len - 1;
@@ -581,7 +608,7 @@ impl VisitMut for Pure<'_> {
                 self.ignore_return_value(
                     &mut **e,
                     DropOpts {
-                        drop_zero: false,
+                        drop_zero: can_drop_zero,
                         drop_global_refs_if_unused: false,
                         drop_str_lit: true,
                     },
@@ -708,9 +735,10 @@ impl VisitMut for Pure<'_> {
         }
     }
 
-    /// We don't optimize [Tpl] contained in [TaggedTpl].
     fn visit_mut_tagged_tpl(&mut self, n: &mut TaggedTpl) {
         n.tag.visit_mut_with(self);
+
+        n.tpl.exprs.visit_mut_with(self);
     }
 
     fn visit_mut_tpl(&mut self, n: &mut Tpl) {

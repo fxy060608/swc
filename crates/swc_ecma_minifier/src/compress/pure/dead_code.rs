@@ -193,7 +193,7 @@ impl Pure<'_> {
     where
         T: StmtLike + ModuleItemExt + Take,
     {
-        if !self.options.dead_code {
+        if !self.options.dead_code && !self.options.if_return {
             return;
         }
 
@@ -206,9 +206,25 @@ impl Pure<'_> {
         if let Some(idx) = idx {
             self.drop_duplicate_terminate(&mut stmts[..=idx]);
 
+            // Return at the last is fine
             if idx == stmts.len() - 1 {
                 return;
             }
+
+            // If only function declarations are left, we should not proceed
+            if stmts
+                .iter()
+                .skip(idx + 1)
+                .all(|s| matches!(s.as_stmt(), Some(Stmt::Decl(Decl::Fn(_)))))
+            {
+                if let Some(Stmt::Return(ReturnStmt { arg: None, .. })) = stmts[idx].as_stmt() {
+                    // Remove last return
+                    stmts.remove(idx);
+                }
+
+                return;
+            }
+
             self.changed = true;
 
             report_change!("Dropping statements after a control keyword");
@@ -249,8 +265,17 @@ impl Pure<'_> {
                 );
             }
 
+            match stmts[idx].as_stmt() {
+                Some(Stmt::Return(ReturnStmt { arg: None, .. })) => {
+                    // Exclude return
+                    new_stmts.extend(stmts.drain(..idx));
+                }
+                _ => {
+                    new_stmts.extend(stmts.drain(..=idx));
+                }
+            }
+
             new_stmts.extend(hoisted_fns);
-            new_stmts.extend(stmts.drain(..=idx));
 
             *stmts = new_stmts;
         }
@@ -413,7 +438,7 @@ impl Pure<'_> {
         }
 
         if !stmts.iter().any(|stmt| match stmt.as_stmt() {
-            Some(Stmt::If(s)) => s.test.as_bool().1.is_known(),
+            Some(Stmt::If(s)) => s.test.cast_to_bool(&self.expr_ctx).1.is_known(),
             _ => false,
         }) {
             return;
@@ -428,7 +453,7 @@ impl Pure<'_> {
             match stmt.try_into_stmt() {
                 Ok(stmt) => match stmt {
                     Stmt::If(mut s) => {
-                        if let Value::Known(v) = s.test.as_bool().1 {
+                        if let Value::Known(v) = s.test.cast_to_bool(&self.expr_ctx).1 {
                             let mut var_ids = vec![];
                             new.push(T::from_stmt(Stmt::Expr(ExprStmt {
                                 span: DUMMY_SP,

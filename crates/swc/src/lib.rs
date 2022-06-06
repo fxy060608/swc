@@ -113,6 +113,7 @@ pub extern crate swc_common as common;
 pub extern crate swc_ecmascript as ecmascript;
 
 use std::{
+    env,
     fs::{read_to_string, File},
     path::{Path, PathBuf},
     sync::Arc,
@@ -120,8 +121,8 @@ use std::{
 
 use anyhow::{bail, Context, Error};
 use atoms::JsWord;
-use common::{collections::AHashMap, comments::SingleThreadedComments, errors::HANDLER, Span};
-use config::{util::BoolOrObject, IsModule, JsMinifyCommentOption, JsMinifyOptions};
+use common::{collections::AHashMap, comments::SingleThreadedComments, errors::HANDLER};
+use config::{IsModule, JsMinifyCommentOption, JsMinifyOptions, OutputCharset};
 use json_comments::StripComments;
 use once_cell::sync::Lazy;
 use serde::Serialize;
@@ -135,6 +136,8 @@ use swc_common::{
     sync::Lrc,
     BytePos, FileName, Globals, Mark, SourceFile, SourceMap, Spanned, GLOBALS,
 };
+pub use swc_config::config_types::{BoolConfig, BoolOr, BoolOrDataConfig};
+use swc_config::merge::Merge;
 use swc_ecma_ast::{EsVersion, Ident, Program};
 use swc_ecma_codegen::{self, text_writer::WriteJs, Emitter, Node};
 use swc_ecma_loader::resolvers::{
@@ -159,7 +162,7 @@ use swc_timer::timer;
 
 pub use crate::builder::PassBuilder;
 use crate::config::{
-    BuiltInput, Config, ConfigFile, InputSourceMap, Merge, Options, Rc, RootMode, SourceMapsConfig,
+    BuiltInput, Config, ConfigFile, InputSourceMap, Options, Rc, RootMode, SourceMapsConfig,
 };
 
 mod builder;
@@ -370,7 +373,7 @@ impl Compiler {
         is_module: IsModule,
         comments: Option<&dyn Comments>,
     ) -> Result<Program, Error> {
-        self.run(|| {
+        let mut res = self.run(|| {
             let mut error = false;
 
             let mut errors = vec![];
@@ -405,7 +408,13 @@ impl Compiler {
             }
 
             Ok(program)
-        })
+        });
+
+        if env::var("SWC_DEBUG").unwrap_or_default() == "1" {
+            res = res.with_context(|| format!("Parser config: {:?}", syntax));
+        }
+
+        res
     }
 
     /// Converts ast node to source string and sourcemap.
@@ -426,6 +435,8 @@ impl Compiler {
         orig: Option<&sourcemap::SourceMap>,
         minify: bool,
         comments: Option<&dyn Comments>,
+        emit_source_map_columns: bool,
+        ascii_only: bool,
     ) -> Result<TransformOutput, Error>
     where
         T: Node + VisitWith<IdentCollector>,
@@ -438,7 +449,7 @@ impl Compiler {
             let src = {
                 let mut buf = vec![];
                 {
-                    let mut wr = Box::new(swc_ecma_codegen::text_writer::JsWriter::with_target(
+                    let mut wr = Box::new(swc_ecma_codegen::text_writer::JsWriter::new(
                         self.cm.clone(),
                         "\n",
                         &mut buf,
@@ -447,7 +458,6 @@ impl Compiler {
                         } else {
                             None
                         },
-                        target,
                     )) as Box<dyn WriteJs>;
 
                     if minify {
@@ -455,7 +465,11 @@ impl Compiler {
                     }
 
                     let mut emitter = Emitter {
-                        cfg: swc_ecma_codegen::Config { minify },
+                        cfg: swc_ecma_codegen::Config {
+                            minify,
+                            target,
+                            ascii_only,
+                        },
                         comments,
                         cm: self.cm.clone(),
                         wr,
@@ -470,7 +484,7 @@ impl Compiler {
 
             if cfg!(debug_assertions)
                 && !src_map_buf.is_empty()
-                && src_map_buf.iter().all(|(bp, _)| *bp == BytePos(0))
+                && src_map_buf.iter().all(|(bp, _)| bp.is_dummy())
                 && src.lines().count() >= 3
                 && option_env!("SWC_DEBUG") == Some("1")
             {
@@ -491,6 +505,7 @@ impl Compiler {
                                     output_path: output_path.as_deref(),
                                     names: source_map_names,
                                     inline_sources_content,
+                                    emit_columns: emit_source_map_columns,
                                 },
                             )
                             .to_writer(&mut buf)
@@ -515,6 +530,7 @@ impl Compiler {
                                 output_path: output_path.as_deref(),
                                 names: source_map_names,
                                 inline_sources_content,
+                                emit_columns: emit_source_map_columns,
                             },
                         )
                         .to_writer(&mut buf)
@@ -544,6 +560,8 @@ struct SwcSourceMapConfig<'a> {
     names: &'a AHashMap<BytePos, JsWord>,
 
     inline_sources_content: bool,
+
+    emit_columns: bool,
 }
 
 impl SourceMapGenConfig for SwcSourceMapConfig<'_> {
@@ -582,76 +600,28 @@ impl SourceMapGenConfig for SwcSourceMapConfig<'_> {
     fn inline_sources_content(&self, _: &FileName) -> bool {
         self.inline_sources_content
     }
-}
 
-pub fn minify_global_comments(
-    comments: &SwcComments,
-    span: Span,
-    minify: bool,
-    preserve_comments: Option<BoolOrObject<JsMinifyCommentOption>>,
-) {
-    let preserve_comments = preserve_comments.unwrap_or({
-        if minify {
-            BoolOrObject::Obj(JsMinifyCommentOption::PreserveSomeComments)
+    fn emit_columns(&self, _f: &FileName) -> bool {
+        self.emit_columns
+    }
+
+    fn skip(&self, f: &FileName) -> bool {
+        if let FileName::Custom(s) = f {
+            s.starts_with('<')
         } else {
-            BoolOrObject::Obj(JsMinifyCommentOption::PreserveAllComments)
-        }
-    });
-
-    match preserve_comments {
-        BoolOrObject::Bool(true)
-        | BoolOrObject::Obj(JsMinifyCommentOption::PreserveAllComments) => {}
-
-        BoolOrObject::Obj(JsMinifyCommentOption::PreserveSomeComments) => {
-            let preserve_excl = |pos: &BytePos, vc: &mut Vec<Comment>| -> bool {
-                if *pos < span.lo || *pos >= span.hi {
-                    return true;
-                }
-
-                // Preserve license comments.
-                if vc.iter().any(|c| c.text.contains("@license")) {
-                    return true;
-                }
-
-                vc.retain(|c: &Comment| c.text.starts_with('!'));
-                !vc.is_empty()
-            };
-            comments.leading.retain(preserve_excl);
-            comments.trailing.retain(preserve_excl);
-        }
-
-        BoolOrObject::Bool(false) => {
-            let remove_all_in_range = |pos: &BytePos, _: &mut Vec<Comment>| -> bool {
-                if *pos < span.lo || *pos >= span.hi {
-                    return true;
-                }
-
-                false
-            };
-            comments.leading.retain(remove_all_in_range);
-            comments.trailing.retain(remove_all_in_range);
+            false
         }
     }
 }
 
-pub fn minify_file_comments(
+pub(crate) fn minify_file_comments(
     comments: &SingleThreadedComments,
-    minify: bool,
-    preserve_comments: Option<BoolOrObject<JsMinifyCommentOption>>,
+    preserve_comments: BoolOr<JsMinifyCommentOption>,
 ) {
-    let preserve_comments = preserve_comments.unwrap_or({
-        if minify {
-            BoolOrObject::Obj(JsMinifyCommentOption::PreserveSomeComments)
-        } else {
-            BoolOrObject::Obj(JsMinifyCommentOption::PreserveAllComments)
-        }
-    });
-
     match preserve_comments {
-        BoolOrObject::Bool(true)
-        | BoolOrObject::Obj(JsMinifyCommentOption::PreserveAllComments) => {}
+        BoolOr::Bool(true) | BoolOr::Data(JsMinifyCommentOption::PreserveAllComments) => {}
 
-        BoolOrObject::Obj(JsMinifyCommentOption::PreserveSomeComments) => {
+        BoolOr::Data(JsMinifyCommentOption::PreserveSomeComments) => {
             let preserve_excl = |_: &BytePos, vc: &mut Vec<Comment>| -> bool {
                 // Preserve license comments.
                 if vc.iter().any(|c| c.text.contains("@license")) {
@@ -667,7 +637,7 @@ pub fn minify_file_comments(
             t.retain(preserve_excl);
         }
 
-        BoolOrObject::Bool(false) => {
+        BoolOr::Bool(false) => {
             let (mut l, mut t) = comments.borrow_all_mut();
             l.clear();
             t.clear();
@@ -725,7 +695,7 @@ impl Compiler {
                                 .context("failed to process config file")?;
 
                             if let Some(config_file) = config_file {
-                                config.merge(&config_file.into_config(Some(path))?)
+                                config.merge(config_file.into_config(Some(path))?)
                             }
 
                             if let Some(c) = &mut config {
@@ -831,7 +801,6 @@ impl Compiler {
                 opts.output_path.as_deref(),
                 opts.source_file_name.clone(),
                 handler,
-                opts.is_module,
                 Some(config),
                 comments,
                 before_pass,
@@ -928,6 +897,8 @@ impl Compiler {
                 preserve_comments: config.preserve_comments,
                 inline_sources_content: config.inline_sources_content,
                 comments: config.comments,
+                emit_source_map_columns: config.emit_source_map_columns,
+                output: config.output,
             };
 
             let orig = if config.source_maps.enabled() {
@@ -963,10 +934,10 @@ impl Compiler {
 
             let target = opts.ecma.clone().into();
 
-            let (source_map, orig) = match &opts.source_map {
-                BoolOrObject::Bool(false) => (SourceMapsConfig::Bool(false), None),
-                BoolOrObject::Bool(true) => (SourceMapsConfig::Bool(true), None),
-                BoolOrObject::Obj(obj) => {
+            let (source_map, orig) = opts
+                .source_map
+                .as_ref()
+                .map(|obj| -> Result<_, Error> {
                     let orig = obj
                         .content
                         .as_ref()
@@ -975,17 +946,32 @@ impl Compiler {
                         Some(v) => Some(v?),
                         None => None,
                     };
-                    (SourceMapsConfig::Bool(true), orig)
-                }
-            };
+                    Ok((SourceMapsConfig::Bool(true), orig))
+                })
+                .unwrap_as_option(|v| {
+                    Some(Ok(match v {
+                        Some(true) => (SourceMapsConfig::Bool(true), None),
+                        _ => (SourceMapsConfig::Bool(false), None),
+                    }))
+                })
+                .unwrap()?;
 
             let mut min_opts = MinifyOptions {
                 compress: opts
                     .compress
                     .clone()
-                    .into_obj()
+                    .unwrap_as_option(|default| match default {
+                        Some(true) | None => Some(Default::default()),
+                        _ => None,
+                    })
                     .map(|v| v.into_config(self.cm.clone())),
-                mangle: opts.mangle.clone().into_obj(),
+                mangle: opts
+                    .mangle
+                    .clone()
+                    .unwrap_as_option(|default| match default {
+                        Some(true) | None => Some(Default::default()),
+                        _ => None,
+                    }),
                 ..Default::default()
             };
 
@@ -1065,7 +1051,13 @@ impl Compiler {
                 module.fold_with(&mut fixer(Some(&comments as &dyn Comments)))
             });
 
-            minify_file_comments(&comments, true, Some(opts.format.comments.clone()));
+            let preserve_comments = opts
+                .format
+                .comments
+                .clone()
+                .into_inner()
+                .unwrap_or(BoolOr::Data(JsMinifyCommentOption::PreserveSomeComments));
+            minify_file_comments(&comments, preserve_comments);
 
             self.print(
                 &module,
@@ -1078,6 +1070,8 @@ impl Compiler {
                 orig.as_ref(),
                 true,
                 Some(&comments),
+                opts.emit_source_map_columns,
+                opts.format.ascii_only,
             )
         })
     }
@@ -1135,7 +1129,7 @@ impl Compiler {
             });
 
             if let Some(comments) = &config.comments {
-                minify_file_comments(comments, config.minify, config.preserve_comments);
+                minify_file_comments(comments, config.preserve_comments);
             }
 
             self.print(
@@ -1149,6 +1143,12 @@ impl Compiler {
                 orig,
                 config.minify,
                 config.comments.as_ref().map(|v| v as _),
+                config.emit_source_map_columns,
+                config
+                    .output
+                    .charset
+                    .map(|v| matches!(v, OutputCharset::Ascii))
+                    .unwrap_or(false),
             )
         })
     }

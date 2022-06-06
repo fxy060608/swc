@@ -1,6 +1,0 @@
-#document
-| <html>
-|   <head>
-|   <body>
-|     <textarea>
-|       "foo<span>bar</span><i>baz"

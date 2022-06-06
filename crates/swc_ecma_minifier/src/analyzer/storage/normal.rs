@@ -2,7 +2,6 @@ use std::collections::hash_map::Entry;
 
 use swc_common::collections::AHashSet;
 use swc_ecma_ast::*;
-use swc_ecma_utils::{ident::IdentLike, Id};
 
 use super::{ScopeDataLike, Storage, VarDataLike};
 use crate::analyzer::{ctx::Ctx, ProgramData, ScopeData, ScopeKind, VarUsageInfo};
@@ -141,8 +140,7 @@ impl Storage for ProgramData {
                 is_fn_local: true,
                 var_kind: kind,
                 var_initialized: has_init,
-                no_side_effect_for_member_access: ctx
-                    .in_var_decl_with_no_side_effect_for_member_access,
+                no_side_effect_for_member_access: ctx.in_decl_with_no_side_effect_for_member_access,
 
                 ..Default::default()
             });
@@ -268,7 +266,7 @@ impl VarDataLike for VarUsageInfo {
         self.reassigned_with_assignment = true;
     }
 
-    fn add_infects(&mut self, other: Id) {
+    fn add_infects_to(&mut self, other: Id) {
         self.infects.push(other);
     }
 

@@ -1,11 +1,13 @@
 use swc_atoms::js_word;
 use swc_common::{util::take::Take, Span, DUMMY_SP};
 use swc_ecma_ast::*;
-use swc_ecma_utils::{contains_ident_ref, ident::IdentLike};
+use swc_ecma_utils::contains_ident_ref;
 
 use super::Optimizer;
 use crate::{
-    compress::{optimize::util::class_has_side_effect, util::is_global_var},
+    compress::{
+        optimize::util::class_has_side_effect, util::is_global_var_with_pure_property_access,
+    },
     debug::dump,
     mode::Mode,
     option::PureGetterOption,
@@ -271,7 +273,7 @@ where
         match e {
             Expr::Ident(e) => {
                 if e.span.ctxt.outer() == self.marks.unresolved_mark {
-                    if is_global_var(&e.sym) {
+                    if is_global_var_with_pure_property_access(&e.sym) {
                         return false;
                     }
                 }
@@ -326,6 +328,7 @@ where
     }
 
     /// `parent_span` should be [Span] of [VarDeclarator] or [AssignExpr]
+    #[allow(clippy::only_used_in_recursion)]
     #[cfg_attr(feature = "debug", tracing::instrument(skip_all))]
     pub(super) fn take_pat_if_unused(
         &mut self,
@@ -472,7 +475,7 @@ where
         }
 
         if let Decl::Class(c) = decl {
-            if class_has_side_effect(&c.class) {
+            if class_has_side_effect(&self.expr_ctx, &c.class) {
                 return;
             }
         }
@@ -754,7 +757,7 @@ where
                 return;
             }
 
-            if contains_ident_ref(&f.function.body, f.ident.as_ref().unwrap()) {
+            if contains_ident_ref(&f.function.body, &f.ident.as_ref().unwrap().to_id()) {
                 return;
             }
 

@@ -1,5 +1,6 @@
 use std::mem::take;
 
+use ahash::AHashSet;
 use indexmap::IndexMap;
 use smallvec::SmallVec;
 use swc_atoms::{js_word, JsWord};
@@ -9,8 +10,8 @@ use swc_common::{
 use swc_ecma_ast::*;
 use swc_ecma_transforms_base::helper;
 use swc_ecma_utils::{
-    contains_arguments, contains_this_expr, find_ids, ident::IdentLike, prepend, private_ident,
-    quote_ident, quote_str, undefined, var::VarCollector, ExprFactory, Id, StmtLike,
+    contains_arguments, contains_this_expr, find_pat_ids, prepend_stmt, private_ident, quote_ident,
+    quote_str, undefined, var::VarCollector, ExprFactory, StmtLike,
 };
 use swc_ecma_visit::{
     as_folder, noop_visit_mut_type, noop_visit_type, visit_mut_obj_and_computed, Fold, Visit,
@@ -181,6 +182,7 @@ impl BlockScoping {
                 has_break: false,
                 has_return: false,
                 label: IndexMap::new(),
+                inner_label: AHashSet::new(),
                 mutated,
                 in_switch_case: false,
                 in_nested_loop: false,
@@ -587,7 +589,7 @@ impl BlockScoping {
         stmts.visit_mut_children_with(self);
 
         if !self.vars.is_empty() {
-            prepend(
+            prepend_stmt(
                 stmts,
                 T::from_stmt(Stmt::Decl(Decl::Var(VarDecl {
                     span: DUMMY_SP,
@@ -645,7 +647,7 @@ impl Visit for InfectionFinder<'_> {
         node.right.visit_with(self);
 
         if self.found {
-            let ids = find_ids(&node.left);
+            let ids = find_pat_ids(&node.left);
             self.vars.extend(ids);
         }
 
@@ -694,7 +696,7 @@ impl Visit for InfectionFinder<'_> {
         node.init.visit_with(self);
 
         if self.found {
-            let ids = find_ids(&node.name);
+            let ids = find_pat_ids(&node.name);
             self.vars.extend(ids);
         }
 
@@ -707,6 +709,7 @@ struct FlowHelper<'a> {
     has_return: bool,
     // label cannot be shadowed, so it's pretty safe to use JsWord
     label: IndexMap<JsWord, Label>,
+    inner_label: AHashSet<JsWord>,
     all: &'a Vec<Id>,
     mutated: AHashMap<Id, SyntaxContext>,
     in_switch_case: bool,
@@ -728,6 +731,13 @@ impl<'a> FlowHelper<'a> {
             );
         }
     }
+
+    fn has_outer_label(&self, label: &Option<Ident>) -> bool {
+        match label {
+            Some(l) => self.inner_label.get(&l.sym).is_none(),
+            None => false,
+        }
+    }
 }
 
 #[swc_trace]
@@ -737,6 +747,12 @@ impl VisitMut for FlowHelper<'_> {
     /// noop
     fn visit_mut_arrow_expr(&mut self, _n: &mut ArrowExpr) {}
 
+    fn visit_mut_labeled_stmt(&mut self, l: &mut LabeledStmt) {
+        self.inner_label.insert(l.label.sym.clone());
+
+        l.visit_mut_children_with(self);
+    }
+
     fn visit_mut_assign_expr(&mut self, n: &mut AssignExpr) {
         match &n.left {
             PatOrExpr::Expr(e) => {
@@ -745,7 +761,7 @@ impl VisitMut for FlowHelper<'_> {
                 }
             }
             PatOrExpr::Pat(p) => {
-                let ids: Vec<Id> = find_ids(p);
+                let ids: Vec<Id> = find_pat_ids(p);
 
                 for id in ids {
                     self.check(id);
@@ -796,10 +812,9 @@ impl VisitMut for FlowHelper<'_> {
 
         match node {
             Stmt::Continue(ContinueStmt { label, .. }) => {
-                if self.in_nested_loop {
+                if self.in_nested_loop && !self.has_outer_label(label) {
                     return;
                 }
-
                 let value = if let Some(label) = label {
                     let value: JsWord = format!("continue|{}", label.sym).into();
                     self.label
@@ -822,7 +837,7 @@ impl VisitMut for FlowHelper<'_> {
                 });
             }
             Stmt::Break(BreakStmt { label, .. }) => {
-                if self.in_switch_case || self.in_nested_loop {
+                if (self.in_switch_case || self.in_nested_loop) && !self.has_outer_label(label) {
                     return;
                 }
                 let value = if let Some(label) = label {

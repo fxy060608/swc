@@ -2,7 +2,19 @@ use serde::{Deserialize, Serialize};
 use swc_atoms::JsWord;
 use swc_cached::regex::CachedRegex;
 use swc_common::{collections::AHashMap, Mark};
+use swc_config::merge::Merge;
 use swc_ecma_ast::{EsVersion, Expr};
+
+/// Implement default using serde.
+macro_rules! impl_default {
+    ($T:ty) => {
+        impl Default for $T {
+            fn default() -> Self {
+                serde_json::from_value(serde_json::Value::Object(Default::default())).unwrap()
+            }
+        }
+    };
+}
 
 pub mod terser;
 
@@ -68,13 +80,13 @@ pub struct MangleOptions {
     pub reserved: Vec<JsWord>,
 }
 
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, Merge)]
 #[serde(rename_all = "camelCase")]
 pub struct ManglePropertiesOptions {
     #[serde(default, alias = "reserved")]
     pub reserved: Vec<JsWord>,
     #[serde(default, alias = "undeclared")]
-    pub undeclared: bool,
+    pub undeclared: Option<bool>,
     #[serde(default)]
     pub regex: Option<CachedRegex>,
 }
@@ -123,11 +135,11 @@ pub struct CompressOptions {
     #[serde(alias = "comparisons")]
     pub comparisons: bool,
 
-    #[serde(default)]
+    #[serde(default = "true_by_default")]
     #[serde(alias = "computed_props")]
     pub computed_props: bool,
 
-    #[serde(default)]
+    #[serde(default = "true_by_default")]
     #[serde(alias = "conditionals")]
     pub conditionals: bool,
 
@@ -135,7 +147,7 @@ pub struct CompressOptions {
     #[serde(alias = "dead_code")]
     pub dead_code: bool,
 
-    #[serde(default)]
+    #[serde(default = "true_by_default")]
     #[serde(alias = "directives")]
     pub directives: bool,
 
@@ -238,10 +250,13 @@ pub struct CompressOptions {
     pub props: bool,
 
     #[serde(default)]
-    #[serde(alias = "properties")]
+    #[serde(alias = "pure_getters")]
     pub pure_getters: PureGetterOption,
 
-    // pure_funcs    : null,
+    #[serde(default)]
+    #[serde(alias = "pure_funcs")]
+    pub pure_funcs: Vec<Box<Expr>>,
+
     #[serde(default)]
     #[serde(alias = "reduce_funcs")]
     pub reduce_fns: bool,
@@ -348,17 +363,6 @@ const fn three_by_default() -> u8 {
 
 const fn default_ecma() -> EsVersion {
     EsVersion::Es5
-}
-
-/// Implement default using serde.
-macro_rules! impl_default {
-    ($T:ty) => {
-        impl Default for $T {
-            fn default() -> Self {
-                serde_json::from_str("{}").unwrap()
-            }
-        }
-    };
 }
 
 impl_default!(MinifyOptions);

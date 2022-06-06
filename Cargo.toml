@@ -1,9 +1,9 @@
 [workspace]
 members = [
+  "crates/dbg-swc",
   "crates/jsdoc",
   "crates/binding_core_node",
   "crates/binding_core_wasm",
-  "crates/binding_css_node",
   "crates/swc_cli",
   "crates/swc_css",
   "crates/swc_css_lints",
@@ -44,5 +44,5 @@ opt-level = 3
 opt-level = 3
 
 [patch.crates-io]
-cranelift-codegen = { git = "https://github.com/kdy1/wasmtime", branch = "tls" }
-cranelift-entity = { git = "https://github.com/kdy1/wasmtime", branch = "tls" }
+cranelift-codegen = {git = "https://github.com/kdy1/wasmtime", branch = "tls"}
+cranelift-entity = {git = "https://github.com/kdy1/wasmtime", branch = "tls"}

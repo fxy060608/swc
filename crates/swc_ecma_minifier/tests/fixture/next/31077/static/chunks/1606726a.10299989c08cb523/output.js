@@ -57,8 +57,7 @@
                         if (1 != parent.nodeType || hasBlockDesc(node) || atomElements.test(node.nodeName) || "false" == node.contentEditable) return !1;
                         off = domIndex(node) + (dir < 0 ? 0 : 1), node = parent;
                     } else {
-                        if (1 != node.nodeType) return !1;
-                        if ("false" == (node = node.childNodes[off + (dir < 0 ? -1 : 0)]).contentEditable) return !1;
+                        if (1 != node.nodeType || "false" == (node = node.childNodes[off + (dir < 0 ? -1 : 0)]).contentEditable) return !1;
                         off = dir < 0 ? nodeSize(node) : 0;
                     }
                 }
@@ -1265,8 +1264,7 @@
             }
             function selectVertically(view, dir, mods) {
                 var sel = view.state.selection;
-                if (sel instanceof prosemirror_state__WEBPACK_IMPORTED_MODULE_0__.TextSelection && !sel.empty || mods.indexOf("s") > -1) return !1;
-                if (result1.mac && mods.indexOf("m") > -1) return !1;
+                if (sel instanceof prosemirror_state__WEBPACK_IMPORTED_MODULE_0__.TextSelection && !sel.empty || mods.indexOf("s") > -1 || result1.mac && mods.indexOf("m") > -1) return !1;
                 var $from = sel.$from, $to = sel.$to;
                 if (!$from.parent.inlineContent || view.endOfTextblock(dir < 0 ? "up" : "down")) {
                     var next = moveSelectionBlock(view.state, dir);
@@ -1336,11 +1334,13 @@
                     }
                     firstChild = wrap.firstChild;
                 }
-                return firstChild && 1 == firstChild.nodeType && firstChild.setAttribute("data-pm-slice", openStart + " " + openEnd + " " + JSON.stringify(context)), {
+                firstChild && 1 == firstChild.nodeType && firstChild.setAttribute("data-pm-slice", openStart + " " + openEnd + " " + JSON.stringify(context));
+                var text = view.someProp("clipboardTextSerializer", function(f) {
+                    return f(slice);
+                }) || slice.content.textBetween(0, slice.content.size, "\n\n");
+                return {
                     dom: wrap,
-                    text: view.someProp("clipboardTextSerializer", function(f) {
-                        return f(slice);
-                    }) || slice.content.textBetween(0, slice.content.size, "\n\n")
+                    text: text
                 };
             }
             function parseFromClipboard(view, text, html, plainText, $context) {
@@ -1600,8 +1600,7 @@
             }, DOMObserver.prototype.registerMutation = function(mut, added) {
                 if (added.indexOf(mut.target) > -1) return null;
                 var desc = this.view.docView.nearestDesc(mut.target);
-                if ("attributes" == mut.type && (desc == this.view.docView || "contenteditable" == mut.attributeName || "style" == mut.attributeName && !mut.oldValue && !mut.target.getAttribute("style"))) return null;
-                if (!desc || desc.ignoreMutation(mut)) return null;
+                if ("attributes" == mut.type && (desc == this.view.docView || "contenteditable" == mut.attributeName || "style" == mut.attributeName && !mut.oldValue && !mut.target.getAttribute("style")) || !desc || desc.ignoreMutation(mut)) return null;
                 if ("childList" == mut.type) {
                     for(var i = 0; i < mut.addedNodes.length; i++)added.push(mut.addedNodes[i]);
                     if (desc.contentDOM && desc.contentDOM != desc.dom && !desc.contentDOM.contains(mut.target)) return {
@@ -1613,10 +1612,10 @@
                         var ref = mut.addedNodes[i$1], previousSibling = ref.previousSibling, nextSibling = ref.nextSibling;
                         (!previousSibling || 0 > Array.prototype.indexOf.call(mut.addedNodes, previousSibling)) && (prev = previousSibling), (!nextSibling || 0 > Array.prototype.indexOf.call(mut.addedNodes, nextSibling)) && (next = nextSibling);
                     }
-                    var fromOffset = prev && prev.parentNode == mut.target ? domIndex(prev) + 1 : 0, from = desc.localPosFromDOM(mut.target, fromOffset, -1), toOffset = next && next.parentNode == mut.target ? domIndex(next) : mut.target.childNodes.length;
+                    var fromOffset = prev && prev.parentNode == mut.target ? domIndex(prev) + 1 : 0, from = desc.localPosFromDOM(mut.target, fromOffset, -1), toOffset = next && next.parentNode == mut.target ? domIndex(next) : mut.target.childNodes.length, to = desc.localPosFromDOM(mut.target, toOffset, 1);
                     return {
                         from: from,
-                        to: desc.localPosFromDOM(mut.target, toOffset, 1)
+                        to: to
                     };
                 }
                 return "attributes" == mut.type ? {
@@ -2168,7 +2167,7 @@
                     } else mustRebuild = !0;
                 }
                 if (mustRebuild) {
-                    var built = buildTree(mapAndGatherRemainingDecorations(children, oldChildren, newLocal || [], mapping, offset, oldOffset, options), node, 0, options);
+                    var decorations = mapAndGatherRemainingDecorations(children, oldChildren, newLocal || [], mapping, offset, oldOffset, options), built = buildTree(decorations, node, 0, options);
                     newLocal = built.local;
                     for(var i$2 = 0; i$2 < children.length; i$2 += 3)children[i$2 + 1] < 0 && (children.splice(i$2, 3), i$2 -= 3);
                     for(var i$3 = 0, j = 0; i$3 < built.children.length; i$3 += 3){
@@ -2367,7 +2366,14 @@
                                     var adjust = Math.max(0, start - Math.min(endA, endB));
                                     preferredPos -= endA + adjust - start;
                                 }
-                                return endA < start && a.size < b.size ? (start -= preferredPos <= start && preferredPos >= endA ? start - preferredPos : 0, endB = start + (endB - endA), endA = start) : endB < start && (start -= preferredPos <= start && preferredPos >= endB ? start - preferredPos : 0, endA = start + (endA - endB), endB = start), {
+                                if (endA < start && a.size < b.size) {
+                                    var move = preferredPos <= start && preferredPos >= endA ? start - preferredPos : 0;
+                                    start -= move, endB = start + (endB - endA), endA = start;
+                                } else if (endB < start) {
+                                    var move$1 = preferredPos <= start && preferredPos >= endB ? start - preferredPos : 0;
+                                    start -= move$1, endA = start + (endA - endB), endB = start;
+                                }
+                                return {
                                     start: start,
                                     endA: endA,
                                     endB: endB
@@ -2643,8 +2649,7 @@
                     var pos, elt1 = (view10.root.elementFromPoint ? view10.root : doc).elementFromPoint(coords3.left, coords3.top + 1);
                     if (!elt1 || !view10.dom.contains(1 != elt1.nodeType ? elt1.parentNode : elt1)) {
                         var box = view10.dom.getBoundingClientRect();
-                        if (!inRect(coords3, box)) return null;
-                        if (!(elt1 = elementFromPoint(view10.dom, coords3, box))) return null;
+                        if (!inRect(coords3, box) || !(elt1 = elementFromPoint(view10.dom, coords3, box))) return null;
                     }
                     if (result1.safari) for(var p = elt1; node1 && p; p = parentNode(p))p.draggable && (node1 = offset1 = null);
                     if (elt1 = (dom = elt1, coords1 = coords3, (parent = dom.parentNode) && /^li$/i.test(parent.nodeName) && coords1.left < dom.getBoundingClientRect().left ? parent : dom), node1) {

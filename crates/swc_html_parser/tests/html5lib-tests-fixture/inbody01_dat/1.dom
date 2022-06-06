@@ -1,8 +1,0 @@
-#document
-| <html>
-|   <head>
-|   <body>
-|     <foo>
-|       "1"
-|       <p>
-|         "2"

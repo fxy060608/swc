@@ -14,7 +14,7 @@ use swc_ecma_utils::{
     prepend_stmts, private_ident, quote_ident, quote_str, var::VarCollector, DestructuringFinder,
     ExprFactory,
 };
-use swc_ecma_visit::{noop_fold_type, Fold, FoldWith, VisitWith};
+use swc_ecma_visit::{noop_fold_type, Fold, FoldWith, Visit, VisitWith};
 
 use super::util::{
     self, define_es_module, define_property, has_use_strict, initialize_to_undefined,
@@ -47,6 +47,26 @@ pub fn amd_with_resolver(
 
         resolver: Resolver::Real { base, resolver },
         vars: Default::default(),
+    }
+}
+
+struct LocalScopedRequireVisitor {
+    pub require_ident: Option<Ident>,
+}
+
+impl LocalScopedRequireVisitor {
+    pub fn new() -> Self {
+        LocalScopedRequireVisitor {
+            require_ident: Default::default(),
+        }
+    }
+}
+
+impl Visit for LocalScopedRequireVisitor {
+    fn visit_ident(&mut self, ident: &Ident) {
+        if self.require_ident.is_none() && &*ident.sym == "require" {
+            self.require_ident = Some(ident.clone());
+        }
     }
 }
 
@@ -84,6 +104,9 @@ impl Fold for Amd {
     }
 
     fn fold_module(&mut self, module: Module) -> Module {
+        let mut local_scoped_require_visitor = LocalScopedRequireVisitor::new();
+        module.visit_with(&mut local_scoped_require_visitor);
+
         let items = module.body;
         self.in_top_level = true;
 
@@ -100,6 +123,11 @@ impl Fold for Amd {
         let mut emitted_esmodule = false;
         let mut has_export = false;
         let exports_ident = self.exports.0.clone();
+        // We'll preserve local scoped `require` ident as amd's local require ident
+        // shadows global one
+        let scoped_local_require_ident = local_scoped_require_visitor
+            .require_ident
+            .unwrap_or_else(|| private_ident!("require"));
 
         // Process items
         for item in items {
@@ -486,6 +514,18 @@ impl Fold for Amd {
         let mut scope_ref_mut = self.scope.borrow_mut();
         let scope = &mut *scope_ref_mut;
         let mut factory_params = Vec::with_capacity(scope.imports.len() + 1);
+
+        // inject local scoped `require` regardless of having exports or not, as long as
+        // it can be considered as module (either having import or export)
+        if !scope.imports.is_empty() || has_export {
+            define_deps_arg.elems.push(Some("require".as_arg()));
+            factory_params.push(Param {
+                span: DUMMY_SP,
+                decorators: Default::default(),
+                pat: scoped_local_require_ident.into(),
+            });
+        }
+
         if has_export {
             define_deps_arg.elems.push(Some("exports".as_arg()));
             factory_params.push(Param {

@@ -30,8 +30,8 @@
  4 | |   
  5 | |   <a href=https://www.w3schools.com>This is a link</a>
  6 | |   
- 7 | `-> </body>
- 8 |     </html>
+ 7 | |   </body>
+ 8 | `-> </html>
    `----
 
   x Element
@@ -41,23 +41,13 @@
  4 | |   
  5 | |   <a href=https://www.w3schools.com>This is a link</a>
  6 | |   
- 7 | `-> </body>
- 8 |     </html>
+ 7 | |   </body>
+ 8 | `-> </html>
    `----
 
   x Child
-   ,-[$DIR/tests/recovery/document_type/missing-name/input.html:1:1]
- 1 | ,-> <!DOCTYPE>
- 2 | |   <html>
- 3 | `-> <body>
-   `----
 
   x Element
-   ,-[$DIR/tests/recovery/document_type/missing-name/input.html:1:1]
- 1 | ,-> <!DOCTYPE>
- 2 | |   <html>
- 3 | `-> <body>
-   `----
 
   x Child
    ,-[$DIR/tests/recovery/document_type/missing-name/input.html:3:1]
@@ -96,19 +86,19 @@
   x Child
    ,-[$DIR/tests/recovery/document_type/missing-name/input.html:5:1]
  5 | <a href=https://www.w3schools.com>This is a link</a>
-   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
    `----
 
   x Element
    ,-[$DIR/tests/recovery/document_type/missing-name/input.html:5:1]
  5 | <a href=https://www.w3schools.com>This is a link</a>
-   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
    `----
 
   x Attribute
-   ,-[$DIR/tests/recovery/document_type/missing-name/input.html:1:1]
- 1 | <!DOCTYPE>
-   : ^
+   ,-[$DIR/tests/recovery/document_type/missing-name/input.html:5:1]
+ 5 | <a href=https://www.w3schools.com>This is a link</a>
+   :    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
    `----
 
   x Child

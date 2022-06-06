@@ -4,7 +4,7 @@ extern crate swc_node_base;
 use std::{path::PathBuf, sync::Arc};
 
 use criterion::{black_box, criterion_group, criterion_main, Bencher, Criterion};
-use swc::{config::JsMinifyOptions, try_with_handler};
+use swc::{config::JsMinifyOptions, try_with_handler, BoolOrDataConfig};
 use swc_common::{FilePathMapping, SourceMap};
 
 fn mk() -> swc::Compiler {
@@ -35,8 +35,8 @@ fn bench_minify(b: &mut Bencher, filename: &str) {
                 fm,
                 handler,
                 &JsMinifyOptions {
-                    compress: true.into(),
-                    mangle: true.into(),
+                    compress: BoolOrDataConfig::from_bool(true),
+                    mangle: BoolOrDataConfig::from_bool(true),
                     format: Default::default(),
                     ecma: Default::default(),
                     keep_classnames: Default::default(),
@@ -47,6 +47,7 @@ fn bench_minify(b: &mut Bencher, filename: &str) {
                     source_map: Default::default(),
                     output_path: Default::default(),
                     inline_sources_content: true,
+                    emit_source_map_columns: true,
                 },
             )
         })

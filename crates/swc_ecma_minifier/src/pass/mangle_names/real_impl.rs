@@ -1,41 +1,34 @@
 use rustc_hash::FxHashSet;
-use swc_atoms::{js_word, JsWord};
-use swc_common::collections::AHashMap;
+use swc_atoms::JsWord;
+use swc_common::{collections::AHashMap, SyntaxContext};
 use swc_ecma_ast::*;
 use swc_ecma_transforms_base::hygiene::rename;
-use swc_ecma_visit::{
-    noop_visit_mut_type, noop_visit_type, visit_obj_and_computed, Visit, VisitMut, VisitMutWith,
-    VisitWith,
-};
+use swc_ecma_visit::{noop_visit_mut_type, VisitMut, VisitMutWith, VisitWith};
 use tracing::info;
 
 use super::{analyzer::Analyzer, preserver::idents_to_preserve};
-use crate::{debug::dump, marks::Marks, option::MangleOptions};
+use crate::{debug::dump, marks::Marks, option::MangleOptions, util::contains_eval};
 
-pub(crate) fn name_mangler(options: MangleOptions, _marks: Marks) -> impl VisitMut {
+pub(crate) fn name_mangler(options: MangleOptions, marks: Marks) -> impl VisitMut {
     Mangler {
         options,
+        unresolved_ctxt: SyntaxContext::empty().apply_mark(marks.unresolved_mark),
         preserved: Default::default(),
+        unresolved: Default::default(),
     }
 }
 
 struct Mangler {
     options: MangleOptions,
 
+    unresolved_ctxt: SyntaxContext,
+
     preserved: FxHashSet<Id>,
+    unresolved: FxHashSet<JsWord>,
 }
 
 impl Mangler {
-    fn contains_eval<N>(&self, node: &N) -> bool
-    where
-        N: VisitWith<EvalFinder>,
-    {
-        let mut v = EvalFinder { found: false };
-        node.visit_with(&mut v);
-        v.found
-    }
-
-    fn get_map<N>(&self, node: &N) -> AHashMap<Id, JsWord>
+    fn get_map<N>(&self, node: &N, skip_one: bool) -> AHashMap<Id, JsWord>
     where
         N: VisitWith<Analyzer>,
     {
@@ -43,9 +36,13 @@ impl Mangler {
             scope: Default::default(),
             is_pat_decl: Default::default(),
         };
-        node.visit_with(&mut analyzer);
+        if skip_one {
+            node.visit_children_with(&mut analyzer);
+        } else {
+            node.visit_with(&mut analyzer);
+        }
 
-        analyzer.into_rename_map(&self.preserved)
+        analyzer.into_rename_map(&self.preserved, &self.unresolved)
     }
 }
 
@@ -56,10 +53,22 @@ macro_rules! unit {
     ($name:ident, $T:ty) => {
         /// Only called if `eval` exists
         fn $name(&mut self, n: &mut $T) {
-            if self.contains_eval(n) {
+            if contains_eval(n, true) {
                 n.visit_mut_children_with(self);
             } else {
-                let map = self.get_map(n);
+                let map = self.get_map(n, false);
+
+                n.visit_mut_with(&mut rename(&map));
+            }
+        }
+    };
+    ($name:ident, $T:ty, true) => {
+        /// Only called if `eval` exists
+        fn $name(&mut self, n: &mut $T) {
+            if contains_eval(n, true) {
+                n.visit_mut_children_with(self);
+            } else {
+                let map = self.get_map(n, true);
 
                 n.visit_mut_with(&mut rename(&map));
             }
@@ -86,17 +95,23 @@ impl VisitMut for Mangler {
 
     unit!(visit_mut_private_method, PrivateMethod);
 
+    unit!(visit_mut_fn_decl, FnDecl, true);
+
+    unit!(visit_mut_class_decl, ClassDecl, true);
+
     fn visit_mut_module(&mut self, m: &mut Module) {
-        self.preserved = idents_to_preserve(self.options.clone(), &*m);
+        let v = idents_to_preserve(self.options.clone(), self.unresolved_ctxt, &*m);
+        self.preserved = v.0;
+        self.unresolved = v.1;
 
         if option_env!("DEBUG_MANGLER") == Some("1") {
             info!("Before: {}", dump(&*m, true));
         }
 
-        if self.contains_eval(m) {
+        if contains_eval(m, true) {
             m.visit_mut_children_with(self);
         } else {
-            let map = self.get_map(m);
+            let map = self.get_map(m, false);
 
             m.visit_mut_with(&mut rename(&map));
         }
@@ -107,35 +122,17 @@ impl VisitMut for Mangler {
     }
 
     fn visit_mut_script(&mut self, s: &mut Script) {
-        if self.contains_eval(s) {
-            return;
-        }
+        let v = idents_to_preserve(self.options.clone(), self.unresolved_ctxt, &*s);
+        self.preserved = v.0;
+        self.unresolved = v.1;
 
-        self.preserved = idents_to_preserve(self.options.clone(), &*s);
-
-        if self.contains_eval(s) {
+        if contains_eval(s, true) {
             s.visit_mut_children_with(self);
             return;
         }
 
-        let map = self.get_map(s);
+        let map = self.get_map(s, false);
 
         s.visit_mut_with(&mut rename(&map));
-    }
-}
-
-struct EvalFinder {
-    found: bool,
-}
-
-impl Visit for EvalFinder {
-    noop_visit_type!();
-
-    visit_obj_and_computed!();
-
-    fn visit_ident(&mut self, i: &Ident) {
-        if i.sym == js_word!("eval") {
-            self.found = true;
-        }
     }
 }

@@ -13,8 +13,8 @@ use swc_common::{
 use swc_ecma_ast::*;
 use swc_ecma_transforms_react::{parse_expr_for_jsx, JsxDirectives};
 use swc_ecma_utils::{
-    alias_ident_for, constructor::inject_after_super, ident::IdentLike, is_literal, member_expr,
-    prepend, private_ident, prop_name_to_expr, quote_ident, var::VarCollector, ExprFactory, Id,
+    alias_ident_for, constructor::inject_after_super, is_literal, member_expr, prepend_stmt,
+    private_ident, prop_name_to_expr, quote_ident, var::VarCollector, ExprFactory,
 };
 use swc_ecma_visit::{
     as_folder, noop_visit_mut_type, visit_obj_and_computed, Fold, Visit, VisitMut, VisitMutWith,
@@ -1545,6 +1545,13 @@ where
                 interface.body.visit_with(self);
             }
             Decl::TsModule(module) => {
+                match &module.id {
+                    TsModuleName::Ident(id) => {
+                        let v = self.scope.decls.entry(id.to_id()).or_default();
+                        v.has_concrete = true;
+                    }
+                    TsModuleName::Str(_) => {}
+                }
                 module.body.visit_with(self);
             }
             Decl::TsTypeAlias(alias) => {
@@ -1651,6 +1658,17 @@ where
                     match name {
                         TsEntityName::Ident(ref i) => {
                             entry.maybe_dependency = Some(i.clone());
+                            // Eagerly update referenced idents for the concrete exports
+                            // resolves https://github.com/swc-project/swc/issues/4481, if we
+                            // know reference exists & reexports.
+                            // when referenced idents are scoped in ts namespace, its references
+                            // is updated _after_ visiting import decl which strips out imports
+                            // already.
+                            if n.is_export && !n.is_type_only {
+                                let entry =
+                                    self.scope.referenced_idents.entry(i.to_id()).or_default();
+                                entry.has_concrete = true;
+                            }
                             break;
                         }
                         TsEntityName::TsQualifiedName(ref q) => name = &q.left,
@@ -2006,7 +2024,7 @@ where
 
         module.visit_mut_children_with(self);
         if !self.uninitialized_vars.is_empty() {
-            prepend(
+            prepend_stmt(
                 &mut module.body,
                 Stmt::Decl(Decl::Var(VarDecl {
                     span: DUMMY_SP,
@@ -2335,7 +2353,7 @@ where
         }
 
         if !self.keys.is_empty() {
-            prepend(
+            prepend_stmt(
                 &mut stmts,
                 Stmt::Decl(Decl::Var(VarDecl {
                     span: DUMMY_SP,
@@ -2420,7 +2438,7 @@ where
         n.visit_mut_children_with(self);
 
         if !self.uninitialized_vars.is_empty() {
-            prepend(
+            prepend_stmt(
                 &mut n.body,
                 Stmt::Decl(Decl::Var(VarDecl {
                     span: DUMMY_SP,
@@ -2503,7 +2521,7 @@ where
         }
 
         if !self.keys.is_empty() {
-            prepend(
+            prepend_stmt(
                 &mut stmts,
                 Stmt::Decl(Decl::Var(VarDecl {
                     span: DUMMY_SP,

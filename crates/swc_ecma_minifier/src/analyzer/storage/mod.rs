@@ -1,7 +1,6 @@
 use swc_atoms::JsWord;
 use swc_common::SyntaxContext;
 use swc_ecma_ast::*;
-use swc_ecma_utils::Id;
 
 use super::{ctx::Ctx, ScopeKind};
 
@@ -61,7 +60,7 @@ pub(crate) trait VarDataLike: Sized {
     fn mark_mutated(&mut self);
     fn mark_reassigned_with_assign(&mut self);
 
-    fn add_infects(&mut self, other: Id);
+    fn add_infects_to(&mut self, other: Id);
 
     fn prevent_inline(&mut self);
 

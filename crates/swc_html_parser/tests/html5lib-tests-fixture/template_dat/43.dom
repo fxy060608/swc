@@ -1,9 +1,0 @@
-#document
-| <html>
-|   <head>
-|   <body>
-|     <template>
-|       content
-|         <script>
-|           "var i = 1;"
-|         <td>

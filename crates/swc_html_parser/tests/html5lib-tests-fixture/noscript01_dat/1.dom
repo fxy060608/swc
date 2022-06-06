@@ -1,7 +1,0 @@
-#document
-| <html>
-|   class="foo"
-|   <head>
-|     <noscript>
-|       <!-- foo -->
-|   <body>

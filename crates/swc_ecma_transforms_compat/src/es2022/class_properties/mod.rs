@@ -1,8 +1,7 @@
-#![allow(dead_code)]
-
 use swc_common::{
     collections::{AHashMap, AHashSet},
     comments::Comments,
+    errors::HANDLER,
     util::take::Take,
     Mark, Span, Spanned, SyntaxContext, DUMMY_SP,
 };
@@ -12,8 +11,8 @@ use swc_ecma_transforms_classes::super_field::SuperFieldAccessFolder;
 use swc_ecma_transforms_macros::fast_path;
 use swc_ecma_utils::{
     alias_ident_for, alias_if_required, constructor::inject_after_super, default_constructor,
-    is_literal, prepend, private_ident, quote_ident, replace_ident, undefined, ExprFactory,
-    ModuleItemLike, StmtLike, HANDLER,
+    is_literal, prepend_stmt, private_ident, quote_ident, replace_ident, undefined, ExprFactory,
+    ModuleItemLike, StmtLike,
 };
 use swc_ecma_visit::{
     as_folder, noop_visit_mut_type, noop_visit_type, Fold, Visit, VisitMut, VisitMutWith, VisitWith,
@@ -80,7 +79,7 @@ struct ClassExtra {
 impl ClassExtra {
     fn prepend_with<T: StmtLike + From<Stmt>>(self, stmts: &mut Vec<T>) {
         if !self.vars.is_empty() {
-            prepend(
+            prepend_stmt(
                 stmts,
                 Stmt::Decl(Decl::Var(VarDecl {
                     span: DUMMY_SP,
@@ -93,7 +92,7 @@ impl ClassExtra {
         }
 
         if !self.lets.is_empty() {
-            prepend(
+            prepend_stmt(
                 stmts,
                 Stmt::Decl(Decl::Var(VarDecl {
                     span: DUMMY_SP,
@@ -515,6 +514,19 @@ impl<C: Comments> ClassProperties<C> {
             private: &self.private,
         });
 
+        let should_create_vars_for_method_names = class.body.iter().any(|m| match m {
+            ClassMember::Constructor(_)
+            | ClassMember::PrivateMethod(_)
+            | ClassMember::TsIndexSignature(_)
+            | ClassMember::Empty(_) => false,
+
+            ClassMember::Method(m) => contains_super(&m.key),
+
+            ClassMember::ClassProp(_)
+            | ClassMember::PrivateProp(_)
+            | ClassMember::StaticBlock(_) => true,
+        });
+
         for member in class.body {
             match member {
                 ClassMember::Empty(..) | ClassMember::TsIndexSignature(..) => members.push(member),
@@ -525,7 +537,7 @@ impl<C: Comments> ClassProperties<C> {
                         PropName::Computed(ComputedPropName {
                             span: c_span,
                             mut expr,
-                        }) if !is_literal(&*expr) => {
+                        }) if should_create_vars_for_method_names && !is_literal(&*expr) => {
                             vars.extend(visit_private_in_expr(&mut expr, &self.private, self.c));
 
                             expr.visit_mut_with(&mut ClassNameTdzFolder {
@@ -1006,4 +1018,55 @@ impl Check for ShouldWork {
     fn should_handle(&self) -> bool {
         self.found
     }
+}
+
+// TODO: remove
+struct SuperVisitor {
+    found: bool,
+}
+
+impl Visit for SuperVisitor {
+    noop_visit_type!();
+
+    /// Don't recurse into constructor
+    fn visit_constructor(&mut self, _: &Constructor) {}
+
+    /// Don't recurse into fn
+    fn visit_fn_decl(&mut self, _: &FnDecl) {}
+
+    /// Don't recurse into fn
+    fn visit_fn_expr(&mut self, _: &FnExpr) {}
+
+    /// Don't recurse into fn
+    fn visit_function(&mut self, _: &Function) {}
+
+    /// Don't recurse into fn
+    fn visit_getter_prop(&mut self, n: &GetterProp) {
+        n.key.visit_with(self);
+    }
+
+    /// Don't recurse into fn
+    fn visit_method_prop(&mut self, n: &MethodProp) {
+        n.key.visit_with(self);
+        n.function.visit_with(self);
+    }
+
+    /// Don't recurse into fn
+    fn visit_setter_prop(&mut self, n: &SetterProp) {
+        n.key.visit_with(self);
+        n.param.visit_with(self);
+    }
+
+    fn visit_super(&mut self, _: &Super) {
+        self.found = true;
+    }
+}
+
+fn contains_super<N>(body: &N) -> bool
+where
+    N: VisitWith<SuperVisitor>,
+{
+    let mut visitor = SuperVisitor { found: false };
+    body.visit_with(&mut visitor);
+    visitor.found
 }

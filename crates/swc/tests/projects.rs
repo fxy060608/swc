@@ -9,11 +9,12 @@ use swc::{
         BuiltInput, Config, IsModule, JscConfig, ModuleConfig, Options, SourceMapsConfig,
         TransformConfig,
     },
-    minify_file_comments, Compiler, TransformOutput,
+    Compiler, TransformOutput,
 };
 use swc_common::{
     chain,
     comments::{Comment, SingleThreadedComments},
+    errors::HANDLER,
     BytePos, FileName,
 };
 use swc_ecma_ast::{EsVersion, *};
@@ -22,7 +23,6 @@ use swc_ecma_transforms::{
     helpers::{self, Helpers},
     pass::noop,
 };
-use swc_ecma_utils::HANDLER;
 use swc_ecma_visit::{Fold, FoldWith};
 use testing::{NormalizedOutput, StdErr, Tester};
 use walkdir::WalkDir;
@@ -283,7 +283,7 @@ fn issue_414() {
     let s2 = file("tests/projects/issue-414/b.ts").unwrap();
     println!("{}", s2);
     assert!(s2.contains("define("));
-    assert!(s2.contains("function(_bar) {"));
+    assert!(s2.contains("__esModule"));
 }
 
 /// should handle comments in return statement
@@ -555,9 +555,10 @@ fn issue_879() {
                         ..Default::default()
                     })),
                     transform: Some(TransformConfig {
-                        legacy_decorator: true,
+                        legacy_decorator: true.into(),
                         ..Default::default()
-                    }),
+                    })
+                    .into(),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -753,6 +754,8 @@ fn should_visit() {
                 preserve_comments: config.preserve_comments,
                 inline_sources_content: config.inline_sources_content,
                 comments: config.comments,
+                emit_source_map_columns: config.emit_source_map_columns,
+                output: config.output,
             };
 
             if config.minify {
@@ -772,8 +775,6 @@ fn should_visit() {
                 })
             });
 
-            minify_file_comments(&comments, config.minify, config.preserve_comments);
-
             Ok(c.print(
                 &program,
                 None,
@@ -786,6 +787,8 @@ fn should_visit() {
                 // TODO: figure out sourcemaps
                 config.minify,
                 Some(&comments),
+                config.emit_source_map_columns,
+                false,
             )
             .unwrap()
             .code)
@@ -831,7 +834,7 @@ fn tests(input_dir: PathBuf) {
                         output_path: Some(output.join(entry.file_name())),
                         config: Config {
                             jsc: JscConfig {
-                                external_helpers: true,
+                                external_helpers: true.into(),
                                 ..Default::default()
                             },
                             ..Default::default()

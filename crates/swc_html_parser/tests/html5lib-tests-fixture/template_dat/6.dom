@@ -1,8 +1,0 @@
-#document
-| <html>
-|   <head>
-|   <body>
-|     <div>
-|       <template>
-|         content
-|           "Hello"

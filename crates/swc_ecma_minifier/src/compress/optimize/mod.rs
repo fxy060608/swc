@@ -1,5 +1,6 @@
 use std::{iter::once, mem::take};
 
+#[allow(unused_imports)]
 use retain_mut::RetainMut;
 use rustc_hash::FxHashMap;
 use swc_atoms::{js_word, JsWord};
@@ -9,8 +10,8 @@ use swc_common::{
 };
 use swc_ecma_ast::*;
 use swc_ecma_utils::{
-    ident::IdentLike, prepend_stmts, undefined, ExprExt, ExprFactory, Id, IsEmpty, ModuleItemLike,
-    StmtLike, Type, Value,
+    prepend_stmts, undefined, ExprCtx, ExprExt, ExprFactory, IsEmpty, ModuleItemLike, StmtLike,
+    Type, Value,
 };
 use swc_ecma_visit::{noop_visit_mut_type, VisitMut, VisitMutWith, VisitWith};
 use tracing::{debug, span, Level};
@@ -28,7 +29,10 @@ use crate::{
     marks::Marks,
     mode::Mode,
     option::CompressOptions,
-    util::{contains_leaping_yield, make_number, ExprOptExt, ModuleItemExt},
+    util::{
+        contains_eval, contains_leaping_continue_with_label, contains_leaping_yield, make_number,
+        ExprOptExt, ModuleItemExt,
+    },
 };
 
 mod arguments;
@@ -38,12 +42,12 @@ mod conditionals;
 mod dead_code;
 mod evaluate;
 mod fns;
-mod hoist_props;
 mod if_return;
 mod iife;
 mod inline;
 mod loops;
 mod ops;
+mod props;
 mod sequences;
 mod strings;
 mod switches;
@@ -68,6 +72,10 @@ where
 
     Optimizer {
         marks,
+        expr_ctx: ExprCtx {
+            unresolved_ctxt: SyntaxContext::empty().apply_mark(marks.unresolved_mark),
+            is_unresolved_ref_safe: false,
+        },
         changed: false,
         options,
         prepend_stmts: Default::default(),
@@ -97,6 +105,8 @@ struct Ctx {
     /// `true` if the [VarDecl] has const annotation.
     #[allow(dead_code)]
     has_const_ann: bool,
+
+    dont_use_prepend_nor_append: bool,
 
     in_bool_ctx: bool,
 
@@ -157,6 +167,8 @@ struct Ctx {
 
     dont_invoke_iife: bool,
 
+    in_with_stmt: bool,
+
     /// Current scope.
     scope: SyntaxContext,
 }
@@ -180,6 +192,7 @@ impl Ctx {
 
 struct Optimizer<'a, M> {
     marks: Marks,
+    expr_ctx: ExprCtx,
 
     changed: bool,
     options: &'a CompressOptions,
@@ -777,7 +790,7 @@ where
                         if let Some(usage) = self.data.vars.get(&callee.to_id()) {
                             if !usage.reassigned() && usage.pure_fn {
                                 self.changed = true;
-                                report_change!("Reducing funcion call to a variable");
+                                report_change!("Reducing function call to a variable");
 
                                 let args = args
                                     .take()
@@ -1049,7 +1062,8 @@ where
                 if exprs.len() <= 1 {
                     return exprs.pop().map(|v| *v);
                 } else {
-                    let is_last_undefined = is_pure_undefined(exprs.last().unwrap());
+                    let is_last_undefined =
+                        is_pure_undefined(&self.expr_ctx, exprs.last().unwrap());
 
                     // (foo(), void 0) => void foo()
                     if is_last_undefined {
@@ -1180,48 +1194,6 @@ where
         }))
     }
 
-    ///
-    /// - `a ? true : false` => `!!a`
-    fn compress_useless_cond_expr(&mut self, expr: &mut Expr) {
-        let cond = match expr {
-            Expr::Cond(c) => c,
-            _ => return,
-        };
-
-        let lt = cond.cons.get_type();
-        let rt = cond.alt.get_type();
-        match (lt, rt) {
-            (Known(Type::Bool), Known(Type::Bool)) => {}
-            _ => return,
-        }
-
-        let lb = cond.cons.as_pure_bool();
-        let rb = cond.alt.as_pure_bool();
-
-        let lb = match lb {
-            Value::Known(v) => v,
-            Value::Unknown => return,
-        };
-        let rb = match rb {
-            Value::Known(v) => v,
-            Value::Unknown => return,
-        };
-
-        // `cond ? true : false` => !!cond
-        if lb && !rb {
-            self.negate(&mut cond.test, false);
-            self.negate(&mut cond.test, false);
-            *expr = *cond.test.take();
-            return;
-        }
-
-        // `cond ? false : true` => !cond
-        if !lb && rb {
-            self.negate(&mut cond.test, false);
-            *expr = *cond.test.take();
-        }
-    }
-
     fn merge_var_decls(&mut self, stmts: &mut Vec<Stmt>) {
         if !self.options.join_vars && !self.options.hoist_vars {
             return;
@@ -1297,10 +1269,11 @@ where
         }
     }
 
-    fn try_removing_block(&mut self, s: &mut Stmt, unwrap_more: bool) {
+    fn try_removing_block(&mut self, s: &mut Stmt, unwrap_more: bool, allow_fn_decl: bool) {
         match s {
             Stmt::Block(bs) => {
                 if bs.stmts.is_empty() {
+                    report_change!("Converting empty block to empty statement");
                     *s = Stmt::Empty(EmptyStmt { span: DUMMY_SP });
                     return;
                 }
@@ -1308,6 +1281,7 @@ where
                 // Remove nested blocks
                 if bs.stmts.len() == 1 {
                     if bs.span.has_mark(self.marks.fake_block) {
+                        report_change!("Unwrapping a fake block");
                         *s = bs.stmts.take().into_iter().next().unwrap();
                         return;
                     }
@@ -1351,6 +1325,7 @@ where
                             self.changed = true;
                             report_change!("optimizer: Removing empty block");
                             *stmt = Stmt::Empty(EmptyStmt { span: DUMMY_SP });
+                            return;
                         }
                     }
                 }
@@ -1362,7 +1337,7 @@ where
                             report_change!("optimizer: Unwrapping block stmt");
                             self.changed = true;
                         }
-                        Stmt::Decl(Decl::Fn(..)) if !self.ctx.in_strict => {
+                        Stmt::Decl(Decl::Fn(..)) if allow_fn_decl && !self.ctx.in_strict => {
                             *s = bs.stmts[0].take();
                             report_change!("optimizer: Unwrapping block stmt in non strcit mode");
                             self.changed = true;
@@ -1373,7 +1348,7 @@ where
             }
 
             Stmt::If(s) => {
-                self.try_removing_block(&mut s.cons, true);
+                self.try_removing_block(&mut s.cons, true, true);
                 let can_remove_block_of_alt = match &*s.cons {
                     Stmt::Expr(..) | Stmt::If(..) => true,
                     Stmt::Block(bs) if bs.stmts.len() == 1 => matches!(&bs.stmts[0], Stmt::For(..)),
@@ -1381,21 +1356,21 @@ where
                 };
                 if can_remove_block_of_alt {
                     if let Some(alt) = &mut s.alt {
-                        self.try_removing_block(alt, true);
+                        self.try_removing_block(alt, true, false);
                     }
                 }
             }
 
             Stmt::ForIn(s) => {
-                self.try_removing_block(&mut s.body, true);
+                self.try_removing_block(&mut s.body, true, false);
             }
 
             Stmt::For(s) => {
-                self.try_removing_block(&mut s.body, true);
+                self.try_removing_block(&mut s.body, true, false);
             }
 
             Stmt::ForOf(s) => {
-                self.try_removing_block(&mut s.body, true);
+                self.try_removing_block(&mut s.body, true, false);
             }
 
             _ => {}
@@ -1513,7 +1488,7 @@ where
         n.visit_mut_children_with(self);
 
         if let Some(value) = &n.value {
-            if is_pure_undefined(value) {
+            if is_pure_undefined(&self.expr_ctx, value) {
                 n.value = None;
             }
         }
@@ -1532,7 +1507,9 @@ where
 
         self.compress_typeof_undefined(n);
 
-        self.optimize_bin_operator(n);
+        self.optimize_bin_equal(n);
+
+        self.remove_bin_paren(n);
 
         self.optimize_cmp_with_null_or_undefined(n);
 
@@ -1646,7 +1623,9 @@ where
 
     fn visit_mut_class_expr(&mut self, e: &mut ClassExpr) {
         if !self.options.keep_classnames {
-            self.remove_name_if_not_used(&mut e.ident);
+            if e.ident.is_some() && !contains_eval(&e.class, true) {
+                self.remove_name_if_not_used(&mut e.ident);
+            }
         }
 
         e.visit_mut_children_with(self);
@@ -1761,13 +1740,11 @@ where
 
         self.compress_typeofs(e);
 
-        self.optimize_nullish_coalescing(e);
-
         self.compress_logical_exprs_as_bang_bang(e, false);
 
-        self.compress_useless_cond_expr(e);
-
         self.inline(e);
+
+        self.handle_property_access(e);
 
         if let Expr::Bin(bin) = e {
             let expr = self.optimize_lit_cmp(bin);
@@ -1779,8 +1756,6 @@ where
         }
 
         self.compress_cond_expr_if_similar(e);
-
-        self.compress_negated_bin_eq(e);
 
         if self.options.negate_iife {
             self.negate_iife_in_cond(e);
@@ -1895,8 +1870,15 @@ where
         }
     }
 
-    #[cfg_attr(feature = "debug", tracing::instrument(skip_all))]
     fn visit_mut_fn_decl(&mut self, f: &mut FnDecl) {
+        #[cfg(feature = "debug")]
+        let _tracing = tracing::span!(
+            Level::ERROR,
+            "visit_mut_fn_decl",
+            id = tracing::field::display(&f.ident)
+        )
+        .entered();
+
         self.functions
             .entry(f.ident.to_id())
             .or_insert_with(|| FnMetadata::from(&f.function));
@@ -1921,7 +1903,9 @@ where
         }
 
         if !self.options.keep_fnames {
-            self.remove_name_if_not_used(&mut e.ident);
+            if e.ident.is_some() && !contains_eval(&e.function, true) {
+                self.remove_name_if_not_used(&mut e.ident);
+            }
         }
 
         e.visit_mut_children_with(self);
@@ -2057,15 +2041,22 @@ where
         self.negate_if_stmt(n);
 
         self.merge_nested_if(n);
-
-        self.merge_else_if(n);
     }
 
     #[cfg_attr(feature = "debug", tracing::instrument(skip_all))]
     fn visit_mut_labeled_stmt(&mut self, n: &mut LabeledStmt) {
         let old_label = self.label.take();
         self.label = Some(n.label.to_id());
-        n.visit_mut_children_with(self);
+
+        let ctx = Ctx {
+            dont_use_prepend_nor_append: contains_leaping_continue_with_label(
+                &n.body,
+                n.label.to_id(),
+            ),
+            ..self.ctx
+        };
+
+        n.visit_mut_children_with(&mut *self.with_ctx(ctx));
 
         if self.label.is_none() {
             report_change!("Removing label `{}`", n.label);
@@ -2352,13 +2343,13 @@ where
 
         // visit_mut_children_with above may produce easily optimizable block
         // statements.
-        self.try_removing_block(s, false);
+        self.try_removing_block(s, false, false);
 
         // These methods may modify prepend_stmts or append_stmts.
         self.optimize_loops_if_cond_is_false(s);
         self.optimize_loops_with_break(s);
 
-        self.try_removing_block(s, false);
+        self.try_removing_block(s, false, false);
 
         if !self.prepend_stmts.is_empty() || !self.append_stmts.is_empty() {
             let span = s.span();
@@ -2399,7 +2390,7 @@ where
         debug_assert_eq!(self.prepend_stmts.len(), len);
 
         if let Stmt::Expr(ExprStmt { expr, .. }) = s {
-            if is_pure_undefined(expr) {
+            if is_pure_undefined(&self.expr_ctx, expr) {
                 *s = Stmt::Empty(EmptyStmt { span: DUMMY_SP });
                 return;
             }
@@ -2420,8 +2411,9 @@ where
             }
 
             if self.options.unused {
-                let can_be_removed =
-                    !is_directive && !expr.is_ident() && !expr.may_have_side_effects();
+                let can_be_removed = !is_directive
+                    && !expr.is_ident()
+                    && !expr.may_have_side_effects(&self.expr_ctx);
 
                 if can_be_removed {
                     self.changed = true;
@@ -2655,7 +2647,7 @@ where
         if n.kind == VarDeclKind::Let {
             n.decls.iter_mut().for_each(|var| {
                 if let Some(e) = &var.init {
-                    if is_pure_undefined(e) {
+                    if is_pure_undefined(&self.expr_ctx, e) {
                         self.changed = true;
                         report_change!(
                             "Dropping explicit initializer which evaluates to `undefined`"
@@ -2709,11 +2701,11 @@ where
 
         let uses_eval = self.data.scopes.get(&self.ctx.scope).unwrap().has_eval_call;
 
-        if !uses_eval {
+        if !uses_eval && !self.ctx.dont_use_prepend_nor_append {
             for v in vars.iter_mut() {
                 if v.init
                     .as_deref()
-                    .map(|e| !e.is_ident() && !e.may_have_side_effects())
+                    .map(|e| !e.is_ident() && !e.may_have_side_effects(&self.expr_ctx))
                     .unwrap_or(true)
                 {
                     self.drop_unused_var_declarator(v, &mut None);
@@ -2826,13 +2818,26 @@ where
     }
 
     #[cfg_attr(feature = "debug", tracing::instrument(skip_all))]
+    fn visit_mut_with_stmt(&mut self, n: &mut WithStmt) {
+        n.obj.visit_mut_with(self);
+
+        {
+            let ctx = Ctx {
+                in_with_stmt: true,
+                ..self.ctx
+            };
+            n.body.visit_mut_with(&mut *self.with_ctx(ctx));
+        }
+    }
+
+    #[cfg_attr(feature = "debug", tracing::instrument(skip_all))]
     fn visit_mut_yield_expr(&mut self, n: &mut YieldExpr) {
         n.visit_mut_children_with(self);
 
         if let Some(arg) = &mut n.arg {
             self.compress_undefined(&mut **arg);
 
-            if !n.delegate && is_pure_undefined(arg) {
+            if !n.delegate && is_pure_undefined(&self.expr_ctx, arg) {
                 n.arg = None;
             }
         }
@@ -2881,7 +2886,7 @@ fn is_left_access_to_arguments(l: &PatOrExpr) -> bool {
     }
 }
 
-#[derive(Debug, Default, PartialEq)]
+#[derive(Debug, Default, PartialEq, Eq)]
 struct SynthesizedStmts(Vec<Stmt>);
 
 impl SynthesizedStmts {

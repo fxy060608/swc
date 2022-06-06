@@ -1,8 +1,6 @@
 use swc_common::util::take::Take;
 use swc_ecma_ast::*;
-use swc_ecma_transforms_base::perf::Parallel;
-use swc_ecma_transforms_macros::parallel;
-use swc_ecma_utils::{private_ident, UsageFinder};
+use swc_ecma_utils::{private_ident, IdentUsageFinder};
 use swc_ecma_visit::{as_folder, noop_visit_mut_type, Fold, VisitMut, VisitMutWith};
 use swc_trace_macro::swc_trace;
 
@@ -31,14 +29,6 @@ pub fn function_name() -> impl 'static + Copy + Fold + VisitMut {
 #[derive(Clone, Copy)]
 struct FnName;
 
-impl Parallel for FnName {
-    fn create(&self) -> Self {
-        *self
-    }
-
-    fn merge(&mut self, _: Self) {}
-}
-
 struct Rename {
     name: Option<Ident>,
 }
@@ -53,7 +43,6 @@ fn prepare(i: Ident) -> Ident {
 }
 
 #[swc_trace]
-#[parallel]
 impl VisitMut for FnName {
     noop_visit_mut_type!();
 
@@ -117,7 +106,7 @@ macro_rules! impl_for {
                     };
                     // If function's body references the name of variable, we just skip the
                     // function
-                    if UsageFinder::find(&name, &*node) {
+                    if IdentUsageFinder::find(&name.to_id(), &*node) {
                         // self.name = Some(name);
                         node.ident = None;
                     } else {

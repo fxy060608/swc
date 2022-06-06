@@ -46,9 +46,9 @@
    `----
 
   x Attribute
-   ,-[$DIR/tests/recovery/element/body/broken/input.html:1:1]
- 1 | <!DOCTYPE HTML>
-   : ^
+   ,-[$DIR/tests/recovery/element/body/broken/input.html:6:1]
+ 6 | <html test="test">
+   :       ^^^^^^^^^^^
    `----
 
   x Child
@@ -78,13 +78,13 @@
   x Child
    ,-[$DIR/tests/recovery/element/body/broken/input.html:4:5]
  4 | <title>Test</title></head>
-   : ^^^^^^^^^^^
+   : ^^^^^^^^^^^^^^^^^^^
    `----
 
   x Element
    ,-[$DIR/tests/recovery/element/body/broken/input.html:4:5]
  4 | <title>Test</title></head>
-   : ^^^^^^^^^^^
+   : ^^^^^^^^^^^^^^^^^^^
    `----
 
   x Child

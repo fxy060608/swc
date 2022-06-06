@@ -3,11 +3,14 @@ use std::mem::swap;
 use swc_common::{util::take::Take, EqIgnoreSpan, Spanned, DUMMY_SP};
 use swc_ecma_ast::*;
 use swc_ecma_transforms_base::ext::ExprRefExt;
-use swc_ecma_utils::{ident::IdentLike, ExprExt, ExprFactory, StmtExt, StmtLike};
+use swc_ecma_utils::{ExprExt, ExprFactory, StmtExt, StmtLike};
 
 use super::Optimizer;
 use crate::{
-    compress::{optimize::Ctx, util::negate_cost},
+    compress::{
+        optimize::Ctx,
+        util::{negate, negate_cost},
+    },
     mode::Mode,
     DISABLE_BUGGY_PASSES,
 };
@@ -30,7 +33,7 @@ where
             _ => {}
         }
 
-        if negate_cost(&stmt.test, true, false) < 0 {
+        if negate_cost(&self.expr_ctx, &stmt.test, true, false) < 0 {
             report_change!("if_return: Negating `cond` of an if statement which has cons and alt");
             let ctx = Ctx {
                 in_bool_ctx: true,
@@ -63,7 +66,7 @@ where
             _ => return,
         };
 
-        if !cond.cons.may_have_side_effects() {
+        if !cond.cons.may_have_side_effects(&self.expr_ctx) {
             self.changed = true;
             report_change!("conditionals: `cond ? useless : alt` => `cond || alt`");
             *e = Expr::Bin(BinExpr {
@@ -75,7 +78,7 @@ where
             return;
         }
 
-        if !cond.alt.may_have_side_effects() {
+        if !cond.alt.may_have_side_effects(&self.expr_ctx) {
             self.changed = true;
             report_change!("conditionals: `cond ? cons : useless` => `cond && cons`");
             *e = Expr::Bin(BinExpr {
@@ -116,7 +119,10 @@ where
             stmts
                 .windows(2)
                 .any(|stmts| match (&stmts[0].as_stmt(), &stmts[1].as_stmt()) {
-                    (Some(Stmt::If(l)), Some(Stmt::If(r))) => l.cons.eq_ignore_span(&r.cons),
+                    (
+                        Some(Stmt::If(l @ IfStmt { alt: None, .. })),
+                        Some(Stmt::If(r @ IfStmt { alt: None, .. })),
+                    ) => l.cons.eq_ignore_span(&r.cons),
                     _ => false,
                 });
         if !has_work {
@@ -132,7 +138,7 @@ where
             match stmt.try_into_stmt() {
                 Ok(stmt) => {
                     match stmt {
-                        Stmt::If(mut stmt) => {
+                        Stmt::If(mut stmt @ IfStmt { alt: None, .. }) => {
                             //
 
                             match &mut cur {
@@ -688,6 +694,10 @@ where
     /// else baz()
     ///
     /// `else` token can be removed from the code above.
+    /// if (foo) return bar()
+    /// else baz()
+    ///
+    /// `else` token can be removed from the code above.
     pub(super) fn drop_else_token<T>(&mut self, stmts: &mut Vec<T>)
     where
         T: StmtLike,
@@ -713,11 +723,22 @@ where
                 Ok(stmt) => match stmt {
                     Stmt::If(IfStmt {
                         span,
-                        test,
-                        cons,
-                        alt: Some(alt),
+                        mut test,
+                        mut cons,
+                        alt: Some(mut alt),
                         ..
                     }) if cons.terminates() => {
+                        if let (
+                            Stmt::Return(ReturnStmt { arg: None, .. }),
+                            Stmt::Decl(Decl::Fn(..)),
+                        ) = (&*cons, &*alt)
+                        {
+                            // I don't know why, but terser behaves differently
+                            negate(&self.expr_ctx, &mut test, true, false);
+
+                            swap(&mut cons, &mut alt);
+                        }
+
                         new_stmts.push(T::from_stmt(Stmt::If(IfStmt {
                             span,
                             test,

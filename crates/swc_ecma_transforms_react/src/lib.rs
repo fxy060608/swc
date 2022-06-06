@@ -5,7 +5,7 @@ use swc_ecma_visit::Fold;
 
 pub use self::{
     display_name::display_name,
-    jsx::{jsx, parse_expr_for_jsx, JsxDirectives, Options, Runtime},
+    jsx::*,
     jsx_self::jsx_self,
     jsx_src::jsx_src,
     pure_annotations::pure_annotations,
@@ -42,13 +42,20 @@ where
     C: Comments + Clone,
 {
     let Options { development, .. } = options;
+    let development = development.unwrap_or(false);
 
     let refresh_options = options.refresh.take();
 
     chain!(
         jsx_src(development, cm.clone()),
         jsx_self(development),
-        refresh(development, refresh_options, cm.clone(), comments.clone()),
+        refresh(
+            development,
+            refresh_options,
+            cm.clone(),
+            comments.clone(),
+            top_level_mark
+        ),
         jsx(cm, comments.clone(), options, top_level_mark),
         display_name(),
         pure_annotations(comments),

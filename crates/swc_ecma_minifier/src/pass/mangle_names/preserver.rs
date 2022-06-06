@@ -1,26 +1,39 @@
 use rustc_hash::FxHashSet;
+use swc_atoms::JsWord;
+use swc_common::SyntaxContext;
 use swc_ecma_ast::*;
-use swc_ecma_utils::{find_ids, ident::IdentLike, Id};
+use swc_ecma_utils::find_pat_ids;
 use swc_ecma_visit::{noop_visit_type, Visit, VisitWith};
 
 use crate::option::MangleOptions;
 
-pub(super) fn idents_to_preserve<N>(options: MangleOptions, n: &N) -> FxHashSet<Id>
+/// Returns `(preserved, unresolved)`
+pub(super) fn idents_to_preserve<N>(
+    options: MangleOptions,
+    unresolved_ctxt: SyntaxContext,
+    n: &N,
+) -> (FxHashSet<Id>, FxHashSet<JsWord>)
 where
     N: VisitWith<Preserver>,
 {
     let mut v = Preserver {
         options,
+        unresolved_ctxt,
         preserved: Default::default(),
+        unresolved: Default::default(),
         should_preserve: false,
         in_top_level: false,
     };
     n.visit_with(&mut v);
-    v.preserved
+    (v.preserved, v.unresolved)
 }
 pub(super) struct Preserver {
     options: MangleOptions,
+    unresolved_ctxt: SyntaxContext,
+
     preserved: FxHashSet<Id>,
+    unresolved: FxHashSet<JsWord>,
+
     should_preserve: bool,
     in_top_level: bool,
 }
@@ -78,7 +91,7 @@ impl Visit for Preserver {
                 self.preserved.insert(f.ident.to_id());
             }
             Decl::Var(v) => {
-                let ids: Vec<Id> = find_ids(&v.decls);
+                let ids: Vec<Id> = find_pat_ids(&v.decls);
                 self.preserved.extend(ids);
             }
             _ => {}
@@ -113,6 +126,12 @@ impl Visit for Preserver {
             if let Some(i) = &n.ident {
                 self.preserved.insert(i.to_id());
             }
+        }
+    }
+
+    fn visit_ident(&mut self, n: &Ident) {
+        if self.unresolved_ctxt == n.span.ctxt {
+            self.unresolved.insert(n.sym.clone());
         }
     }
 

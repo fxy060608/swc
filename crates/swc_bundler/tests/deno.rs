@@ -17,7 +17,7 @@ use swc_ecma_codegen::{
 };
 use swc_ecma_minifier::option::MangleOptions;
 use swc_ecma_transforms_base::{fixer::fixer, resolver};
-use swc_ecma_utils::{find_ids, Id};
+use swc_ecma_utils::find_pat_ids;
 use swc_ecma_visit::{Visit, VisitMutWith, VisitWith};
 use testing::assert_eq;
 
@@ -1083,7 +1083,10 @@ fn bundle(url: &str, minify: bool) -> String {
                 }
 
                 Emitter {
-                    cfg: swc_ecma_codegen::Config { minify },
+                    cfg: swc_ecma_codegen::Config {
+                        minify,
+                        ..Default::default()
+                    },
                     cm: cm.clone(),
                     comments: None,
                     wr,
@@ -1202,7 +1205,7 @@ impl Visit for ExportCollector {
                 self.exports.insert(ident.sym.to_string());
             }
             swc_ecma_ast::Decl::Var(var) => {
-                let ids: Vec<Id> = find_ids(var);
+                let ids: Vec<Id> = find_pat_ids(var);
                 self.exports
                     .extend(ids.into_iter().map(|v| v.0.to_string()));
             }

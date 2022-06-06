@@ -34,30 +34,8 @@ use testing::assert_eq;
 #[testing::fixture(
     "tests/terser/compress/**/input.js",
     exclude(
+        // We don't care about ie8
         "ie8",
-        "blocks/issue_1672_for/",
-        "collapse_vars/issue_1631_1/",
-        "collapse_vars/issue_1631_2/",
-        "collapse_vars/issue_1631_3/",
-        "dead_code/issue_2749/",
-        "dead_code/try_catch_finally/",
-        "drop_unused/issue_1715_1/",
-        "drop_unused/issue_1715_2/",
-        "drop_unused/issue_1715_3/",
-        "drop_unused/issue_1830_1/",
-        "drop_unused/issue_1830_2/",
-        "drop_unused/var_catch_toplevel/",
-        "evaluate/issue_1760_1/",
-        "functions/issue_2620_4/",
-        "functions/issue_3016_3/",
-        "functions/issue_3076/",
-        "issue_1105/assorted_Infinity_NaN_undefined_in_with_scope/",
-        "issue_1105/assorted_Infinity_NaN_undefined_in_with_scope_keep_infinity/",
-        "issue_1733/function_catch_catch/",
-        "issue_1750/case_1/",
-        "properties/issue_3188_3/",
-        "rename/function_catch_catch/",
-        "yield/issue_2689/",
         // tests with infinite loops
         "reduce_vars/toplevel_off_loops_2",
         "reduce_vars/toplevel_on_loops_2",
@@ -82,8 +60,8 @@ fn terser_exec(input: PathBuf) {
             return Ok(());
         }
 
-        let input_stdout = stdout_of(&input_src, Duration::from_millis(500)).map_err(|_| {
-            eprintln!("This test is not executable test");
+        let input_stdout = stdout_of(&input_src, Duration::from_millis(1000)).map_err(|_| {
+            eprintln!("This test is not executable test: \n{}", input_src);
         })?;
 
         // Formmating
@@ -91,13 +69,21 @@ fn terser_exec(input: PathBuf) {
             return Ok(());
         }
 
-        let expected_src = read_to_string(&dir.join("output.terser.js")).map_err(|_| {
-            eprintln!("This test does not have `output.terser.js`");
-        })?;
+        let mut expected_src = None;
 
-        let expected_stdout =
-            stdout_of(&expected_src, Duration::from_millis(500)).map_err(|_| {
-                eprintln!("This test is not executable test");
+        let expected_stdout = read_to_string(&dir.join("expected.stdout"))
+            .or_else(|_| {
+                let src = read_to_string(&dir.join("output.terser.js"))
+                    .context("This test does not have `output.terser.js`")?;
+
+                expected_src = Some(src.clone());
+
+                stdout_of(&src, Duration::from_millis(500))
+                    .context("This test is not executable test")
+            })
+            .context("This test is not an excutable test")
+            .map_err(|err| {
+                eprintln!("{}", err);
             })?;
 
         if input_stdout != expected_stdout {
@@ -116,11 +102,13 @@ fn terser_exec(input: PathBuf) {
         let actual = print(cm, &[output_module], false, false);
         let actual_stdout = stdout_of(&actual, Duration::from_secs(5)).unwrap();
 
-        eprintln!(
-            "---- {} -----\n{}",
-            Color::Green.paint("Expected"),
-            expected_src
-        );
+        if let Some(expected_src) = expected_src {
+            eprintln!(
+                "---- {} -----\n{}",
+                Color::Green.paint("Expected"),
+                expected_src
+            );
+        }
 
         eprintln!("---- {} -----\n{}", Color::Green.paint("Actual"), actual);
 
@@ -306,7 +294,10 @@ fn print<N: swc_ecma_codegen::Node>(
         }
 
         let mut emitter = Emitter {
-            cfg: swc_ecma_codegen::Config { minify },
+            cfg: swc_ecma_codegen::Config {
+                minify,
+                ..Default::default()
+            },
             cm,
             comments: None,
             wr,

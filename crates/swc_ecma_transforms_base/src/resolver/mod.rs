@@ -1,10 +1,10 @@
 use std::cell::RefCell;
 
 use rustc_hash::FxHashSet;
-use swc_atoms::JsWord;
+use swc_atoms::{js_word, JsWord};
 use swc_common::{collections::AHashSet, Mark, SyntaxContext};
 use swc_ecma_ast::*;
-use swc_ecma_utils::{find_ids, Id};
+use swc_ecma_utils::find_pat_ids;
 use swc_ecma_visit::{
     as_folder, noop_visit_mut_type, visit_mut_obj_and_computed, Fold, VisitMut, VisitMutWith,
 };
@@ -242,6 +242,15 @@ impl<'a> Resolver<'a> {
 
     /// Returns a [Mark] for an identifier reference.
     fn mark_for_ref(&self, sym: &JsWord) -> Option<Mark> {
+        self.mark_for_ref_inner(sym, false)
+    }
+
+    fn mark_for_ref_inner(&self, sym: &JsWord, stop_an_fn_scope: bool) -> Option<Mark> {
+        // NaN always points the globals
+        if *sym == js_word!("NaN") {
+            return Some(self.config.unresolved_mark);
+        }
+
         if self.config.handle_types && self.in_type {
             let mut mark = self.current.mark;
             let mut scope = Some(&self.current);
@@ -255,6 +264,11 @@ impl<'a> Resolver<'a> {
                     }
                     return Some(mark);
                 }
+
+                if cur.kind == ScopeKind::Fn && stop_an_fn_scope {
+                    return None;
+                }
+
                 if let Some(parent) = &cur.parent {
                     mark = parent.mark;
                 }
@@ -271,6 +285,10 @@ impl<'a> Resolver<'a> {
                     return None;
                 }
                 return Some(mark);
+            }
+
+            if cur.kind == ScopeKind::Fn && stop_an_fn_scope {
+                return None;
             }
 
             if let Some(parent) = &cur.parent {
@@ -422,7 +440,9 @@ macro_rules! typed_ref {
     ($name:ident, $T:ty) => {
         fn $name(&mut self, node: &mut $T) {
             if self.config.handle_types {
+                let ident_type = self.ident_type;
                 node.visit_mut_children_with(self);
+                self.ident_type = ident_type;
             }
         }
     };
@@ -433,9 +453,11 @@ macro_rules! typed_ref_init {
         fn $name(&mut self, node: &mut $T) {
             if self.config.handle_types {
                 let in_type = self.in_type;
+                let ident_type = self.ident_type;
                 self.ident_type = IdentType::Ref;
                 self.in_type = true;
                 node.visit_mut_children_with(self);
+                self.ident_type = ident_type;
                 self.in_type = in_type;
             }
         }
@@ -1005,7 +1027,7 @@ impl<'a> VisitMut for Resolver<'a> {
                 catch_param_decls: Default::default(),
                 excluded_from_catch: Default::default(),
             };
-            stmts.visit_mut_children_with(&mut hoister)
+            stmts.visit_mut_with(&mut hoister)
         }
 
         // Phase 2.
@@ -1038,6 +1060,21 @@ impl<'a> VisitMut for Resolver<'a> {
 
     fn visit_mut_pat(&mut self, p: &mut Pat) {
         p.visit_mut_children_with(self);
+    }
+
+    fn visit_mut_assign_pat(&mut self, node: &mut AssignPat) {
+        // visit the type first so that it doesn't resolve any
+        // identifiers from the others
+        node.type_ann.visit_mut_with(self);
+        node.left.visit_mut_with(self);
+        node.right.visit_mut_with(self);
+    }
+
+    fn visit_mut_rest_pat(&mut self, node: &mut RestPat) {
+        // visit the type first so that it doesn't resolve any
+        // identifiers from the arg
+        node.type_ann.visit_mut_with(self);
+        node.arg.visit_mut_with(self);
     }
 
     fn visit_mut_private_method(&mut self, m: &mut PrivateMethod) {
@@ -1099,7 +1136,7 @@ impl<'a> VisitMut for Resolver<'a> {
                 catch_param_decls: Default::default(),
                 excluded_from_catch: Default::default(),
             };
-            stmts.visit_mut_children_with(&mut hoister)
+            stmts.visit_mut_with(&mut hoister)
         }
 
         // Phase 2.
@@ -1462,7 +1499,7 @@ impl Hoister<'_, '_> {
     fn add_pat_id(&mut self, id: &mut Ident) {
         if self.in_catch_body {
             // If we have a binding, it's different variable.
-            if self.resolver.mark_for_ref(&id.sym).is_some()
+            if self.resolver.mark_for_ref_inner(&id.sym, true).is_some()
                 && self.catch_param_decls.contains(&id.sym)
             {
                 return;
@@ -1539,20 +1576,16 @@ impl VisitMut for Hoister<'_, '_> {
         let old_exclude = self.excluded_from_catch.clone();
         self.excluded_from_catch = Default::default();
 
-        let params: Vec<Id> = find_ids(&c.param);
+        let old_in_catch_body = self.in_catch_body;
+
+        let params: Vec<Id> = find_pat_ids(&c.param);
 
         self.catch_param_decls
             .extend(params.into_iter().map(|v| v.0));
 
-        {
-            let old_in_catch_body = self.in_catch_body;
+        self.in_catch_body = true;
+        c.body.visit_mut_with(self);
 
-            self.in_catch_body = true;
-
-            c.body.visit_mut_with(self);
-
-            self.in_catch_body = old_in_catch_body;
-        }
         let orig = self.catch_param_decls.clone();
 
         // let mut excluded = find_ids::<_, Id>(&c.body);
@@ -1564,10 +1597,12 @@ impl VisitMut for Hoister<'_, '_> {
         //     self.resolver.mark_for_ref(&id.0).is_none()
         // });
 
+        self.in_catch_body = false;
         c.param.visit_mut_with(self);
 
         self.catch_param_decls = orig;
 
+        self.in_catch_body = old_in_catch_body;
         self.excluded_from_catch = old_exclude;
     }
 
@@ -1787,5 +1822,61 @@ impl VisitMut for Hoister<'_, '_> {
     #[inline]
     fn visit_mut_var_declarator(&mut self, node: &mut VarDeclarator) {
         node.name.visit_mut_with(self);
+    }
+
+    /// should visit var decls first, cause var decl may appear behind the
+    /// usage. this can deal with code below:
+    /// ```js
+    /// try {} catch (Ic) {
+    ///   throw Ic;
+    /// }
+    /// var Ic;
+    /// ```
+    /// the `Ic` defined by catch param and the `Ic` defined by `var Ic` are
+    /// different variables.
+    /// If we deal with the `var Ic` first, we can know
+    /// that there is already an global declaration of Ic when deal with the try
+    /// block.
+    fn visit_mut_module_items(&mut self, items: &mut Vec<ModuleItem>) {
+        let mut other_items = vec![];
+
+        for item in items {
+            match item {
+                ModuleItem::Stmt(Stmt::Decl(Decl::Var(decl)))
+                | ModuleItem::ModuleDecl(ModuleDecl::ExportDecl(ExportDecl {
+                    decl: Decl::Var(decl),
+                    ..
+                })) if decl.kind == VarDeclKind::Var => {
+                    item.visit_mut_with(self);
+                }
+                _ => {
+                    other_items.push(item);
+                }
+            }
+        }
+
+        for other_item in other_items {
+            other_item.visit_mut_with(self);
+        }
+    }
+
+    /// see docs for `self.visit_mut_module_items`
+    fn visit_mut_stmts(&mut self, stmts: &mut Vec<Stmt>) {
+        let mut other_stmts = vec![];
+
+        for item in stmts {
+            match item {
+                Stmt::Decl(Decl::Var(decl)) if decl.kind == VarDeclKind::Var => {
+                    item.visit_mut_with(self);
+                }
+                _ => {
+                    other_stmts.push(item);
+                }
+            }
+        }
+
+        for other_stmt in other_stmts {
+            other_stmt.visit_mut_with(self);
+        }
     }
 }

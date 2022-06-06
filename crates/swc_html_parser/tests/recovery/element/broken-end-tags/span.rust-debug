@@ -33,81 +33,23 @@
     `----
 
   x Child
-    ,-[$DIR/tests/recovery/element/broken-end-tags/input.html:1:1]
-  1 | ,-> <div></div>
-  2 | |   <div><div></div></div>
-  3 | |   <div></div><div></div>
-  4 | |   <br>
-  5 | |   <br />
-  6 | |   <h:ællæ></h:ællæ>
-  7 | |   <div ⚡></div>
-  8 | |   <some-tag-1></some-tag-1><some-tag-2></some-tag-2>
-  9 | |   <a href="test.html"><div>hey</div></a>
- 10 | |   <CUSTOM-TAG></CUSTOM-TAG><div>Hello :)</div>
- 11 | |   <div>
- 12 | |   
- 13 | |   test
- 14 | |   
- 15 | |   </div>
- 16 | |   
- 17 | |   <div></div test="a">
- 18 | |   <div data-test="a"></div data-test="a">
- 19 | |   <br data-test="a" />
- 20 | |   <br data-test="a" >
- 21 | |   <br data-test="a">
- 22 | |   <div
- 23 | |   >
- 24 | |   Test
- 25 | |   </div
- 26 | |   >
- 27 | |   
- 28 | |   <div>test</div foo="bar" />
- 29 | `-> <div>test</div/>
-    `----
 
   x Element
-    ,-[$DIR/tests/recovery/element/broken-end-tags/input.html:1:1]
-  1 | ,-> <div></div>
-  2 | |   <div><div></div></div>
-  3 | |   <div></div><div></div>
-  4 | |   <br>
-  5 | |   <br />
-  6 | |   <h:ællæ></h:ællæ>
-  7 | |   <div ⚡></div>
-  8 | |   <some-tag-1></some-tag-1><some-tag-2></some-tag-2>
-  9 | |   <a href="test.html"><div>hey</div></a>
- 10 | |   <CUSTOM-TAG></CUSTOM-TAG><div>Hello :)</div>
- 11 | |   <div>
- 12 | |   
- 13 | |   test
- 14 | |   
- 15 | |   </div>
- 16 | |   
- 17 | |   <div></div test="a">
- 18 | |   <div data-test="a"></div data-test="a">
- 19 | |   <br data-test="a" />
- 20 | |   <br data-test="a" >
- 21 | |   <br data-test="a">
- 22 | |   <div
- 23 | |   >
- 24 | |   Test
- 25 | |   </div
- 26 | |   >
- 27 | |   
- 28 | |   <div>test</div foo="bar" />
- 29 | `-> <div>test</div/>
-    `----
+
+  x Child
+
+  x Element
 
   x Child
    ,-[$DIR/tests/recovery/element/broken-end-tags/input.html:1:1]
  1 | <div></div>
-   : ^^^^^
+   : ^^^^^^^^^^^
    `----
 
   x Element
    ,-[$DIR/tests/recovery/element/broken-end-tags/input.html:1:1]
  1 | <div></div>
-   : ^^^^^
+   : ^^^^^^^^^^^
    `----
 
   x Child
@@ -127,25 +69,25 @@
   x Child
    ,-[$DIR/tests/recovery/element/broken-end-tags/input.html:2:1]
  2 | <div><div></div></div>
-   : ^^^^^^^^^^
+   : ^^^^^^^^^^^^^^^^^^^^^^
    `----
 
   x Element
    ,-[$DIR/tests/recovery/element/broken-end-tags/input.html:2:1]
  2 | <div><div></div></div>
-   : ^^^^^^^^^^
+   : ^^^^^^^^^^^^^^^^^^^^^^
    `----
 
   x Child
    ,-[$DIR/tests/recovery/element/broken-end-tags/input.html:2:1]
  2 | <div><div></div></div>
-   :      ^^^^^
+   :      ^^^^^^^^^^^
    `----
 
   x Element
    ,-[$DIR/tests/recovery/element/broken-end-tags/input.html:2:1]
  2 | <div><div></div></div>
-   :      ^^^^^
+   :      ^^^^^^^^^^^
    `----
 
   x Child
@@ -165,25 +107,25 @@
   x Child
    ,-[$DIR/tests/recovery/element/broken-end-tags/input.html:3:1]
  3 | <div></div><div></div>
-   : ^^^^^
+   : ^^^^^^^^^^^
    `----
 
   x Element
    ,-[$DIR/tests/recovery/element/broken-end-tags/input.html:3:1]
  3 | <div></div><div></div>
-   : ^^^^^
+   : ^^^^^^^^^^^
    `----
 
   x Child
    ,-[$DIR/tests/recovery/element/broken-end-tags/input.html:3:1]
  3 | <div></div><div></div>
-   :            ^^^^^
+   :            ^^^^^^^^^^^
    `----
 
   x Element
    ,-[$DIR/tests/recovery/element/broken-end-tags/input.html:3:1]
  3 | <div></div><div></div>
-   :            ^^^^^
+   :            ^^^^^^^^^^^
    `----
 
   x Child
@@ -255,13 +197,13 @@
   x Child
    ,-[$DIR/tests/recovery/element/broken-end-tags/input.html:6:1]
  6 | <h:ællæ></h:ællæ>
-   : ^^^^^^^^^^
+   : ^^^^^^^^^^^^^^^^^^^^^
    `----
 
   x Element
    ,-[$DIR/tests/recovery/element/broken-end-tags/input.html:6:1]
  6 | <h:ællæ></h:ællæ>
-   : ^^^^^^^^^^
+   : ^^^^^^^^^^^^^^^^^^^^^
    `----
 
   x Child
@@ -281,19 +223,19 @@
   x Child
    ,-[$DIR/tests/recovery/element/broken-end-tags/input.html:7:1]
  7 | <div ⚡></div>
-   : ^^^^^^^^^
+   : ^^^^^^^^^^^^^^^
    `----
 
   x Element
    ,-[$DIR/tests/recovery/element/broken-end-tags/input.html:7:1]
  7 | <div ⚡></div>
-   : ^^^^^^^^^
+   : ^^^^^^^^^^^^^^^
    `----
 
   x Attribute
-   ,-[$DIR/tests/recovery/element/broken-end-tags/input.html:1:1]
- 1 | <div></div>
-   : ^
+   ,-[$DIR/tests/recovery/element/broken-end-tags/input.html:7:1]
+ 7 | <div ⚡></div>
+   :      ^^^
    `----
 
   x Child
@@ -313,25 +255,25 @@
   x Child
    ,-[$DIR/tests/recovery/element/broken-end-tags/input.html:8:1]
  8 | <some-tag-1></some-tag-1><some-tag-2></some-tag-2>
-   : ^^^^^^^^^^^^
+   : ^^^^^^^^^^^^^^^^^^^^^^^^^
    `----
 
   x Element
    ,-[$DIR/tests/recovery/element/broken-end-tags/input.html:8:1]
  8 | <some-tag-1></some-tag-1><some-tag-2></some-tag-2>
-   : ^^^^^^^^^^^^
+   : ^^^^^^^^^^^^^^^^^^^^^^^^^
    `----
 
   x Child
    ,-[$DIR/tests/recovery/element/broken-end-tags/input.html:8:1]
  8 | <some-tag-1></some-tag-1><some-tag-2></some-tag-2>
-   :                          ^^^^^^^^^^^^
+   :                          ^^^^^^^^^^^^^^^^^^^^^^^^^
    `----
 
   x Element
    ,-[$DIR/tests/recovery/element/broken-end-tags/input.html:8:1]
  8 | <some-tag-1></some-tag-1><some-tag-2></some-tag-2>
-   :                          ^^^^^^^^^^^^
+   :                          ^^^^^^^^^^^^^^^^^^^^^^^^^
    `----
 
   x Child
@@ -351,25 +293,31 @@
   x Child
    ,-[$DIR/tests/recovery/element/broken-end-tags/input.html:9:1]
  9 | <a href="test.html"><div>hey</div></a>
-   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
    `----
 
   x Element
    ,-[$DIR/tests/recovery/element/broken-end-tags/input.html:9:1]
  9 | <a href="test.html"><div>hey</div></a>
-   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   `----
+
+  x Attribute
+   ,-[$DIR/tests/recovery/element/broken-end-tags/input.html:9:1]
+ 9 | <a href="test.html"><div>hey</div></a>
+   :    ^^^^^^^^^^^^^^^^
    `----
 
   x Child
    ,-[$DIR/tests/recovery/element/broken-end-tags/input.html:9:1]
  9 | <a href="test.html"><div>hey</div></a>
-   :                     ^^^^^^^^
+   :                     ^^^^^^^^^^^^^^
    `----
 
   x Element
    ,-[$DIR/tests/recovery/element/broken-end-tags/input.html:9:1]
  9 | <a href="test.html"><div>hey</div></a>
-   :                     ^^^^^^^^
+   :                     ^^^^^^^^^^^^^^
    `----
 
   x Child
@@ -401,25 +349,25 @@
   x Child
     ,-[$DIR/tests/recovery/element/broken-end-tags/input.html:10:1]
  10 | <CUSTOM-TAG></CUSTOM-TAG><div>Hello :)</div>
-    : ^^^^^^^^^^^^
+    : ^^^^^^^^^^^^^^^^^^^^^^^^^
     `----
 
   x Element
     ,-[$DIR/tests/recovery/element/broken-end-tags/input.html:10:1]
  10 | <CUSTOM-TAG></CUSTOM-TAG><div>Hello :)</div>
-    : ^^^^^^^^^^^^
+    : ^^^^^^^^^^^^^^^^^^^^^^^^^
     `----
 
   x Child
     ,-[$DIR/tests/recovery/element/broken-end-tags/input.html:10:1]
  10 | <CUSTOM-TAG></CUSTOM-TAG><div>Hello :)</div>
-    :                          ^^^^^^^^^^^^^
+    :                          ^^^^^^^^^^^^^^^^^^^
     `----
 
   x Element
     ,-[$DIR/tests/recovery/element/broken-end-tags/input.html:10:1]
  10 | <CUSTOM-TAG></CUSTOM-TAG><div>Hello :)</div>
-    :                          ^^^^^^^^^^^^^
+    :                          ^^^^^^^^^^^^^^^^^^^
     `----
 
   x Child
@@ -453,8 +401,8 @@
  11 | ,-> <div>
  12 | |   
  13 | |   test
- 14 | `-> 
- 15 |     </div>
+ 14 | |   
+ 15 | `-> </div>
     `----
 
   x Element
@@ -462,8 +410,8 @@
  11 | ,-> <div>
  12 | |   
  13 | |   test
- 14 | `-> 
- 15 |     </div>
+ 14 | |   
+ 15 | `-> </div>
     `----
 
   x Child
@@ -501,13 +449,13 @@
   x Child
     ,-[$DIR/tests/recovery/element/broken-end-tags/input.html:17:1]
  17 | <div></div test="a">
-    : ^^^^^
+    : ^^^^^^^^^^^^^^^^^^^^
     `----
 
   x Element
     ,-[$DIR/tests/recovery/element/broken-end-tags/input.html:17:1]
  17 | <div></div test="a">
-    : ^^^^^
+    : ^^^^^^^^^^^^^^^^^^^^
     `----
 
   x Child
@@ -527,13 +475,19 @@
   x Child
     ,-[$DIR/tests/recovery/element/broken-end-tags/input.html:18:1]
  18 | <div data-test="a"></div data-test="a">
-    : ^^^^^^^^^^^^^^^^^^^
+    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     `----
 
   x Element
     ,-[$DIR/tests/recovery/element/broken-end-tags/input.html:18:1]
  18 | <div data-test="a"></div data-test="a">
-    : ^^^^^^^^^^^^^^^^^^^
+    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    `----
+
+  x Attribute
+    ,-[$DIR/tests/recovery/element/broken-end-tags/input.html:18:1]
+ 18 | <div data-test="a"></div data-test="a">
+    :      ^^^^^^^^^^^^^
     `----
 
   x Child
@@ -562,6 +516,12 @@
     : ^^^^^^^^^^^^^^^^^^^^
     `----
 
+  x Attribute
+    ,-[$DIR/tests/recovery/element/broken-end-tags/input.html:19:1]
+ 19 | <br data-test="a" />
+    :     ^^^^^^^^^^^^^
+    `----
+
   x Child
     ,-[$DIR/tests/recovery/element/broken-end-tags/input.html:19:1]
  19 | <br data-test="a" />
@@ -586,6 +546,12 @@
     ,-[$DIR/tests/recovery/element/broken-end-tags/input.html:20:1]
  20 | <br data-test="a" >
     : ^^^^^^^^^^^^^^^^^^^
+    `----
+
+  x Attribute
+    ,-[$DIR/tests/recovery/element/broken-end-tags/input.html:20:1]
+ 20 | <br data-test="a" >
+    :     ^^^^^^^^^^^^^
     `----
 
   x Child
@@ -614,6 +580,12 @@
     : ^^^^^^^^^^^^^^^^^^
     `----
 
+  x Attribute
+    ,-[$DIR/tests/recovery/element/broken-end-tags/input.html:21:1]
+ 21 | <br data-test="a">
+    :     ^^^^^^^^^^^^^
+    `----
+
   x Child
     ,-[$DIR/tests/recovery/element/broken-end-tags/input.html:21:1]
  21 | <br data-test="a">
@@ -632,16 +604,18 @@
     ,-[$DIR/tests/recovery/element/broken-end-tags/input.html:22:1]
  22 | ,-> <div
  23 | |   >
- 24 | `-> Test
- 25 |     </div
+ 24 | |   Test
+ 25 | |   </div
+ 26 | `-> >
     `----
 
   x Element
     ,-[$DIR/tests/recovery/element/broken-end-tags/input.html:22:1]
  22 | ,-> <div
  23 | |   >
- 24 | `-> Test
- 25 |     </div
+ 24 | |   Test
+ 25 | |   </div
+ 26 | `-> >
     `----
 
   x Child
@@ -675,13 +649,13 @@
   x Child
     ,-[$DIR/tests/recovery/element/broken-end-tags/input.html:28:1]
  28 | <div>test</div foo="bar" />
-    : ^^^^^^^^^
+    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^
     `----
 
   x Element
     ,-[$DIR/tests/recovery/element/broken-end-tags/input.html:28:1]
  28 | <div>test</div foo="bar" />
-    : ^^^^^^^^^
+    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^
     `----
 
   x Child
@@ -713,13 +687,13 @@
   x Child
     ,-[$DIR/tests/recovery/element/broken-end-tags/input.html:29:1]
  29 | <div>test</div/>
-    : ^^^^^^^^^
+    : ^^^^^^^^^^^^^^^^
     `----
 
   x Element
     ,-[$DIR/tests/recovery/element/broken-end-tags/input.html:29:1]
  29 | <div>test</div/>
-    : ^^^^^^^^^
+    : ^^^^^^^^^^^^^^^^
     `----
 
   x Child

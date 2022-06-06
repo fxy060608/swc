@@ -1,20 +1,22 @@
 use std::mem::take;
 
+#[allow(unused_imports)]
 use retain_mut::RetainMut;
 use swc_atoms::js_word;
 use swc_common::{util::take::Take, Spanned, DUMMY_SP};
 use swc_ecma_ast::*;
 use swc_ecma_utils::{
-    contains_arguments, contains_this_expr, ident::IdentLike, prepend_stmts, undefined, ExprExt,
-    Id, StmtLike, UsageFinder,
+    contains_arguments, contains_this_expr, prepend_stmts, undefined, ExprExt, IdentUsageFinder,
+    StmtLike,
 };
 use swc_ecma_visit::{noop_visit_type, Visit, VisitWith};
 use tracing::{span, Level};
 
 use super::{is_pure_undefined, Optimizer};
 use crate::{
+    alias::{collect_infects_from, AliasConfig},
     compress::{
-        optimize::util::replace_id_with_expr,
+        optimize::{unused::PropertyAccessOpts, util::replace_id_with_expr},
         util::{is_directive, is_ident_used_by, replace_expr},
     },
     debug::dump,
@@ -438,7 +440,7 @@ where
                         if right.exprs.len() >= 2
                             && right.exprs[..right.exprs.len() - 1]
                                 .iter()
-                                .all(|e| !e.may_have_side_effects())
+                                .all(|e| !e.may_have_side_effects(&self.expr_ctx))
                         {
                             return true;
                         }
@@ -463,7 +465,7 @@ where
                     Expr::Seq(mut right)
                         if right.exprs[..right.exprs.len() - 1]
                             .iter()
-                            .all(|e| !e.may_have_side_effects()) =>
+                            .all(|e| !e.may_have_side_effects(&self.expr_ctx)) =>
                     {
                         new_exprs.extend(right.exprs.drain(..right.exprs.len() - 1));
                         new_exprs.push(Box::new(Expr::Assign(AssignExpr {
@@ -548,7 +550,7 @@ where
         }
 
         if let Some(last) = e.exprs.last() {
-            if is_pure_undefined(last) {
+            if is_pure_undefined(&self.expr_ctx, last) {
                 self.changed = true;
                 report_change!("sequences: Shifting void");
 
@@ -780,7 +782,7 @@ where
 
                                 match bv.init.as_deref_mut() {
                                     Some(b_init) => {
-                                        if UsageFinder::find(&an.id, b_init) {
+                                        if IdentUsageFinder::find(&an.to_id(), b_init) {
                                             log_abort!(
                                                 "We can't duplicated binding because initializer \
                                                  uses the previous declaration of the variable"
@@ -900,8 +902,7 @@ where
                         }
 
                         if let Some(id) = a1.last_mut().unwrap().id() {
-                            // TODO(kdy1): Optimize
-                            if idents_used_by(&**e2).contains(&id) {
+                            if IdentUsageFinder::find(&id, &**e2) {
                                 break;
                             }
                         }
@@ -913,7 +914,7 @@ where
 
                         if let Some(id) = a1.last_mut().unwrap().id() {
                             // TODO(kdy1): Optimize
-                            if idents_used_by(&**e2).contains(&id) {
+                            if IdentUsageFinder::find(&id, &**e2) {
                                 break;
                             }
                         }
@@ -932,12 +933,14 @@ where
             return false;
         }
 
+        trace_op!("is_skippable_for_seq");
+
         match e {
             Expr::Ident(e) => {
                 if let Some(a) = a {
                     match a {
                         Mergable::Var(a) => {
-                            if is_ident_used_by(e.to_id(), &**a) {
+                            if is_ident_used_by(e.to_id(), &a.init) {
                                 log_abort!("ident used by a (var)");
                                 return false;
                             }
@@ -949,20 +952,107 @@ where
                             }
                         }
                     }
+
+                    // We can't proceed if the rhs (a.id = b.right) is
+                    // initialized with an initializer
+                    // (a.right) which has a side effect for pc (b.left)
+                    //
+                    // ```js
+                    // 
+                    //  function f(x) {
+                    //      pc = 200;
+                    //      return 100;
+                    //  }
+                    //  function x() {
+                    //      var t = f();
+                    //      pc += t;
+                    //      return pc;
+                    //  }
+                    //  var pc = 0;
+                    //  console.log(x());
+                    // ```
+                    //
+                    let ids_used_by_a_init = match a {
+                        Mergable::Var(a) => a.init.as_ref().map(|init| {
+                            collect_infects_from(init, AliasConfig { marks: self.marks })
+                        }),
+                        Mergable::Expr(a) => match a {
+                            Expr::Assign(AssignExpr {
+                                left,
+                                right,
+                                op: op!("="),
+                                ..
+                            }) => {
+                                if left.as_ident().is_some() {
+                                    Some(collect_infects_from(
+                                        right,
+                                        AliasConfig { marks: self.marks },
+                                    ))
+                                } else {
+                                    None
+                                }
+                            }
+
+                            _ => None,
+                        },
+                    };
+
+                    if let Some(ids_used_by_a_init) = ids_used_by_a_init {
+                        let deps = self.data.expand_infected(ids_used_by_a_init, 64);
+
+                        let deps = match deps {
+                            Ok(v) => v,
+                            Err(()) => return false,
+                        };
+                        if deps.contains(&e.to_id()) {
+                            return false;
+                        }
+                    }
+                }
+
+                return true;
+            }
+
+            Expr::Member(MemberExpr { obj, prop, .. }) => {
+                if self.should_preserve_property_access(
+                    obj,
+                    PropertyAccessOpts {
+                        allow_getter: false,
+                        only_ident: false,
+                    },
+                ) {
+                    return false;
+                }
+
+                if let MemberProp::Computed(prop) = prop {
+                    if !self.is_skippable_for_seq(a, &prop.expr) {
+                        return false;
+                    }
                 }
 
                 return true;
             }
 
             Expr::Lit(..) => return true,
+
+            Expr::Yield(..) | Expr::Await(..) => return false,
+
             Expr::Unary(UnaryExpr {
-                op: op!("!") | op!("void") | op!("typeof"),
+                op: op!("!") | op!("void") | op!("typeof") | op!(unary, "-") | op!(unary, "+"),
                 arg,
                 ..
             }) => return self.is_skippable_for_seq(a, arg),
 
             Expr::Bin(BinExpr { left, right, .. }) => {
                 return self.is_skippable_for_seq(a, left) && self.is_skippable_for_seq(a, right)
+            }
+
+            Expr::Cond(CondExpr {
+                test, cons, alt, ..
+            }) => {
+                return self.is_skippable_for_seq(a, test)
+                    && self.is_skippable_for_seq(a, cons)
+                    && self.is_skippable_for_seq(a, alt)
             }
 
             Expr::Assign(e) => {
@@ -1019,11 +1109,41 @@ where
                     return true;
                 }
 
+                for p in &e.props {
+                    match p {
+                        PropOrSpread::Spread(_) => return false,
+                        PropOrSpread::Prop(p) => match &**p {
+                            Prop::Shorthand(i) => {
+                                if !self.is_skippable_for_seq(a, &Expr::Ident(i.clone())) {
+                                    return false;
+                                }
+                            }
+                            Prop::KeyValue(kv) => {
+                                if let PropName::Computed(key) = &kv.key {
+                                    if !self.is_skippable_for_seq(a, &key.expr) {
+                                        return false;
+                                    }
+                                }
+
+                                if !self.is_skippable_for_seq(a, &kv.value) {
+                                    return false;
+                                }
+                            }
+                            Prop::Assign(_) => {
+                                log_abort!("assign property");
+                                return false;
+                            }
+                            _ => {
+                                log_abort!("handler is not implemented for this kind of property");
+                                return false;
+                            }
+                        },
+                    }
+                }
+
                 // TODO: Check for side effects in object properties.
 
-                log_abort!("unimpl: object");
-
-                return false;
+                return true;
             }
 
             Expr::Array(e) => {
@@ -1052,12 +1172,29 @@ where
                         }
                     }
                 }
+
+                // TODO(kdy1): We can calculate side effects of call expressions
+                // in some cases.
+            }
+
+            Expr::Seq(SeqExpr { exprs, .. }) => {
+                return exprs.iter().all(|e| self.is_skippable_for_seq(a, e));
+            }
+
+            Expr::TaggedTpl(..) | Expr::New(..) => {
+                // TODO(kdy1): We can optimize some known calls.
+
+                return false;
+            }
+
+            Expr::Tpl(Tpl { exprs, .. }) => {
+                return exprs.iter().all(|e| self.is_skippable_for_seq(a, e));
             }
 
             _ => {}
         }
 
-        if !e.may_have_side_effects() {
+        if !e.may_have_side_effects(&self.expr_ctx) {
             return true;
         }
 
@@ -1189,7 +1326,7 @@ where
                     return Ok(true);
                 }
 
-                if obj.may_have_side_effects() {
+                if obj.may_have_side_effects(&self.expr_ctx) {
                     return Ok(false);
                 }
 
@@ -1240,7 +1377,7 @@ where
                     },
                 }
 
-                if should_not_check_rhs_of_assign(a, b) {
+                if self.should_not_check_rhs_of_assign(a, b)? {
                     return Ok(false);
                 }
 
@@ -1249,7 +1386,7 @@ where
             }
 
             Expr::Assign(b) => {
-                if should_not_check_rhs_of_assign(a, b) {
+                if self.should_not_check_rhs_of_assign(a, b)? {
                     return Ok(false);
                 }
 
@@ -1259,7 +1396,11 @@ where
                     None => return Ok(false),
                 };
 
-                if UsageFinder::find(&b_left, &b.right) {
+                if !self.is_skippable_for_seq(Some(a), &Expr::Ident(b_left.clone())) {
+                    return Ok(false);
+                }
+
+                if IdentUsageFinder::find(&b_left.to_id(), &b.right) {
                     return Err(());
                 }
 
@@ -1477,79 +1618,153 @@ where
 
     fn replace_seq_update(&mut self, a: &mut Mergable, b: &mut Expr) -> Result<bool, ()> {
         if let Mergable::Expr(a) = a {
-            if let Expr::Update(UpdateExpr {
-                op,
-                prefix: false,
-                arg,
-                ..
-            }) = *a
-            {
-                if let Expr::Ident(a_id) = &**arg {
-                    if let Some(usage) = self.data.vars.get(&a_id.to_id()) {
-                        if let Some(VarDeclKind::Const) = usage.var_kind {
-                            return Err(());
-                        }
-                    }
-
-                    let mut v = UsageCounter {
-                        expr_usage: Default::default(),
-                        pat_usage: Default::default(),
-                        target: &*a_id,
-                        in_lhs: false,
-                    };
-                    b.visit_with(&mut v);
-                    if v.expr_usage != 1 || v.pat_usage != 0 {
-                        log_abort!(
-                            "sequences: Aborting merging of an update expression because of usage \
-                             counts ({}, ref = {}, pat = {})",
-                            a_id,
-                            v.expr_usage,
-                            v.pat_usage
-                        );
-
-                        return Ok(false);
-                    }
-
-                    let mut replaced = false;
-                    replace_expr(b, |e| {
-                        if replaced {
-                            return;
+            match a {
+                Expr::Update(UpdateExpr {
+                    op,
+                    prefix: false,
+                    arg,
+                    ..
+                }) => {
+                    if let Expr::Ident(a_id) = &**arg {
+                        if let Some(usage) = self.data.vars.get(&a_id.to_id()) {
+                            if let Some(VarDeclKind::Const) = usage.var_kind {
+                                return Err(());
+                            }
                         }
 
-                        if let Expr::Ident(orig_expr) = &*e {
-                            if orig_expr.to_id() == a_id.to_id() {
-                                replaced = true;
-                                *e = Expr::Update(UpdateExpr {
-                                    span: DUMMY_SP,
-                                    op: *op,
-                                    prefix: true,
-                                    arg: Box::new(Expr::Ident(orig_expr.clone())),
-                                });
+                        let mut v = UsageCounter {
+                            expr_usage: Default::default(),
+                            pat_usage: Default::default(),
+                            target: &*a_id,
+                            in_lhs: false,
+                        };
+                        b.visit_with(&mut v);
+                        if v.expr_usage != 1 || v.pat_usage != 0 {
+                            log_abort!(
+                                "sequences: Aborting merging of an update expression because of \
+                                 usage counts ({}, ref = {}, pat = {})",
+                                a_id,
+                                v.expr_usage,
+                                v.pat_usage
+                            );
+
+                            return Ok(false);
+                        }
+
+                        let mut replaced = false;
+                        replace_expr(b, |e| {
+                            if replaced {
                                 return;
                             }
-                        }
 
-                        if let Expr::Update(e @ UpdateExpr { prefix: false, .. }) = e {
-                            if let Expr::Ident(arg) = &*e.arg {
-                                if *op == e.op && arg.to_id() == a_id.to_id() {
-                                    e.prefix = true;
+                            if let Expr::Ident(orig_expr) = &*e {
+                                if orig_expr.to_id() == a_id.to_id() {
                                     replaced = true;
+                                    *e = Expr::Update(UpdateExpr {
+                                        span: DUMMY_SP,
+                                        op: *op,
+                                        prefix: true,
+                                        arg: Box::new(Expr::Ident(orig_expr.clone())),
+                                    });
+                                    return;
                                 }
                             }
-                        }
-                    });
-                    if replaced {
-                        self.changed = true;
-                        report_change!(
-                            "sequences: Merged update expression into another expression",
-                        );
 
-                        a.take();
-                        return Ok(true);
+                            if let Expr::Update(e @ UpdateExpr { prefix: false, .. }) = e {
+                                if let Expr::Ident(arg) = &*e.arg {
+                                    if *op == e.op && arg.to_id() == a_id.to_id() {
+                                        e.prefix = true;
+                                        replaced = true;
+                                    }
+                                }
+                            }
+                        });
+                        if replaced {
+                            self.changed = true;
+                            report_change!(
+                                "sequences: Merged update expression into another expression",
+                            );
+
+                            a.take();
+                            return Ok(true);
+                        }
                     }
                 }
 
-                return Ok(false);
+                Expr::Update(UpdateExpr {
+                    op,
+                    prefix: true,
+                    arg,
+                    ..
+                }) => {
+                    if let Expr::Ident(a_id) = &**arg {
+                        if let Some(usage) = self.data.vars.get(&a_id.to_id()) {
+                            if let Some(VarDeclKind::Const) = usage.var_kind {
+                                return Err(());
+                            }
+                        }
+
+                        let mut v = UsageCounter {
+                            expr_usage: Default::default(),
+                            pat_usage: Default::default(),
+                            target: &*a_id,
+                            in_lhs: false,
+                        };
+                        b.visit_with(&mut v);
+                        if v.expr_usage != 1 || v.pat_usage != 0 {
+                            log_abort!(
+                                "sequences: Aborting merging of an update expression because of \
+                                 usage counts ({}, ref = {}, pat = {})",
+                                a_id,
+                                v.expr_usage,
+                                v.pat_usage
+                            );
+
+                            return Ok(false);
+                        }
+
+                        let mut replaced = false;
+                        replace_expr(b, |e| {
+                            if replaced {
+                                return;
+                            }
+
+                            if let Expr::Ident(orig_expr) = &*e {
+                                if orig_expr.to_id() == a_id.to_id() {
+                                    replaced = true;
+                                    *e = Expr::Update(UpdateExpr {
+                                        span: DUMMY_SP,
+                                        op: *op,
+                                        prefix: true,
+                                        arg: Box::new(Expr::Ident(orig_expr.clone())),
+                                    });
+                                    return;
+                                }
+                            }
+
+                            if let Expr::Update(e @ UpdateExpr { prefix: false, .. }) = e {
+                                if let Expr::Ident(arg) = &*e.arg {
+                                    if *op == e.op && arg.to_id() == a_id.to_id() {
+                                        e.prefix = true;
+                                        replaced = true;
+                                    }
+                                }
+                            }
+                        });
+                        if replaced {
+                            self.changed = true;
+                            report_change!(
+                                "sequences: Merged prefix update expression into another \
+                                 expression",
+                            );
+
+                            a.take();
+                            return Ok(true);
+                        }
+                    }
+                }
+
+                _ => {}
             }
         }
 
@@ -1637,7 +1852,15 @@ where
             }
         };
 
-        if a_right.is_this() || a_right.is_ident_ref_to(js_word!("arguments")) {
+        if a_right.is_this()
+            || matches!(
+                &**a_right,
+                Expr::Ident(Ident {
+                    sym: js_word!("arguments"),
+                    ..
+                })
+            )
+        {
             return Ok(false);
         }
         if contains_arguments(&**a_right) {
@@ -1661,12 +1884,12 @@ where
 
             let used_by_b = idents_used_by(&*b);
 
-            for id in &deps {
-                if *id == left_id.to_id() {
+            for dep_id in &deps {
+                if *dep_id == left_id.to_id() {
                     continue;
                 }
 
-                if used_by_b.contains(id) {
+                if used_by_b.contains(dep_id) {
                     log_abort!("[X] sequences: Aborting because of deps");
                     return Err(());
                 }
@@ -1712,31 +1935,32 @@ where
 
         Ok(true)
     }
-}
 
-/// TODO(kdy1): Optimize this
-///
-/// See https://github.com/swc-project/swc/pull/3480
-///
-/// This works, but it should be optimized.
-///
-/// This check blocks optimization of clearly valid optimizations like `i += 1,
-/// arr[i]`
-fn should_not_check_rhs_of_assign(a: &Mergable, b: &mut AssignExpr) -> bool {
-    if let Some(a_id) = a.id() {
-        match a {
-            Mergable::Expr(Expr::Assign(AssignExpr { op: op!("="), .. })) => {}
-            Mergable::Expr(Expr::Assign(..)) => {
-                let used_by_b = idents_used_by(&*b.right);
-                if used_by_b.contains(&a_id) {
-                    return true;
+    /// TODO(kdy1): Optimize this
+    ///
+    /// See https://github.com/swc-project/swc/pull/3480
+    ///
+    /// This works, but it should be optimized.
+    ///
+    /// This check blocks optimization of clearly valid optimizations like `i +=
+    /// 1, arr[i]`
+    //
+    fn should_not_check_rhs_of_assign(&self, a: &Mergable, b: &mut AssignExpr) -> Result<bool, ()> {
+        if let Some(a_id) = a.id() {
+            match a {
+                Mergable::Expr(Expr::Assign(AssignExpr { op: op!("="), .. })) => {}
+                Mergable::Expr(Expr::Assign(..)) => {
+                    let used_by_b = idents_used_by(&*b.right);
+                    if used_by_b.contains(&a_id) {
+                        return Ok(true);
+                    }
                 }
+                _ => {}
             }
-            _ => {}
         }
-    }
 
-    false
+        Ok(false)
+    }
 }
 
 struct UsageCounter<'a> {

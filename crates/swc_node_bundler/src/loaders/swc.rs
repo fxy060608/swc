@@ -192,22 +192,26 @@ impl SwcLoader {
                         swc::config::Config {
                             jsc: JscConfig {
                                 transform: {
-                                    c.jsc.transform.as_ref().map(|c| TransformConfig {
-                                        react: c.react.clone(),
-                                        const_modules: c.const_modules.clone(),
-                                        optimizer: None,
-                                        legacy_decorator: c.legacy_decorator,
-                                        decorator_metadata: c.decorator_metadata,
-                                        hidden: Default::default(),
-                                        ..Default::default()
-                                    })
+                                    c.jsc
+                                        .transform
+                                        .as_ref()
+                                        .map(|c| TransformConfig {
+                                            react: c.react.clone(),
+                                            const_modules: c.const_modules.clone(),
+                                            optimizer: None,
+                                            legacy_decorator: c.legacy_decorator,
+                                            decorator_metadata: c.decorator_metadata,
+                                            hidden: Default::default(),
+                                            ..Default::default()
+                                        })
+                                        .into()
                                 },
-                                external_helpers: true,
+                                external_helpers: true.into(),
                                 ..c.jsc.clone()
                             },
                             module: None,
-                            minify: false,
-                            input_source_map: InputSourceMap::Bool(false),
+                            minify: false.into(),
+                            input_source_map: InputSourceMap::Bool(false).into(),
                             ..c.clone()
                         }
                     },
