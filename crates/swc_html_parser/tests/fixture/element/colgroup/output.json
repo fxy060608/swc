@@ -60,7 +60,7 @@
                 "end": 45,
                 "ctxt": 0
               },
-              "value": "\n    "
+              "data": "\n    "
             },
             {
               "type": "Element",
@@ -80,10 +80,11 @@
                     "end": 60,
                     "ctxt": 0
                   },
-                  "value": "Document"
+                  "data": "Document"
                 }
               ],
-              "content": null
+              "content": null,
+              "isSelfClosing": false
             },
             {
               "type": "Text",
@@ -92,10 +93,11 @@
                 "end": 69,
                 "ctxt": 0
               },
-              "value": "\n"
+              "data": "\n"
             }
           ],
-          "content": null
+          "content": null,
+          "isSelfClosing": false
         },
         {
           "type": "Text",
@@ -104,7 +106,7 @@
             "end": 77,
             "ctxt": 0
           },
-          "value": "\n"
+          "data": "\n"
         },
         {
           "type": "Element",
@@ -124,7 +126,7 @@
                 "end": 84,
                 "ctxt": 0
               },
-              "value": "\n"
+              "data": "\n"
             },
             {
               "type": "Element",
@@ -144,7 +146,7 @@
                     "end": 96,
                     "ctxt": 0
                   },
-                  "value": "\n    "
+                  "data": "\n    "
                 },
                 {
                   "type": "Element",
@@ -164,10 +166,11 @@
                         "end": 129,
                         "ctxt": 0
                       },
-                      "value": "Superheros and sidekicks"
+                      "data": "Superheros and sidekicks"
                     }
                   ],
-                  "content": null
+                  "content": null,
+                  "isSelfClosing": false
                 },
                 {
                   "type": "Text",
@@ -176,7 +179,7 @@
                     "end": 144,
                     "ctxt": 0
                   },
-                  "value": "\n    "
+                  "data": "\n    "
                 },
                 {
                   "type": "Element",
@@ -200,7 +203,8 @@
                       "namespace": "http://www.w3.org/1999/xhtml",
                       "attributes": [],
                       "children": [],
-                      "content": null
+                      "content": null,
+                      "isSelfClosing": false
                     },
                     {
                       "type": "Element",
@@ -238,7 +242,8 @@
                         }
                       ],
                       "children": [],
-                      "content": null
+                      "content": null,
+                      "isSelfClosing": false
                     },
                     {
                       "type": "Element",
@@ -276,10 +281,12 @@
                         }
                       ],
                       "children": [],
-                      "content": null
+                      "content": null,
+                      "isSelfClosing": false
                     }
                   ],
-                  "content": null
+                  "content": null,
+                  "isSelfClosing": false
                 },
                 {
                   "type": "Text",
@@ -288,13 +295,13 @@
                     "end": 232,
                     "ctxt": 0
                   },
-                  "value": "\n    "
+                  "data": "\n    "
                 },
                 {
                   "type": "Element",
                   "span": {
                     "start": 0,
-                    "end": 416,
+                    "end": 0,
                     "ctxt": 0
                   },
                   "tagName": "tbody",
@@ -319,7 +326,7 @@
                             "end": 245,
                             "ctxt": 0
                           },
-                          "value": "\n        "
+                          "data": "\n        "
                         },
                         {
                           "type": "Element",
@@ -339,10 +346,11 @@
                                 "end": 251,
                                 "ctxt": 0
                               },
-                              "value": " "
+                              "data": " "
                             }
                           ],
-                          "content": null
+                          "content": null,
+                          "isSelfClosing": false
                         },
                         {
                           "type": "Text",
@@ -351,7 +359,7 @@
                             "end": 265,
                             "ctxt": 0
                           },
-                          "value": "\n        "
+                          "data": "\n        "
                         },
                         {
                           "type": "Element",
@@ -384,10 +392,11 @@
                                 "end": 287,
                                 "ctxt": 0
                               },
-                              "value": "Batman"
+                              "data": "Batman"
                             }
                           ],
-                          "content": null
+                          "content": null,
+                          "isSelfClosing": false
                         },
                         {
                           "type": "Text",
@@ -396,7 +405,7 @@
                             "end": 301,
                             "ctxt": 0
                           },
-                          "value": "\n        "
+                          "data": "\n        "
                         },
                         {
                           "type": "Element",
@@ -429,10 +438,11 @@
                                 "end": 322,
                                 "ctxt": 0
                               },
-                              "value": "Robin"
+                              "data": "Robin"
                             }
                           ],
-                          "content": null
+                          "content": null,
+                          "isSelfClosing": false
                         },
                         {
                           "type": "Text",
@@ -441,7 +451,7 @@
                             "end": 336,
                             "ctxt": 0
                           },
-                          "value": "\n        "
+                          "data": "\n        "
                         },
                         {
                           "type": "Element",
@@ -474,10 +484,11 @@
                                 "end": 361,
                                 "ctxt": 0
                               },
-                              "value": "The Flash"
+                              "data": "The Flash"
                             }
                           ],
-                          "content": null
+                          "content": null,
+                          "isSelfClosing": false
                         },
                         {
                           "type": "Text",
@@ -486,7 +497,7 @@
                             "end": 375,
                             "ctxt": 0
                           },
-                          "value": "\n        "
+                          "data": "\n        "
                         },
                         {
                           "type": "Element",
@@ -519,10 +530,11 @@
                                 "end": 400,
                                 "ctxt": 0
                               },
-                              "value": "Kid Flash"
+                              "data": "Kid Flash"
                             }
                           ],
-                          "content": null
+                          "content": null,
+                          "isSelfClosing": false
                         },
                         {
                           "type": "Text",
@@ -531,10 +543,11 @@
                             "end": 410,
                             "ctxt": 0
                           },
-                          "value": "\n    "
+                          "data": "\n    "
                         }
                       ],
-                      "content": null
+                      "content": null,
+                      "isSelfClosing": false
                     },
                     {
                       "type": "Text",
@@ -543,13 +556,15 @@
                         "end": 416,
                         "ctxt": 0
                       },
-                      "value": "\n"
+                      "data": "\n"
                     }
                   ],
-                  "content": null
+                  "content": null,
+                  "isSelfClosing": false
                 }
               ],
-              "content": null
+              "content": null,
+              "isSelfClosing": false
             },
             {
               "type": "Text",
@@ -558,13 +573,15 @@
                 "end": 433,
                 "ctxt": 0
               },
-              "value": "\n\n"
+              "data": "\n\n"
             }
           ],
-          "content": null
+          "content": null,
+          "isSelfClosing": false
         }
       ],
-      "content": null
+      "content": null,
+      "isSelfClosing": false
     }
   ]
 }

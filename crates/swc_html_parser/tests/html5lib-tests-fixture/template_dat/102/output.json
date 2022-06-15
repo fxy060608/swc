@@ -11,7 +11,7 @@
       "type": "Element",
       "span": {
         "start": 0,
-        "end": 72,
+        "end": 0,
         "ctxt": 0
       },
       "tagName": "html",
@@ -22,14 +22,15 @@
           "type": "Element",
           "span": {
             "start": 0,
-            "end": 7,
+            "end": 0,
             "ctxt": 0
           },
           "tagName": "head",
           "namespace": "http://www.w3.org/1999/xhtml",
           "attributes": [],
           "children": [],
-          "content": null
+          "content": null,
+          "isSelfClosing": false
         },
         {
           "type": "Element",
@@ -57,7 +58,7 @@
                   "type": "Element",
                   "span": {
                     "start": 0,
-                    "end": 54,
+                    "end": 0,
                     "ctxt": 0
                   },
                   "tagName": "tbody",
@@ -123,22 +124,27 @@
                                           "end": 43,
                                           "ctxt": 0
                                         },
-                                        "value": "Foo"
+                                        "data": "Foo"
                                       }
                                     ]
-                                  }
+                                  },
+                                  "isSelfClosing": false
                                 }
                               ],
-                              "content": null
+                              "content": null,
+                              "isSelfClosing": false
                             }
                           ],
-                          "content": null
+                          "content": null,
+                          "isSelfClosing": false
                         }
                       ],
-                      "content": null
+                      "content": null,
+                      "isSelfClosing": false
                     }
                   ],
-                  "content": null
+                  "content": null,
+                  "isSelfClosing": false
                 },
                 {
                   "type": "Element",
@@ -158,19 +164,23 @@
                         "end": 64,
                         "ctxt": 0
                       },
-                      "value": "A"
+                      "data": "A"
                     }
                   ],
-                  "content": null
+                  "content": null,
+                  "isSelfClosing": false
                 }
               ],
-              "content": null
+              "content": null,
+              "isSelfClosing": false
             }
           ],
-          "content": null
+          "content": null,
+          "isSelfClosing": false
         }
       ],
-      "content": null
+      "content": null,
+      "isSelfClosing": false
     }
   ]
 }

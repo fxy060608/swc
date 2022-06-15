@@ -11,7 +11,7 @@
       "type": "Element",
       "span": {
         "start": 0,
-        "end": 44,
+        "end": 0,
         "ctxt": 0
       },
       "tagName": "html",
@@ -22,20 +22,21 @@
           "type": "Element",
           "span": {
             "start": 0,
-            "end": 4,
+            "end": 0,
             "ctxt": 0
           },
           "tagName": "head",
           "namespace": "http://www.w3.org/1999/xhtml",
           "attributes": [],
           "children": [],
-          "content": null
+          "content": null,
+          "isSelfClosing": false
         },
         {
           "type": "Element",
           "span": {
             "start": 0,
-            "end": 44,
+            "end": 0,
             "ctxt": 0
           },
           "tagName": "body",
@@ -53,7 +54,8 @@
               "namespace": "http://www.w3.org/1999/xhtml",
               "attributes": [],
               "children": [],
-              "content": null
+              "content": null,
+              "isSelfClosing": false
             },
             {
               "type": "Element",
@@ -84,10 +86,11 @@
                         "end": 12,
                         "ctxt": 0
                       },
-                      "value": "Bold "
+                      "data": "Bold "
                     }
                   ],
-                  "content": null
+                  "content": null,
+                  "isSelfClosing": false
                 },
                 {
                   "type": "Text",
@@ -96,10 +99,11 @@
                     "end": 25,
                     "ctxt": 0
                   },
-                  "value": " Not bold"
+                  "data": " Not bold"
                 }
               ],
-              "content": null
+              "content": null,
+              "isSelfClosing": false
             },
             {
               "type": "Text",
@@ -108,13 +112,15 @@
                 "end": 44,
                 "ctxt": 0
               },
-              "value": "\nAlso not bold."
+              "data": "\nAlso not bold."
             }
           ],
-          "content": null
+          "content": null,
+          "isSelfClosing": false
         }
       ],
-      "content": null
+      "content": null,
+      "isSelfClosing": false
     }
   ]
 }

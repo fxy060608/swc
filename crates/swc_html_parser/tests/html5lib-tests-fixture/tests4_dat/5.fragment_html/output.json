@@ -10,20 +10,21 @@
       "type": "Element",
       "span": {
         "start": 0,
-        "end": 2,
+        "end": 0,
         "ctxt": 0
       },
       "tagName": "head",
       "namespace": "http://www.w3.org/1999/xhtml",
       "attributes": [],
       "children": [],
-      "content": null
+      "content": null,
+      "isSelfClosing": false
     },
     {
       "type": "Element",
       "span": {
         "start": 0,
-        "end": 25,
+        "end": 0,
         "ctxt": 0
       },
       "tagName": "body",
@@ -37,10 +38,11 @@
             "end": 25,
             "ctxt": 0
           },
-          "value": "setting html's innerHTML"
+          "data": "setting html's innerHTML"
         }
       ],
-      "content": null
+      "content": null,
+      "isSelfClosing": false
     }
   ]
 }

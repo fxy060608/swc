@@ -11,7 +11,7 @@
       "type": "Element",
       "span": {
         "start": 0,
-        "end": 51,
+        "end": 0,
         "ctxt": 0
       },
       "tagName": "html",
@@ -22,20 +22,21 @@
           "type": "Element",
           "span": {
             "start": 0,
-            "end": 8,
+            "end": 0,
             "ctxt": 0
           },
           "tagName": "head",
           "namespace": "http://www.w3.org/1999/xhtml",
           "attributes": [],
           "children": [],
-          "content": null
+          "content": null,
+          "isSelfClosing": false
         },
         {
           "type": "Element",
           "span": {
             "start": 0,
-            "end": 51,
+            "end": 0,
             "ctxt": 0
           },
           "tagName": "body",
@@ -57,7 +58,7 @@
                   "type": "Element",
                   "span": {
                     "start": 0,
-                    "end": 13,
+                    "end": 0,
                     "ctxt": 0
                   },
                   "tagName": "colgroup",
@@ -75,10 +76,12 @@
                       "namespace": "http://www.w3.org/1999/xhtml",
                       "attributes": [],
                       "children": [],
-                      "content": null
+                      "content": null,
+                      "isSelfClosing": false
                     }
                   ],
-                  "content": null
+                  "content": null,
+                  "isSelfClosing": false
                 },
                 {
                   "type": "Element",
@@ -91,13 +94,14 @@
                   "namespace": "http://www.w3.org/1999/xhtml",
                   "attributes": [],
                   "children": [],
-                  "content": null
+                  "content": null,
+                  "isSelfClosing": false
                 },
                 {
                   "type": "Element",
                   "span": {
                     "start": 0,
-                    "end": 25,
+                    "end": 0,
                     "ctxt": 0
                   },
                   "tagName": "colgroup",
@@ -115,16 +119,18 @@
                       "namespace": "http://www.w3.org/1999/xhtml",
                       "attributes": [],
                       "children": [],
-                      "content": null
+                      "content": null,
+                      "isSelfClosing": false
                     }
                   ],
-                  "content": null
+                  "content": null,
+                  "isSelfClosing": false
                 },
                 {
                   "type": "Element",
                   "span": {
                     "start": 0,
-                    "end": 29,
+                    "end": 0,
                     "ctxt": 0
                   },
                   "tagName": "tbody",
@@ -142,16 +148,18 @@
                       "namespace": "http://www.w3.org/1999/xhtml",
                       "attributes": [],
                       "children": [],
-                      "content": null
+                      "content": null,
+                      "isSelfClosing": false
                     }
                   ],
-                  "content": null
+                  "content": null,
+                  "isSelfClosing": false
                 },
                 {
                   "type": "Element",
                   "span": {
                     "start": 0,
-                    "end": 34,
+                    "end": 0,
                     "ctxt": 0
                   },
                   "tagName": "colgroup",
@@ -169,16 +177,18 @@
                       "namespace": "http://www.w3.org/1999/xhtml",
                       "attributes": [],
                       "children": [],
-                      "content": null
+                      "content": null,
+                      "isSelfClosing": false
                     }
                   ],
-                  "content": null
+                  "content": null,
+                  "isSelfClosing": false
                 },
                 {
                   "type": "Element",
                   "span": {
                     "start": 0,
-                    "end": 38,
+                    "end": 0,
                     "ctxt": 0
                   },
                   "tagName": "tbody",
@@ -189,7 +199,7 @@
                       "type": "Element",
                       "span": {
                         "start": 0,
-                        "end": 38,
+                        "end": 0,
                         "ctxt": 0
                       },
                       "tagName": "tr",
@@ -207,19 +217,22 @@
                           "namespace": "http://www.w3.org/1999/xhtml",
                           "attributes": [],
                           "children": [],
-                          "content": null
+                          "content": null,
+                          "isSelfClosing": false
                         }
                       ],
-                      "content": null
+                      "content": null,
+                      "isSelfClosing": false
                     }
                   ],
-                  "content": null
+                  "content": null,
+                  "isSelfClosing": false
                 },
                 {
                   "type": "Element",
                   "span": {
                     "start": 0,
-                    "end": 43,
+                    "end": 0,
                     "ctxt": 0
                   },
                   "tagName": "colgroup",
@@ -237,19 +250,24 @@
                       "namespace": "http://www.w3.org/1999/xhtml",
                       "attributes": [],
                       "children": [],
-                      "content": null
+                      "content": null,
+                      "isSelfClosing": false
                     }
                   ],
-                  "content": null
+                  "content": null,
+                  "isSelfClosing": false
                 }
               ],
-              "content": null
+              "content": null,
+              "isSelfClosing": false
             }
           ],
-          "content": null
+          "content": null,
+          "isSelfClosing": false
         }
       ],
-      "content": null
+      "content": null,
+      "isSelfClosing": false
     }
   ]
 }

@@ -11,7 +11,7 @@
       "type": "Element",
       "span": {
         "start": 1,
-        "end": 289,
+        "end": 7,
         "ctxt": 0
       },
       "tagName": "html",
@@ -22,20 +22,21 @@
           "type": "Element",
           "span": {
             "start": 0,
-            "end": 24,
+            "end": 0,
             "ctxt": 0
           },
           "tagName": "head",
           "namespace": "http://www.w3.org/1999/xhtml",
           "attributes": [],
           "children": [],
-          "content": null
+          "content": null,
+          "isSelfClosing": false
         },
         {
           "type": "Element",
           "span": {
             "start": 0,
-            "end": 289,
+            "end": 0,
             "ctxt": 0
           },
           "tagName": "body",
@@ -84,13 +85,15 @@
                         "end": 41,
                         "ctxt": 0
                       },
-                      "value": "Italic and Red"
+                      "data": "Italic and Red"
                     }
                   ],
-                  "content": null
+                  "content": null,
+                  "isSelfClosing": false
                 }
               ],
-              "content": null
+              "content": null,
+              "isSelfClosing": false
             },
             {
               "type": "Element",
@@ -145,10 +148,11 @@
                             "end": 59,
                             "ctxt": 0
                           },
-                          "value": "Italic and Red "
+                          "data": "Italic and Red "
                         }
                       ],
-                      "content": null
+                      "content": null,
+                      "isSelfClosing": false
                     },
                     {
                       "type": "Text",
@@ -157,10 +161,11 @@
                         "end": 79,
                         "ctxt": 0
                       },
-                      "value": " Just italic."
+                      "data": " Just italic."
                     }
                   ],
-                  "content": null
+                  "content": null,
+                  "isSelfClosing": false
                 },
                 {
                   "type": "Text",
@@ -169,10 +174,11 @@
                     "end": 96,
                     "ctxt": 0
                   },
-                  "value": " Italic only."
+                  "data": " Italic only."
                 }
               ],
-              "content": null
+              "content": null,
+              "isSelfClosing": false
             },
             {
               "type": "Text",
@@ -181,7 +187,7 @@
                 "end": 107,
                 "ctxt": 0
               },
-              "value": " Plain\n"
+              "data": " Plain\n"
             },
             {
               "type": "Element",
@@ -201,7 +207,7 @@
                     "end": 131,
                     "ctxt": 0
                   },
-                  "value": "I should not be red. "
+                  "data": "I should not be red. "
                 },
                 {
                   "type": "Element",
@@ -234,7 +240,7 @@
                         "end": 152,
                         "ctxt": 0
                       },
-                      "value": "Red. "
+                      "data": "Red. "
                     },
                     {
                       "type": "Element",
@@ -254,16 +260,19 @@
                             "end": 170,
                             "ctxt": 0
                           },
-                          "value": "Italic and red."
+                          "data": "Italic and red."
                         }
                       ],
-                      "content": null
+                      "content": null,
+                      "isSelfClosing": false
                     }
                   ],
-                  "content": null
+                  "content": null,
+                  "isSelfClosing": false
                 }
               ],
-              "content": null
+              "content": null,
+              "isSelfClosing": false
             },
             {
               "type": "Element",
@@ -307,13 +316,15 @@
                         "end": 175,
                         "ctxt": 0
                       },
-                      "value": "\n"
+                      "data": "\n"
                     }
                   ],
-                  "content": null
+                  "content": null,
+                  "isSelfClosing": false
                 }
               ],
-              "content": null
+              "content": null,
+              "isSelfClosing": false
             },
             {
               "type": "Element",
@@ -368,10 +379,11 @@
                             "end": 194,
                             "ctxt": 0
                           },
-                          "value": "Italic and red. "
+                          "data": "Italic and red. "
                         }
                       ],
-                      "content": null
+                      "content": null,
+                      "isSelfClosing": false
                     },
                     {
                       "type": "Text",
@@ -380,10 +392,11 @@
                         "end": 203,
                         "ctxt": 0
                       },
-                      "value": " Red."
+                      "data": " Red."
                     }
                   ],
-                  "content": null
+                  "content": null,
+                  "isSelfClosing": false
                 },
                 {
                   "type": "Text",
@@ -392,10 +405,11 @@
                     "end": 231,
                     "ctxt": 0
                   },
-                  "value": " I should not be red."
+                  "data": " I should not be red."
                 }
               ],
-              "content": null
+              "content": null,
+              "isSelfClosing": false
             },
             {
               "type": "Text",
@@ -404,7 +418,7 @@
                 "end": 236,
                 "ctxt": 0
               },
-              "value": "\n"
+              "data": "\n"
             },
             {
               "type": "Element",
@@ -424,7 +438,7 @@
                     "end": 244,
                     "ctxt": 0
                   },
-                  "value": "Bold "
+                  "data": "Bold "
                 },
                 {
                   "type": "Element",
@@ -444,13 +458,15 @@
                         "end": 262,
                         "ctxt": 0
                       },
-                      "value": "Bold and italic"
+                      "data": "Bold and italic"
                     }
                   ],
-                  "content": null
+                  "content": null,
+                  "isSelfClosing": false
                 }
               ],
-              "content": null
+              "content": null,
+              "isSelfClosing": false
             },
             {
               "type": "Element",
@@ -470,10 +486,11 @@
                     "end": 279,
                     "ctxt": 0
                   },
-                  "value": " Only Italic "
+                  "data": " Only Italic "
                 }
               ],
-              "content": null
+              "content": null,
+              "isSelfClosing": false
             },
             {
               "type": "Text",
@@ -482,13 +499,15 @@
                 "end": 289,
                 "ctxt": 0
               },
-              "value": " Plain"
+              "data": " Plain"
             }
           ],
-          "content": null
+          "content": null,
+          "isSelfClosing": false
         }
       ],
-      "content": null
+      "content": null,
+      "isSelfClosing": false
     }
   ]
 }

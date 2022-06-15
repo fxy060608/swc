@@ -47,7 +47,7 @@
                 "end": 35,
                 "ctxt": 0
               },
-              "value": "\n    "
+              "data": "\n    "
             },
             {
               "type": "Element",
@@ -67,10 +67,11 @@
                     "end": 62,
                     "ctxt": 0
                   },
-                  "value": "\n\n        Test\n\n    "
+                  "data": "\n\n        Test\n\n    "
                 }
               ],
-              "content": null
+              "content": null,
+              "isSelfClosing": false
             },
             {
               "type": "Text",
@@ -79,10 +80,11 @@
                 "end": 71,
                 "ctxt": 0
               },
-              "value": "\n"
+              "data": "\n"
             }
           ],
-          "content": null
+          "content": null,
+          "isSelfClosing": false
         },
         {
           "type": "Text",
@@ -91,7 +93,7 @@
             "end": 79,
             "ctxt": 0
           },
-          "value": "\n"
+          "data": "\n"
         },
         {
           "type": "Element",
@@ -111,7 +113,7 @@
                 "end": 87,
                 "ctxt": 0
               },
-              "value": "\n\n"
+              "data": "\n\n"
             },
             {
               "type": "Element",
@@ -131,10 +133,11 @@
                     "end": 110,
                     "ctxt": 0
                   },
-                  "value": "This is a paragraph."
+                  "data": "This is a paragraph."
                 }
               ],
-              "content": null
+              "content": null,
+              "isSelfClosing": false
             },
             {
               "type": "Text",
@@ -143,7 +146,7 @@
                 "end": 115,
                 "ctxt": 0
               },
-              "value": "\n"
+              "data": "\n"
             },
             {
               "type": "Element",
@@ -163,10 +166,11 @@
                     "end": 144,
                     "ctxt": 0
                   },
-                  "value": "This is another paragraph."
+                  "data": "This is another paragraph."
                 }
               ],
-              "content": null
+              "content": null,
+              "isSelfClosing": false
             },
             {
               "type": "Text",
@@ -175,13 +179,15 @@
                 "end": 166,
                 "ctxt": 0
               },
-              "value": "\n\n\n\n"
+              "data": "\n\n\n\n"
             }
           ],
-          "content": null
+          "content": null,
+          "isSelfClosing": false
         }
       ],
-      "content": null
+      "content": null,
+      "isSelfClosing": false
     }
   ]
 }

@@ -22,14 +22,15 @@
           "type": "Element",
           "span": {
             "start": 0,
-            "end": 17,
+            "end": 0,
             "ctxt": 0
           },
           "tagName": "head",
           "namespace": "http://www.w3.org/1999/xhtml",
           "attributes": [],
           "children": [],
-          "content": null
+          "content": null,
+          "isSelfClosing": false
         },
         {
           "type": "Element",
@@ -69,10 +70,11 @@
                     "end": 36,
                     "ctxt": 0
                   },
-                  "value": "A"
+                  "data": "A"
                 }
               ],
-              "content": null
+              "content": null,
+              "isSelfClosing": false
             },
             {
               "type": "Comment",
@@ -84,7 +86,8 @@
               "data": "2"
             }
           ],
-          "content": null
+          "content": null,
+          "isSelfClosing": false
         },
         {
           "type": "Comment",
@@ -113,10 +116,11 @@
                 "end": 85,
                 "ctxt": 0
               },
-              "value": "B"
+              "data": "B"
             }
           ],
-          "content": null
+          "content": null,
+          "isSelfClosing": false
         },
         {
           "type": "Comment",
@@ -145,13 +149,15 @@
                 "end": 130,
                 "ctxt": 0
               },
-              "value": "C"
+              "data": "C"
             }
           ],
-          "content": null
+          "content": null,
+          "isSelfClosing": false
         }
       ],
-      "content": null
+      "content": null,
+      "isSelfClosing": false
     },
     {
       "type": "Comment",

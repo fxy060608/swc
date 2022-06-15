@@ -11,7 +11,7 @@
       "type": "Element",
       "span": {
         "start": 0,
-        "end": 73,
+        "end": 0,
         "ctxt": 0
       },
       "tagName": "html",
@@ -22,20 +22,21 @@
           "type": "Element",
           "span": {
             "start": 0,
-            "end": 16,
+            "end": 0,
             "ctxt": 0
           },
           "tagName": "head",
           "namespace": "http://www.w3.org/1999/xhtml",
           "attributes": [],
           "children": [],
-          "content": null
+          "content": null,
+          "isSelfClosing": false
         },
         {
           "type": "Element",
           "span": {
             "start": 0,
-            "end": 73,
+            "end": 0,
             "ctxt": 0
           },
           "tagName": "body",
@@ -95,13 +96,15 @@
                             "end": 35,
                             "ctxt": 0
                           },
-                          "value": "A"
+                          "data": "A"
                         }
                       ],
-                      "content": null
+                      "content": null,
+                      "isSelfClosing": false
                     }
                   ],
-                  "content": null
+                  "content": null,
+                  "isSelfClosing": false
                 },
                 {
                   "type": "Element",
@@ -121,19 +124,23 @@
                         "end": 62,
                         "ctxt": 0
                       },
-                      "value": "B"
+                      "data": "B"
                     }
                   ],
-                  "content": null
+                  "content": null,
+                  "isSelfClosing": false
                 }
               ],
-              "content": null
+              "content": null,
+              "isSelfClosing": false
             }
           ],
-          "content": null
+          "content": null,
+          "isSelfClosing": false
         }
       ],
-      "content": null
+      "content": null,
+      "isSelfClosing": false
     }
   ]
 }

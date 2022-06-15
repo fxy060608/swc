@@ -11,7 +11,7 @@
       "type": "Element",
       "span": {
         "start": 0,
-        "end": 33,
+        "end": 0,
         "ctxt": 0
       },
       "tagName": "html",
@@ -22,20 +22,21 @@
           "type": "Element",
           "span": {
             "start": 0,
-            "end": 2,
+            "end": 0,
             "ctxt": 0
           },
           "tagName": "head",
           "namespace": "http://www.w3.org/1999/xhtml",
           "attributes": [],
           "children": [],
-          "content": null
+          "content": null,
+          "isSelfClosing": false
         },
         {
           "type": "Element",
           "span": {
             "start": 0,
-            "end": 33,
+            "end": 0,
             "ctxt": 0
           },
           "tagName": "body",
@@ -49,7 +50,7 @@
                 "end": 6,
                 "ctxt": 0
               },
-              "value": "Line1"
+              "data": "Line1"
             },
             {
               "type": "Element",
@@ -62,7 +63,8 @@
               "namespace": "http://www.w3.org/1999/xhtml",
               "attributes": [],
               "children": [],
-              "content": null
+              "content": null,
+              "isSelfClosing": false
             },
             {
               "type": "Text",
@@ -71,7 +73,7 @@
                 "end": 15,
                 "ctxt": 0
               },
-              "value": "Line2"
+              "data": "Line2"
             },
             {
               "type": "Element",
@@ -84,7 +86,8 @@
               "namespace": "http://www.w3.org/1999/xhtml",
               "attributes": [],
               "children": [],
-              "content": null
+              "content": null,
+              "isSelfClosing": false
             },
             {
               "type": "Text",
@@ -93,7 +96,7 @@
                 "end": 24,
                 "ctxt": 0
               },
-              "value": "Line3"
+              "data": "Line3"
             },
             {
               "type": "Element",
@@ -106,7 +109,8 @@
               "namespace": "http://www.w3.org/1999/xhtml",
               "attributes": [],
               "children": [],
-              "content": null
+              "content": null,
+              "isSelfClosing": false
             },
             {
               "type": "Text",
@@ -115,13 +119,15 @@
                 "end": 33,
                 "ctxt": 0
               },
-              "value": "Line4"
+              "data": "Line4"
             }
           ],
-          "content": null
+          "content": null,
+          "isSelfClosing": false
         }
       ],
-      "content": null
+      "content": null,
+      "isSelfClosing": false
     }
   ]
 }

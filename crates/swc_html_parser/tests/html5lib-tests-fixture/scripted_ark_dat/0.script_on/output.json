@@ -11,7 +11,7 @@
       "type": "Element",
       "span": {
         "start": 0,
-        "end": 144,
+        "end": 0,
         "ctxt": 0
       },
       "tagName": "html",
@@ -22,20 +22,21 @@
           "type": "Element",
           "span": {
             "start": 0,
-            "end": 4,
+            "end": 0,
             "ctxt": 0
           },
           "tagName": "head",
           "namespace": "http://www.w3.org/1999/xhtml",
           "attributes": [],
           "children": [],
-          "content": null
+          "content": null,
+          "isSelfClosing": false
         },
         {
           "type": "Element",
           "span": {
             "start": 0,
-            "end": 144,
+            "end": 0,
             "ctxt": 0
           },
           "tagName": "body",
@@ -143,10 +144,11 @@
                                     "end": 118,
                                     "ctxt": 0
                                   },
-                                  "value": "document.getElementsByTagName(\"font\")[2].setAttribute(\"size\", \"5\");"
+                                  "data": "document.getElementsByTagName(\"font\")[2].setAttribute(\"size\", \"5\");"
                                 }
                               ],
-                              "content": null
+                              "content": null,
+                              "isSelfClosing": false
                             },
                             {
                               "type": "Element",
@@ -172,19 +174,24 @@
                                 }
                               ],
                               "children": [],
-                              "content": null
+                              "content": null,
+                              "isSelfClosing": false
                             }
                           ],
-                          "content": null
+                          "content": null,
+                          "isSelfClosing": false
                         }
                       ],
-                      "content": null
+                      "content": null,
+                      "isSelfClosing": false
                     }
                   ],
-                  "content": null
+                  "content": null,
+                  "isSelfClosing": false
                 }
               ],
-              "content": null
+              "content": null,
+              "isSelfClosing": false
             },
             {
               "type": "Element",
@@ -276,25 +283,31 @@
                                 "end": 144,
                                 "ctxt": 0
                               },
-                              "value": "X"
+                              "data": "X"
                             }
                           ],
-                          "content": null
+                          "content": null,
+                          "isSelfClosing": false
                         }
                       ],
-                      "content": null
+                      "content": null,
+                      "isSelfClosing": false
                     }
                   ],
-                  "content": null
+                  "content": null,
+                  "isSelfClosing": false
                 }
               ],
-              "content": null
+              "content": null,
+              "isSelfClosing": false
             }
           ],
-          "content": null
+          "content": null,
+          "isSelfClosing": false
         }
       ],
-      "content": null
+      "content": null,
+      "isSelfClosing": false
     }
   ]
 }

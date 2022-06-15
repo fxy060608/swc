@@ -11,7 +11,7 @@
       "type": "Element",
       "span": {
         "start": 0,
-        "end": 51,
+        "end": 0,
         "ctxt": 0
       },
       "tagName": "html",
@@ -22,7 +22,7 @@
           "type": "Element",
           "span": {
             "start": 0,
-            "end": 26,
+            "end": 0,
             "ctxt": 0
           },
           "tagName": "head",
@@ -47,19 +47,21 @@
                     "end": 15,
                     "ctxt": 0
                   },
-                  "value": "<!--"
+                  "data": "<!--"
                 }
               ],
-              "content": null
+              "content": null,
+              "isSelfClosing": false
             }
           ],
-          "content": null
+          "content": null,
+          "isSelfClosing": false
         },
         {
           "type": "Element",
           "span": {
             "start": 0,
-            "end": 51,
+            "end": 0,
             "ctxt": 0
           },
           "tagName": "body",
@@ -73,7 +75,7 @@
                 "end": 27,
                 "ctxt": 0
               },
-              "value": "X"
+              "data": "X"
             },
             {
               "type": "Element",
@@ -93,16 +95,19 @@
                     "end": 40,
                     "ctxt": 0
                   },
-                  "value": "-->"
+                  "data": "-->"
                 }
               ],
-              "content": null
+              "content": null,
+              "isSelfClosing": false
             }
           ],
-          "content": null
+          "content": null,
+          "isSelfClosing": false
         }
       ],
-      "content": null
+      "content": null,
+      "isSelfClosing": false
     }
   ]
 }

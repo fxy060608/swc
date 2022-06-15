@@ -30,7 +30,8 @@
         }
       ],
       "children": [],
-      "content": null
+      "content": null,
+      "isSelfClosing": false
     },
     {
       "type": "Text",
@@ -39,7 +40,7 @@
         "end": 21,
         "ctxt": 0
       },
-      "value": "X"
+      "data": "X"
     }
   ]
 }

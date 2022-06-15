@@ -22,7 +22,7 @@
       "type": "Element",
       "span": {
         "start": 0,
-        "end": 28,
+        "end": 0,
         "ctxt": 0
       },
       "tagName": "html",
@@ -33,20 +33,21 @@
           "type": "Element",
           "span": {
             "start": 0,
-            "end": 17,
+            "end": 0,
             "ctxt": 0
           },
           "tagName": "head",
           "namespace": "http://www.w3.org/1999/xhtml",
           "attributes": [],
           "children": [],
-          "content": null
+          "content": null,
+          "isSelfClosing": false
         },
         {
           "type": "Element",
           "span": {
             "start": 0,
-            "end": 28,
+            "end": 0,
             "ctxt": 0
           },
           "tagName": "body",
@@ -60,7 +61,7 @@
                 "end": 17,
                 "ctxt": 0
               },
-              "value": "a"
+              "data": "a"
             },
             {
               "type": "Element",
@@ -80,7 +81,7 @@
                     "end": 29,
                     "ctxt": 0
                   },
-                  "value": "bc"
+                  "data": "bc"
                 },
                 {
                   "type": "Element",
@@ -100,10 +101,11 @@
                         "end": 38,
                         "ctxt": 0
                       },
-                      "value": "de"
+                      "data": "de"
                     }
                   ],
-                  "content": null
+                  "content": null,
+                  "isSelfClosing": false
                 },
                 {
                   "type": "Text",
@@ -112,7 +114,7 @@
                     "end": 43,
                     "ctxt": 0
                   },
-                  "value": "f"
+                  "data": "f"
                 },
                 {
                   "type": "Element",
@@ -125,16 +127,20 @@
                   "namespace": "http://www.w3.org/1999/xhtml",
                   "attributes": [],
                   "children": [],
-                  "content": null
+                  "content": null,
+                  "isSelfClosing": false
                 }
               ],
-              "content": null
+              "content": null,
+              "isSelfClosing": false
             }
           ],
-          "content": null
+          "content": null,
+          "isSelfClosing": false
         }
       ],
-      "content": null
+      "content": null,
+      "isSelfClosing": false
     }
   ]
 }

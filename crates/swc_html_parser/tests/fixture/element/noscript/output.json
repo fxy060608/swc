@@ -60,7 +60,7 @@
                 "end": 45,
                 "ctxt": 0
               },
-              "value": "\n    "
+              "data": "\n    "
             },
             {
               "type": "Element",
@@ -80,10 +80,11 @@
                     "end": 60,
                     "ctxt": 0
                   },
-                  "value": "Document"
+                  "data": "Document"
                 }
               ],
-              "content": null
+              "content": null,
+              "isSelfClosing": false
             },
             {
               "type": "Text",
@@ -92,10 +93,11 @@
                 "end": 69,
                 "ctxt": 0
               },
-              "value": "\n"
+              "data": "\n"
             }
           ],
-          "content": null
+          "content": null,
+          "isSelfClosing": false
         },
         {
           "type": "Text",
@@ -104,7 +106,7 @@
             "end": 77,
             "ctxt": 0
           },
-          "value": "\n"
+          "data": "\n"
         },
         {
           "type": "Element",
@@ -124,7 +126,7 @@
                 "end": 84,
                 "ctxt": 0
               },
-              "value": "\n"
+              "data": "\n"
             },
             {
               "type": "Element",
@@ -144,7 +146,7 @@
                     "end": 95,
                     "ctxt": 0
                   },
-                  "value": " "
+                  "data": " "
                 },
                 {
                   "type": "Comment",
@@ -162,7 +164,7 @@
                     "end": 136,
                     "ctxt": 0
                   },
-                  "value": " "
+                  "data": " "
                 },
                 {
                   "type": "Element",
@@ -195,10 +197,11 @@
                         "end": 184,
                         "ctxt": 0
                       },
-                      "value": "External Link"
+                      "data": "External Link"
                     }
                   ],
-                  "content": null
+                  "content": null,
+                  "isSelfClosing": false
                 },
                 {
                   "type": "Text",
@@ -207,10 +210,11 @@
                     "end": 189,
                     "ctxt": 0
                   },
-                  "value": " "
+                  "data": " "
                 }
               ],
-              "content": null
+              "content": null,
+              "isSelfClosing": false
             },
             {
               "type": "Text",
@@ -219,7 +223,7 @@
                 "end": 201,
                 "ctxt": 0
               },
-              "value": "\n"
+              "data": "\n"
             },
             {
               "type": "Element",
@@ -252,10 +256,11 @@
                     "end": 249,
                     "ctxt": 0
                   },
-                  "value": "External Link"
+                  "data": "External Link"
                 }
               ],
-              "content": null
+              "content": null,
+              "isSelfClosing": false
             },
             {
               "type": "Text",
@@ -264,13 +269,15 @@
                 "end": 262,
                 "ctxt": 0
               },
-              "value": "\n\n"
+              "data": "\n\n"
             }
           ],
-          "content": null
+          "content": null,
+          "isSelfClosing": false
         }
       ],
-      "content": null
+      "content": null,
+      "isSelfClosing": false
     }
   ]
 }

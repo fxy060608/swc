@@ -11,7 +11,7 @@
       "type": "Element",
       "span": {
         "start": 0,
-        "end": 16,
+        "end": 0,
         "ctxt": 0
       },
       "tagName": "html",
@@ -22,20 +22,21 @@
           "type": "Element",
           "span": {
             "start": 0,
-            "end": 2,
+            "end": 0,
             "ctxt": 0
           },
           "tagName": "head",
           "namespace": "http://www.w3.org/1999/xhtml",
           "attributes": [],
           "children": [],
-          "content": null
+          "content": null,
+          "isSelfClosing": false
         },
         {
           "type": "Element",
           "span": {
             "start": 0,
-            "end": 16,
+            "end": 0,
             "ctxt": 0
           },
           "tagName": "body",
@@ -49,7 +50,7 @@
                 "end": 2,
                 "ctxt": 0
               },
-              "value": "x"
+              "data": "x"
             },
             {
               "type": "Element",
@@ -62,7 +63,8 @@
               "namespace": "http://www.w3.org/1999/xhtml",
               "attributes": [],
               "children": [],
-              "content": null
+              "content": null,
+              "isSelfClosing": false
             },
             {
               "type": "Text",
@@ -71,7 +73,7 @@
                 "end": 17,
                 "ctxt": 0
               },
-              "value": "x"
+              "data": "x"
             },
             {
               "type": "Element",
@@ -84,13 +86,16 @@
               "namespace": "http://www.w3.org/1999/xhtml",
               "attributes": [],
               "children": [],
-              "content": null
+              "content": null,
+              "isSelfClosing": false
             }
           ],
-          "content": null
+          "content": null,
+          "isSelfClosing": false
         }
       ],
-      "content": null
+      "content": null,
+      "isSelfClosing": false
     }
   ]
 }

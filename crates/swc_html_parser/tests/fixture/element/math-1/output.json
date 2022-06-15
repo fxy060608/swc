@@ -60,7 +60,7 @@
                 "end": 45,
                 "ctxt": 0
               },
-              "value": "\n    "
+              "data": "\n    "
             },
             {
               "type": "Element",
@@ -80,10 +80,11 @@
                     "end": 60,
                     "ctxt": 0
                   },
-                  "value": "Document"
+                  "data": "Document"
                 }
               ],
-              "content": null
+              "content": null,
+              "isSelfClosing": false
             },
             {
               "type": "Text",
@@ -92,10 +93,11 @@
                 "end": 69,
                 "ctxt": 0
               },
-              "value": "\n"
+              "data": "\n"
             }
           ],
-          "content": null
+          "content": null,
+          "isSelfClosing": false
         },
         {
           "type": "Text",
@@ -104,7 +106,7 @@
             "end": 77,
             "ctxt": 0
           },
-          "value": "\n"
+          "data": "\n"
         },
         {
           "type": "Element",
@@ -124,7 +126,7 @@
                 "end": 84,
                 "ctxt": 0
               },
-              "value": "\n"
+              "data": "\n"
             },
             {
               "type": "Element",
@@ -157,7 +159,7 @@
                     "end": 115,
                     "ctxt": 0
                   },
-                  "value": "\n    "
+                  "data": "\n    "
                 },
                 {
                   "type": "Element",
@@ -205,13 +207,16 @@
                           "namespace": "http://www.w3.org/1998/Math/MathML",
                           "attributes": [],
                           "children": [],
-                          "content": null
+                          "content": null,
+                          "isSelfClosing": true
                         }
                       ],
-                      "content": null
+                      "content": null,
+                      "isSelfClosing": false
                     }
                   ],
-                  "content": null
+                  "content": null,
+                  "isSelfClosing": false
                 },
                 {
                   "type": "Text",
@@ -220,7 +225,7 @@
                     "end": 160,
                     "ctxt": 0
                   },
-                  "value": "\n    "
+                  "data": "\n    "
                 },
                 {
                   "type": "Element",
@@ -268,7 +273,8 @@
                           "namespace": "http://www.w3.org/1998/Math/MathML",
                           "attributes": [],
                           "children": [],
-                          "content": null
+                          "content": null,
+                          "isSelfClosing": true
                         },
                         {
                           "type": "Element",
@@ -281,13 +287,16 @@
                           "namespace": "http://www.w3.org/1998/Math/MathML",
                           "attributes": [],
                           "children": [],
-                          "content": null
+                          "content": null,
+                          "isSelfClosing": true
                         }
                       ],
-                      "content": null
+                      "content": null,
+                      "isSelfClosing": false
                     }
                   ],
-                  "content": null
+                  "content": null,
+                  "isSelfClosing": false
                 },
                 {
                   "type": "Text",
@@ -296,7 +305,7 @@
                     "end": 209,
                     "ctxt": 0
                   },
-                  "value": "\n    "
+                  "data": "\n    "
                 },
                 {
                   "type": "Element",
@@ -373,13 +382,15 @@
                                         "end": 245,
                                         "ctxt": 0
                                       },
-                                      "value": "1"
+                                      "data": "1"
                                     }
                                   ],
-                                  "content": null
+                                  "content": null,
+                                  "isSelfClosing": false
                                 }
                               ],
-                              "content": null
+                              "content": null,
+                              "isSelfClosing": false
                             },
                             {
                               "type": "Element",
@@ -399,19 +410,23 @@
                                     "end": 262,
                                     "ctxt": 0
                                   },
-                                  "value": "a"
+                                  "data": "a"
                                 }
                               ],
-                              "content": null
+                              "content": null,
+                              "isSelfClosing": false
                             }
                           ],
-                          "content": null
+                          "content": null,
+                          "isSelfClosing": false
                         }
                       ],
-                      "content": null
+                      "content": null,
+                      "isSelfClosing": false
                     }
                   ],
-                  "content": null
+                  "content": null,
+                  "isSelfClosing": false
                 },
                 {
                   "type": "Text",
@@ -420,7 +435,7 @@
                     "end": 292,
                     "ctxt": 0
                   },
-                  "value": "\n    "
+                  "data": "\n    "
                 },
                 {
                   "type": "Element",
@@ -453,10 +468,11 @@
                         "end": 317,
                         "ctxt": 0
                       },
-                      "value": "⟨⟩"
+                      "data": "⟨⟩"
                     }
                   ],
-                  "content": null
+                  "content": null,
+                  "isSelfClosing": false
                 },
                 {
                   "type": "Text",
@@ -465,7 +481,7 @@
                     "end": 328,
                     "ctxt": 0
                   },
-                  "value": "\n    "
+                  "data": "\n    "
                 },
                 {
                   "type": "Element",
@@ -498,10 +514,11 @@
                         "end": 347,
                         "ctxt": 0
                       },
-                      "value": "𝕂"
+                      "data": "𝕂"
                     }
                   ],
-                  "content": null
+                  "content": null,
+                  "isSelfClosing": false
                 },
                 {
                   "type": "Text",
@@ -510,7 +527,7 @@
                     "end": 358,
                     "ctxt": 0
                   },
-                  "value": "\n    "
+                  "data": "\n    "
                 },
                 {
                   "type": "Element",
@@ -576,10 +593,11 @@
                                     "end": 393,
                                     "ctxt": 0
                                   },
-                                  "value": "a"
+                                  "data": "a"
                                 }
                               ],
-                              "content": null
+                              "content": null,
+                              "isSelfClosing": false
                             },
                             {
                               "type": "Element",
@@ -603,7 +621,8 @@
                                   "namespace": "http://www.w3.org/1998/Math/MathML",
                                   "attributes": [],
                                   "children": [],
-                                  "content": null
+                                  "content": null,
+                                  "isSelfClosing": true
                                 },
                                 {
                                   "type": "Element",
@@ -616,19 +635,24 @@
                                   "namespace": "http://www.w3.org/1998/Math/MathML",
                                   "attributes": [],
                                   "children": [],
-                                  "content": null
+                                  "content": null,
+                                  "isSelfClosing": true
                                 }
                               ],
-                              "content": null
+                              "content": null,
+                              "isSelfClosing": false
                             }
                           ],
-                          "content": null
+                          "content": null,
+                          "isSelfClosing": false
                         }
                       ],
-                      "content": null
+                      "content": null,
+                      "isSelfClosing": false
                     }
                   ],
-                  "content": null
+                  "content": null,
+                  "isSelfClosing": false
                 },
                 {
                   "type": "Text",
@@ -637,7 +661,7 @@
                     "end": 473,
                     "ctxt": 0
                   },
-                  "value": "\n    "
+                  "data": "\n    "
                 },
                 {
                   "type": "Element",
@@ -703,10 +727,11 @@
                                     "end": 508,
                                     "ctxt": 0
                                   },
-                                  "value": "a"
+                                  "data": "a"
                                 }
                               ],
-                              "content": null
+                              "content": null,
+                              "isSelfClosing": false
                             },
                             {
                               "type": "Element",
@@ -743,13 +768,16 @@
                                   "namespace": "http://www.w3.org/1999/xhtml",
                                   "attributes": [],
                                   "children": [],
-                                  "content": null
+                                  "content": null,
+                                  "isSelfClosing": false
                                 }
                               ],
-                              "content": null
+                              "content": null,
+                              "isSelfClosing": false
                             }
                           ],
-                          "content": null
+                          "content": null,
+                          "isSelfClosing": false
                         },
                         {
                           "type": "Element",
@@ -762,13 +790,16 @@
                           "namespace": "http://www.w3.org/1998/Math/MathML",
                           "attributes": [],
                           "children": [],
-                          "content": null
+                          "content": null,
+                          "isSelfClosing": true
                         }
                       ],
-                      "content": null
+                      "content": null,
+                      "isSelfClosing": false
                     }
                   ],
-                  "content": null
+                  "content": null,
+                  "isSelfClosing": false
                 },
                 {
                   "type": "Text",
@@ -777,10 +808,11 @@
                     "end": 609,
                     "ctxt": 0
                   },
-                  "value": "\n"
+                  "data": "\n"
                 }
               ],
-              "content": null
+              "content": null,
+              "isSelfClosing": false
             },
             {
               "type": "Text",
@@ -789,7 +821,7 @@
                 "end": 617,
                 "ctxt": 0
               },
-              "value": "\n\n"
+              "data": "\n\n"
             },
             {
               "type": "Element",
@@ -809,7 +841,7 @@
                     "end": 627,
                     "ctxt": 0
                   },
-                  "value": "\n    "
+                  "data": "\n    "
                 },
                 {
                   "type": "Element",
@@ -857,13 +889,16 @@
                           "namespace": "http://www.w3.org/1998/Math/MathML",
                           "attributes": [],
                           "children": [],
-                          "content": null
+                          "content": null,
+                          "isSelfClosing": true
                         }
                       ],
-                      "content": null
+                      "content": null,
+                      "isSelfClosing": false
                     }
                   ],
-                  "content": null
+                  "content": null,
+                  "isSelfClosing": false
                 },
                 {
                   "type": "Text",
@@ -872,7 +907,7 @@
                     "end": 672,
                     "ctxt": 0
                   },
-                  "value": "\n    "
+                  "data": "\n    "
                 },
                 {
                   "type": "Element",
@@ -933,13 +968,16 @@
                             }
                           ],
                           "children": [],
-                          "content": null
+                          "content": null,
+                          "isSelfClosing": true
                         }
                       ],
-                      "content": null
+                      "content": null,
+                      "isSelfClosing": false
                     }
                   ],
-                  "content": null
+                  "content": null,
+                  "isSelfClosing": false
                 },
                 {
                   "type": "Text",
@@ -948,7 +986,7 @@
                     "end": 734,
                     "ctxt": 0
                   },
-                  "value": "\n    "
+                  "data": "\n    "
                 },
                 {
                   "type": "Element",
@@ -1027,10 +1065,11 @@
                                     "end": 805,
                                     "ctxt": 0
                                   },
-                                  "value": "a"
+                                  "data": "a"
                                 }
                               ],
-                              "content": null
+                              "content": null,
+                              "isSelfClosing": false
                             },
                             {
                               "type": "Element",
@@ -1054,7 +1093,8 @@
                                   "namespace": "http://www.w3.org/1998/Math/MathML",
                                   "attributes": [],
                                   "children": [],
-                                  "content": null
+                                  "content": null,
+                                  "isSelfClosing": true
                                 },
                                 {
                                   "type": "Element",
@@ -1067,19 +1107,24 @@
                                   "namespace": "http://www.w3.org/1998/Math/MathML",
                                   "attributes": [],
                                   "children": [],
-                                  "content": null
+                                  "content": null,
+                                  "isSelfClosing": true
                                 }
                               ],
-                              "content": null
+                              "content": null,
+                              "isSelfClosing": false
                             }
                           ],
-                          "content": null
+                          "content": null,
+                          "isSelfClosing": false
                         }
                       ],
-                      "content": null
+                      "content": null,
+                      "isSelfClosing": false
                     }
                   ],
-                  "content": null
+                  "content": null,
+                  "isSelfClosing": false
                 },
                 {
                   "type": "Text",
@@ -1088,7 +1133,7 @@
                     "end": 885,
                     "ctxt": 0
                   },
-                  "value": "\n    "
+                  "data": "\n    "
                 },
                 {
                   "type": "Element",
@@ -1154,19 +1199,23 @@
                                     "end": 928,
                                     "ctxt": 0
                                   },
-                                  "value": "x"
+                                  "data": "x"
                                 }
                               ],
-                              "content": null
+                              "content": null,
+                              "isSelfClosing": false
                             }
                           ],
-                          "content": null
+                          "content": null,
+                          "isSelfClosing": false
                         }
                       ],
-                      "content": null
+                      "content": null,
+                      "isSelfClosing": false
                     }
                   ],
-                  "content": null
+                  "content": null,
+                  "isSelfClosing": false
                 },
                 {
                   "type": "Text",
@@ -1175,7 +1224,7 @@
                     "end": 961,
                     "ctxt": 0
                   },
-                  "value": "\n    "
+                  "data": "\n    "
                 },
                 {
                   "type": "Element",
@@ -1241,19 +1290,23 @@
                                     "end": 998,
                                     "ctxt": 0
                                   },
-                                  "value": "x"
+                                  "data": "x"
                                 }
                               ],
-                              "content": null
+                              "content": null,
+                              "isSelfClosing": false
                             }
                           ],
-                          "content": null
+                          "content": null,
+                          "isSelfClosing": false
                         }
                       ],
-                      "content": null
+                      "content": null,
+                      "isSelfClosing": false
                     }
                   ],
-                  "content": null
+                  "content": null,
+                  "isSelfClosing": false
                 },
                 {
                   "type": "Text",
@@ -1262,7 +1315,7 @@
                     "end": 1028,
                     "ctxt": 0
                   },
-                  "value": "\n    "
+                  "data": "\n    "
                 },
                 {
                   "type": "Element",
@@ -1328,19 +1381,23 @@
                                     "end": 1065,
                                     "ctxt": 0
                                   },
-                                  "value": "x"
+                                  "data": "x"
                                 }
                               ],
-                              "content": null
+                              "content": null,
+                              "isSelfClosing": false
                             }
                           ],
-                          "content": null
+                          "content": null,
+                          "isSelfClosing": false
                         }
                       ],
-                      "content": null
+                      "content": null,
+                      "isSelfClosing": false
                     }
                   ],
-                  "content": null
+                  "content": null,
+                  "isSelfClosing": false
                 },
                 {
                   "type": "Text",
@@ -1349,7 +1406,7 @@
                     "end": 1095,
                     "ctxt": 0
                   },
-                  "value": "\n    "
+                  "data": "\n    "
                 },
                 {
                   "type": "Element",
@@ -1415,19 +1472,23 @@
                                     "end": 1126,
                                     "ctxt": 0
                                   },
-                                  "value": "x"
+                                  "data": "x"
                                 }
                               ],
-                              "content": null
+                              "content": null,
+                              "isSelfClosing": false
                             }
                           ],
-                          "content": null
+                          "content": null,
+                          "isSelfClosing": false
                         }
                       ],
-                      "content": null
+                      "content": null,
+                      "isSelfClosing": false
                     }
                   ],
-                  "content": null
+                  "content": null,
+                  "isSelfClosing": false
                 },
                 {
                   "type": "Text",
@@ -1436,10 +1497,11 @@
                     "end": 1149,
                     "ctxt": 0
                   },
-                  "value": "\n"
+                  "data": "\n"
                 }
               ],
-              "content": null
+              "content": null,
+              "isSelfClosing": false
             },
             {
               "type": "Text",
@@ -1448,13 +1510,15 @@
                 "end": 1164,
                 "ctxt": 0
               },
-              "value": "\n\n"
+              "data": "\n\n"
             }
           ],
-          "content": null
+          "content": null,
+          "isSelfClosing": false
         }
       ],
-      "content": null
+      "content": null,
+      "isSelfClosing": false
     }
   ]
 }
