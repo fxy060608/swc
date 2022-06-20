@@ -5,13 +5,42 @@
 
 
 
+- **(es/parser)** Don't panic on an invalid import meta property (#4994) ([53a8cb1](https://github.com/swc-project/swc/commit/53a8cb12094b15aed1667f844abfefea1420d3d2))
+
+
+- **(es/parser)** Allow instantiation expression followed by a line break or a binary operator (#5000) ([a62b2b3](https://github.com/swc-project/swc/commit/a62b2b32446613fca0a6193c93c19f1e0b86c3b0))
+
+
+- **(es/typescript)** Preserve `export = ` for AMD (#4995) ([d736b31](https://github.com/swc-project/swc/commit/d736b31e08771c3ca243e6875a11bef1a2937c85))
+
+### Documentation
+
+
+
+- **(readme)** Add a link for discord badge in `README.md` (#5005) ([1f64055](https://github.com/swc-project/swc/commit/1f64055438f1867683fc0fb3b3bef88ca077ff0c))
+
+## [1.2.204] - 2022-06-18
+
+### Bug Fixes
+
+
+
 - **(es/helpers)** Fix `module` field in `package.json` of `@swc/helpers` (#4978) ([5123c20](https://github.com/swc-project/swc/commit/5123c20b5d765db0fa645a1d4ba2820d5eeddc9c))
 
 
 - **(es/helpers)** Use `.mjs` extension in helper imports (#4979) ([9484cf8](https://github.com/swc-project/swc/commit/9484cf81a1cef43059bea98c20a6fa8cef6802d1))
 
 
+- **(es/parser)** Fix binary operator parsed as an instantiation expression (#4992) ([36ef3e4](https://github.com/swc-project/swc/commit/36ef3e4507d949187b83c1bf7ecd6b31eef50a73))
+
+
 - **(es/resolver)** Make catch parameter not disturb resolving (#4976) ([b3f6f20](https://github.com/swc-project/swc/commit/b3f6f20721b90b03a67c1db5d9680147ffe13923))
+
+
+- **(html/codegen)** Handle optional tags (#4986) ([41dc0a7](https://github.com/swc-project/swc/commit/41dc0a7aa9c7c48dd9a47b3ac61422419c3e879e))
+
+
+- **(html/minifier)** Fix removal of comments (#4974) ([8e63b0b](https://github.com/swc-project/swc/commit/8e63b0bbd528b48122a3cef1164a512fbd4952e8))
 
 ### Documentation
 
@@ -23,6 +52,9 @@
 
 
 
+- **(es/config)** Add `isModule` to `.swcrc` (#4993) ([e85c0db](https://github.com/swc-project/swc/commit/e85c0db92689d0eaf656ac869b6cb16ebec43b6f))
+
+
 - **(html/codegen)** Add option for tag omission of self closing void elements (#4971) ([d07ab2c](https://github.com/swc-project/swc/commit/d07ab2cb91a68ef88bd9adbdcc18217818a0c31d))
 
 
@@ -30,6 +62,12 @@
 
 
 - **(html/minifier)** Add `preserve_comments` option (#4959) ([2e52c18](https://github.com/swc-project/swc/commit/2e52c18a6b4ea4d58c219253c159af86a189ce26))
+
+
+- **(html/minifier)** Add an option to set html5 doctype (#4980) ([fb74ace](https://github.com/swc-project/swc/commit/fb74ace19b2aa06f38ef0803bea500a8a5d8f165))
+
+
+- **(html/minifier)** Minify conditional comments (#4975) ([713a256](https://github.com/swc-project/swc/commit/713a256ed7fe9c3301d751575f298f1462434fc0))
 
 ### Performance
 
@@ -42,6 +80,12 @@
 
 
 - **(es/minifier)** Use `Program` instead of `Module` (#4969) ([99a474c](https://github.com/swc-project/swc/commit/99a474cb2d18f2741277a64b8524300d3977cc66))
+
+### Testing
+
+
+
+- **(html)** Remove files which are too large too verify (#4983) ([364a34c](https://github.com/swc-project/swc/commit/364a34cd7093a3bc7ca6e7e5cf2cba0844eba9c8))
 
 ## [1.2.203] - 2022-06-14
 
