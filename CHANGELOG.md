@@ -5,6 +5,9 @@
 
 
 
+- **(es/lints)** Allow duplicate function in non-top level (#5011) ([4a422a0](https://github.com/swc-project/swc/commit/4a422a09a4a933b7db085d936d16dbf53e518956))
+
+
 - **(es/parser)** Don't panic on an invalid import meta property (#4994) ([53a8cb1](https://github.com/swc-project/swc/commit/53a8cb12094b15aed1667f844abfefea1420d3d2))
 
 
@@ -15,6 +18,12 @@
 
 
 - **(es/typescript)** Preserve `export = ` for AMD (#4995) ([d736b31](https://github.com/swc-project/swc/commit/d736b31e08771c3ca243e6875a11bef1a2937c85))
+
+
+- **(html/minifier)** Avoid optional attributes (#5016) ([f1fd83d](https://github.com/swc-project/swc/commit/f1fd83dcc70aff7d27d0bd0d4f0954dc5dc8cbbd))
+
+
+- **(html/minifier)** Compress more complex attributes (#5024) ([c61babd](https://github.com/swc-project/swc/commit/c61babd9af822491d2af4295638df0483748d2e0))
 
 ### Documentation
 
@@ -31,11 +40,29 @@
 
 - **(html/minifier)** Add an API to minify document fragments (#5002) ([7745fbf](https://github.com/swc-project/swc/commit/7745fbf604d6c3c8daeb61eced8c01b464e385db))
 
+
+- **(html/minifier)** Minify js (#4999) ([28bc735](https://github.com/swc-project/swc/commit/28bc735d03987dd965fdefe7284b30bee3346a3a))
+
+
+- **(html/minifier)** Add `remove_redundant_attributes` (#5023) ([03d8a3a](https://github.com/swc-project/swc/commit/03d8a3a0ddb843ded43134265973557dd48e14a7))
+
+### Refactor
+
+
+
+- **(webpack-ast)** Remove (#5026) ([17c51fa](https://github.com/swc-project/swc/commit/17c51fa53ca605aea6c3286e1994ab5dbc5f1b74))
+
 ### Testing
 
 
 
+- **(es/helpers)** Unify code path for testing external helpers (#5010) ([125549b](https://github.com/swc-project/swc/commit/125549b7a96d5a91101e1a96a0bb39214e252800))
+
+
 - **(es/minifier)** Add a test case for the minifier (#5013) ([eedcb11](https://github.com/swc-project/swc/commit/eedcb114a2df09d88995c1b58ea1d1980831a02d))
+
+
+- **(es/parser)** Add a test case for instantiation expr (#5014) ([6bcb925](https://github.com/swc-project/swc/commit/6bcb92598b5c71fee407b4f4be7da85d36a0735d))
 
 ## [1.2.204] - 2022-06-18
 
