@@ -3960,7 +3960,7 @@ dependencies = [
 
 [[package]]
 name = "swc_html_minifier"
-version = "0.14.9"
+version = "0.14.10"
 dependencies = [
  "once_cell",
  "serde",
@@ -3968,6 +3968,7 @@ dependencies = [
  "swc_atoms",
  "swc_cached",
  "swc_common",
+ "swc_css_ast",
  "swc_css_codegen",
  "swc_css_minifier",
  "swc_css_parser",
@@ -3986,7 +3987,7 @@ dependencies = [
 
 [[package]]
 name = "swc_html_parser"
-version = "0.13.0"
+version = "0.13.1"
 dependencies = [
  "criterion",
  "serde",
