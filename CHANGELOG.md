@@ -1,11 +1,28 @@
 # Changelog
 ## [unreleased]
 
+### Features
+
+
+
+- **(html/minifier)** Allow minifying custom script contents (#5043) ([d7a5f71](https://github.com/swc-project/swc/commit/d7a5f710730063c51deb91c9aa937f7d5a33e582))
+
+### Miscellaneous Tasks
+
+
+
+- **(deps)** Update `rkyv` (#5057) ([374366d](https://github.com/swc-project/swc/commit/374366d56ca431dc892b390efaf090ee4d116100))
+
+## [1.2.207] - 2022-06-28
+
 ### Bug Fixes
 
 
 
 - **(es/compat)** Handle classes with accessors and a method with the same name (#5039) ([25bd520](https://github.com/swc-project/swc/commit/25bd5206205d76c1ff93e67b67b3aeca551113d6))
+
+
+- **(es/modules)** Handle module references in binding idents (#5055) ([e13364f](https://github.com/swc-project/swc/commit/e13364f976e0c10f879fa0f9678c617a713d052d))
 
 
 - **(node-swc/types)** Add `nodenext` config type (#5044) ([7d4e6be](https://github.com/swc-project/swc/commit/7d4e6bef96242d6506fb0f51c7002f7bbc84af94))
@@ -15,6 +32,9 @@
 
 
 - **(es/lints)** Report an error for reassignment to import binding (#5033) ([376c4e1](https://github.com/swc-project/swc/commit/376c4e11af5aa8c0e5bc5900f6168893644473b7))
+
+
+- **(es/minifier)** Handle pure annotations on member expressions (#5050) ([a15bb48](https://github.com/swc-project/swc/commit/a15bb485241b2a5fb2ecbbd56558dcb5915b8ff4))
 
 
 - **(es/modules)** Optimize a dynamic import with a literal path (#5049) ([2cc229e](https://github.com/swc-project/swc/commit/2cc229e6fb1d0b439e1fe7661be481494f57efa9))
