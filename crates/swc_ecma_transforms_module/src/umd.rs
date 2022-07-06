@@ -1,8 +1,11 @@
 use anyhow::Context;
 use swc_atoms::JsWord;
-use swc_common::{sync::Lrc, util::take::Take, FileName, Mark, SourceMap, Span, DUMMY_SP};
+use swc_common::{
+    comments::Comments, sync::Lrc, util::take::Take, FileName, Mark, SourceMap, Span, Spanned,
+    DUMMY_SP,
+};
 use swc_ecma_ast::*;
-use swc_ecma_transforms_base::{feature::FeatureFlag, helper, helper_expr};
+use swc_ecma_transforms_base::{feature::FeatureFlag, helper_expr};
 use swc_ecma_utils::{
     is_valid_prop_ident, private_ident, quote_ident, quote_str, ExprFactory, IsDirective,
 };
@@ -15,24 +18,31 @@ use crate::{
     module_ref_rewriter::{ImportMap, ModuleRefRewriter},
     path::{ImportResolver, Resolver},
     util::{
-        clone_first_use_strict, define_es_module, emit_export_stmts, local_name_for_src, use_strict,
+        clone_first_use_strict, define_es_module, emit_export_stmts, local_name_for_src,
+        use_strict, ImportInterop,
     },
 };
 
 mod config;
 
-pub fn umd(
+pub fn umd<C>(
     cm: Lrc<SourceMap>,
     unresolved_mark: Mark,
     config: Config,
     available_features: FeatureFlag,
-) -> impl Fold + VisitMut {
+    comments: Option<C>,
+) -> impl Fold + VisitMut
+where
+    C: Comments,
+{
     as_folder(Umd {
         config: config.build(cm.clone()),
         unresolved_mark,
         cm,
         resolver: Resolver::Default,
         available_features,
+        comments,
+
         const_var_kind: if caniuse!(available_features.BlockScoping) {
             VarDeclKind::Const
         } else {
@@ -45,20 +55,26 @@ pub fn umd(
     })
 }
 
-pub fn umd_with_resolver(
+pub fn umd_with_resolver<C>(
     cm: Lrc<SourceMap>,
     resolver: Box<dyn ImportResolver>,
     base: FileName,
     unresolved_mark: Mark,
     config: Config,
     available_features: FeatureFlag,
-) -> impl Fold + VisitMut {
+    comments: Option<C>,
+) -> impl Fold + VisitMut
+where
+    C: Comments,
+{
     as_folder(Umd {
         config: config.build(cm.clone()),
         unresolved_mark,
         cm,
         resolver: Resolver::Real { base, resolver },
         available_features,
+        comments,
+
         const_var_kind: if caniuse!(available_features.BlockScoping) {
             VarDeclKind::Const
         } else {
@@ -70,12 +86,17 @@ pub fn umd_with_resolver(
     })
 }
 
-pub struct Umd {
+pub struct Umd<C>
+where
+    C: Comments,
+{
     cm: Lrc<SourceMap>,
     unresolved_mark: Mark,
     config: BuiltConfig,
     resolver: Resolver,
     available_features: FeatureFlag,
+    comments: Option<C>,
+
     const_var_kind: VarDeclKind,
 
     dep_list: Vec<(Ident, JsWord, Span)>,
@@ -83,10 +104,15 @@ pub struct Umd {
     exports: Option<Ident>,
 }
 
-impl VisitMut for Umd {
+impl<C> VisitMut for Umd<C>
+where
+    C: Comments,
+{
     noop_visit_mut_type!();
 
     fn visit_mut_module(&mut self, module: &mut Module) {
+        let import_interop = self.config.config.import_interop();
+
         let filename = self.cm.span_to_filename(module.span);
         let exported_name = self.config.determine_export_name(filename);
 
@@ -112,7 +138,7 @@ impl VisitMut for Umd {
 
         let is_export_assign = export_assign.is_some();
 
-        if has_module_decl && !self.config.config.no_interop && !is_export_assign {
+        if has_module_decl && !import_interop.is_none() && !is_export_assign {
             stmts.push(define_es_module(self.exports()))
         }
 
@@ -140,6 +166,7 @@ impl VisitMut for Umd {
         stmts.visit_mut_children_with(&mut ModuleRefRewriter {
             import_map,
             lazy_record: Default::default(),
+            allow_top_level_this: self.config.config.allow_top_level_this,
             is_global_this: true,
         });
 
@@ -179,7 +206,10 @@ impl VisitMut for Umd {
     }
 }
 
-impl Umd {
+impl<C> Umd<C>
+where
+    C: Comments,
+{
     fn handle_import_export(
         &mut self,
         import_map: &mut ImportMap,
@@ -187,19 +217,20 @@ impl Umd {
         export: Export,
         is_export_assign: bool,
     ) -> impl Iterator<Item = Stmt> {
+        let import_interop = self.config.config.import_interop();
+
         let mut stmts = Vec::with_capacity(link.len());
 
-        let mut export_obj_prop_list = export
-            .into_iter()
-            .map(|((key, span), ident)| (key, span, ident.into()))
-            .collect();
+        let mut export_obj_prop_list = export.into_iter().map(Into::into).collect();
 
         link.into_iter().for_each(
             |(src, LinkItem(src_span, link_specifier_set, mut link_flag))| {
                 let is_swc_default_helper =
                     !link_flag.has_named() && src.starts_with("@swc/helpers/");
 
-                if self.config.config.no_interop || is_swc_default_helper {
+                let is_node_default = !link_flag.has_named() && import_interop.is_node();
+
+                if import_interop.is_none() || is_swc_default_helper {
                     link_flag -= LinkFlag::NAMESPACE;
                 }
 
@@ -222,7 +253,7 @@ impl Umd {
                     &new_var_ident,
                     &Some(mod_ident.clone()),
                     &mut false,
-                    is_swc_default_helper,
+                    is_swc_default_helper || is_node_default,
                 );
 
                 if is_swc_default_helper {
@@ -247,17 +278,22 @@ impl Umd {
 
                 // _introp(mod);
                 if need_interop {
-                    import_expr = CallExpr {
-                        span: DUMMY_SP,
-                        callee: if link_flag.namespace() {
-                            helper!(interop_require_wildcard, "interopRequireWildcard")
+                    import_expr = match import_interop {
+                        ImportInterop::Swc if link_flag.interop() => if link_flag.namespace() {
+                            helper_expr!(interop_require_wildcard, "interopRequireWildcard")
                         } else {
-                            helper!(interop_require_default, "interopRequireDefault")
-                        },
-                        args: vec![import_expr.as_arg()],
-                        type_args: Default::default(),
+                            helper_expr!(interop_require_default, "interopRequireDefault")
+                        }
+                        .as_call(self.pure_span(), vec![import_expr.as_arg()]),
+                        ImportInterop::Node if link_flag.namespace() => {
+                            helper_expr!(interop_require_wildcard, "interopRequireWildcard")
+                                .as_call(
+                                    self.pure_span(),
+                                    vec![import_expr.as_arg(), true.as_arg()],
+                                )
+                        }
+                        _ => import_expr,
                     }
-                    .into()
                 };
 
                 // mod = _introp(mod);
@@ -282,6 +318,8 @@ impl Umd {
         let mut export_stmts = Default::default();
 
         if !export_obj_prop_list.is_empty() && !is_export_assign {
+            export_obj_prop_list.sort_by_key(|prop| prop.span());
+
             let features = self.available_features;
             let exports = self.exports();
 
@@ -496,5 +534,19 @@ impl Umd {
         };
 
         (adapter_fn_expr, factory_params)
+    }
+
+    fn pure_span(&self) -> Span {
+        let mut span = DUMMY_SP;
+
+        if self.config.config.import_interop().is_none() {
+            return span;
+        }
+
+        if let Some(comments) = &self.comments {
+            span = Span::dummy_with_cmt();
+            comments.add_pure_comment(span.lo);
+        }
+        span
     }
 }

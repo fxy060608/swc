@@ -580,12 +580,13 @@ test!(
                 Default::default()
             ),
             es3(true),
-            import_analyzer(false, false),
+            import_analyzer(false.into(), false),
             inject_helpers(),
             common_js(
                 Mark::fresh(Mark::root()),
                 Default::default(),
-                Default::default()
+                Default::default(),
+                Some(t.comments.clone())
             ),
         )
     },

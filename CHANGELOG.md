@@ -5,19 +5,122 @@
 
 
 
+- **(es/codegen)** Fix codegen of some non-ascii characters (#5108) ([b76b499](https://github.com/swc-project/swc/commit/b76b4999cce42fb2e41ca165bd68bbc8f6663bdc))
+
+
+- **(es/fixer)** Preserve parens in opt calls (#5110) ([3e3c44a](https://github.com/swc-project/swc/commit/3e3c44a0b64c55b4d976a4dafbb999000612d14a))
+
+
+- **(es/fixer)** Preserve parens in more opt calls (#5111) ([528d4c5](https://github.com/swc-project/swc/commit/528d4c5aa45f4a7445fcc7b50eb71302d3631190))
+
+### Documentation
+
+
+
+- **(visit)** Generate rustdoc (#5107) ([8ea631c](https://github.com/swc-project/swc/commit/8ea631c7669356905fb7defd6aeb0fb0602ec458))
+
+## [1.2.209] - 2022-07-05
+
+### Bug Fixes
+
+
+
+- **(es/codegen)** Emit numeric value for Binary and Octal literals (#5083) ([8df6e04](https://github.com/swc-project/swc/commit/8df6e047cc523088a26a3363fe33f1bc224738b0))
+
+
+- **(es/compat)** Preserve spans in `object_rest_spread` (#5082) ([de66b64](https://github.com/swc-project/swc/commit/de66b64aed13166803ebdfb91d1c421eec064c25))
+
+
+- **(es/compat)** Preserve class names (#5104) ([adbb0bf](https://github.com/swc-project/swc/commit/adbb0bf8d8391aa4f15d64c72be701c03de98617))
+
+
+- **(es/lints)** Cover more `const-assign` cases (#5098) ([f7d857c](https://github.com/swc-project/swc/commit/f7d857c6b6c32ad228aa929d0301b22c9d34ff8b))
+
+
+- **(es/modules)** Preserve orders of exports (#5081) ([2f2039c](https://github.com/swc-project/swc/commit/2f2039c693bd1e16b16dd1b1b32f3582fdadca4e))
+
+
+- **(es/modules)** Create an indirect call for a lazy require (#5089) ([0a7ca2f](https://github.com/swc-project/swc/commit/0a7ca2f4bbfaa2573b4da6b25127064cbcfd755f))
+
+
+- **(es/modules)** Support lazy for `export from` (#5103) ([c531e67](https://github.com/swc-project/swc/commit/c531e67a3058bd6d567922d74fe51dc6e393761b))
+
+
+- **(es/react)** Don't panic on invalid react pragma (#5101) ([cc555ef](https://github.com/swc-project/swc/commit/cc555ef225e3299bc17b6e21d67b3a42619abd5a))
+
+
+- **(es/resolver)** Fix handling of block scoped functions (#5092) ([9519e80](https://github.com/swc-project/swc/commit/9519e801ea3bd9a0d7cc4f145323d0a734c83669))
+
+
+- **(html/minifier)** Small fix (#5079) ([5ac5ae2](https://github.com/swc-project/swc/commit/5ac5ae200c3c896f205e7c4567a5a6281d16015b))
+
+
+- **(html/minifier)** Fix bugs of the smart mode (#5093) ([5932a0a](https://github.com/swc-project/swc/commit/5932a0a2ef42ae67f1d2eceebe752b01160ca6fe))
+
+
+- **(node/types)** Add `simplify` (#5105) ([2a29b50](https://github.com/swc-project/swc/commit/2a29b50c5eb7e1441c2735fec9686771c6050053))
+
+### Features
+
+
+
+- **(es/modules)** Support `allowTopLevelThis` (#5086) ([9addef6](https://github.com/swc-project/swc/commit/9addef6fc8672854b52a1b71668795474a6f3fec))
+
+
+- **(es/modules)** Add pure annotations to interop functions (#5087) ([4d5783d](https://github.com/swc-project/swc/commit/4d5783d9cd1f91f5b7cdcc5efaa7d83f35ee4fef))
+
+
+- **(es/modules)** Support AMD triple slash directives (#5091) ([ddb31d1](https://github.com/swc-project/swc/commit/ddb31d1fd79250b14cbb873424f02c750f9c6ef6))
+
+
+- **(es/parser)** Support labelled function from annex B (#5078) ([b62fd3e](https://github.com/swc-project/swc/commit/b62fd3e6cc371ad4f8cb9055b3fed70f1954afa2))
+
+
+- **(html/minifier)** Remove empty metadata elements (#5085) ([cb845c9](https://github.com/swc-project/swc/commit/cb845c9bf903136b074af269b96a685027599284))
+
+
+- **(visit)** Add path-aware variants (#5073) ([204d742](https://github.com/swc-project/swc/commit/204d742ed6ed5f91612245604b4e9037470bc97a))
+
+### Testing
+
+
+
+- **(es/modules)** Add test for string-names (#5088) ([52bfb18](https://github.com/swc-project/swc/commit/52bfb18113895d20bc952e84302e8591c1fdf407))
+
+## [1.2.208] - 2022-07-01
+
+### Bug Fixes
+
+
+
 - **(es/compat)** Preserve this in function with block scoped vars (#5056) ([18ea2b5](https://github.com/swc-project/swc/commit/18ea2b577011d610fbb06bb6728a86be8366703a))
 
 
 - **(es/modules)** Handle `this` in class methods (#5065) ([ef543b1](https://github.com/swc-project/swc/commit/ef543b1b22b9cf29add68984318fe19620240888))
 
 
+- **(es/modules)** Improve compatibility with cjs lexer (#5080) ([9e162dc](https://github.com/swc-project/swc/commit/9e162dcbae91a3dd4cef47ab0d80de14ada6d70d))
+
+
 - **(html/minifier)** Fix smart mode (#5058) ([e9bad20](https://github.com/swc-project/swc/commit/e9bad20898df92f7d0dd898ab1924229d5113251))
+
+
+- **(html/minifier)** Minify `meta` element (#5075) ([214c60a](https://github.com/swc-project/swc/commit/214c60a313162218c9acb007b8747dbc8f39ac8a))
+
+### Documentation
+
+
+
+- **(contributing)** Add `--features memory_cache` to test steps (#5074) ([9d8beb0](https://github.com/swc-project/swc/commit/9d8beb02b7161a6af604cf187f2a53d91cd336ea))
 
 ### Features
 
 
 
 - **(atoms)** Improve atoms (#5066) ([34f4f5a](https://github.com/swc-project/swc/commit/34f4f5a3bc7797e2b9b192671cf68b63ea0dd25c))
+
+
+- **(es/modules)** Support node interop (#5069) ([1e33dba](https://github.com/swc-project/swc/commit/1e33dbab24a534477ed1046b57a0c9daeb84e3ca))
 
 
 - **(es/parser)** Add `allow_return_outside_function` to options (#5046) ([37eb366](https://github.com/swc-project/swc/commit/37eb366a1f554668fd7011869ec8f58c67e9ce9f))
@@ -29,6 +132,9 @@
 - **(html/minifier)** Sort unordered values in attributes (#5035) ([26cfeff](https://github.com/swc-project/swc/commit/26cfeff79cbae9c7b998690ed6b59d2336cf2430))
 
 
+- **(html/minifier)** Improve `collapse_whitespaces` (#5070) ([144314d](https://github.com/swc-project/swc/commit/144314dcc2e98baba79502be6f82ea39aa71f560))
+
+
 - **(plugin)** Add versioned wrapper struct (#5062) ([e34a864](https://github.com/swc-project/swc/commit/e34a864390dc6a8a0d78cc60af458be37031e30f))
 
 
@@ -38,7 +144,7 @@
 
 
 
-- **(deps)** Update `rkyv` (#5057) ([374366d](https://github.com/swc-project/swc/commit/374366d56ca431dc892b390efaf090ee4d116100))
+- **(deps)** Update `rkyv` (#5057) ([374366d](https://github.com/swc-project/swc/commit/374366d56ca431dc892b390efaf090ee4d116100))- **general**: Workaround cargo mono bug ([60424db](https://github.com/swc-project/swc/commit/60424db67b3c9bc0d36012249e16ebaa2100f299))
 
 ### Performance
 
