@@ -12,6 +12,28 @@ use rkyv::{with::AsBox, Archive, Deserialize, Serialize};
 
 use crate::{syntax_pos::Mark, SyntaxContext};
 
+/**
+ * Compile-time version constant for the AST struct schema's version.
+ *
+ * NOTE: this is for PARTIAL compatibility only, supporting if AST struct
+ * adds new properties without changing / removing existing properties.
+ *
+ * - When adding a new properties to the AST struct:
+ *  1. Create a new feature flag in cargo.toml
+ *  2. Create a new schema version with new feature flag.
+ *  3. Create a new AST struct with compile time feature flag with newly
+ *     added properties. Previous struct should remain with existing feature
+ *     flag, or add previous latest feature flag.
+ *
+ * - When removing, or changing existing properties in the AST struct: TBD
+ */
+#[cfg(feature = "plugin-transform-schema-v1")]
+pub const PLUGIN_TRANSFORM_AST_SCHEMA_VERSION: u32 = 1;
+
+// Reserved for the testing purpose.
+#[cfg(feature = "plugin-transform-schema-vtest")]
+pub const PLUGIN_TRANSFORM_AST_SCHEMA_VERSION: u32 = u32::MAX - 1;
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[non_exhaustive]
 #[cfg_attr(
@@ -41,48 +63,38 @@ pub enum PluginError {
     Serialize(String),
 }
 
-/// Wraps internal representation of serialized data. Consumers should not
-/// rely on specific details of byte format struct contains: it is
-/// strictly implementation detail which can change anytime.
-pub struct Serialized {
-    field: rkyv::AlignedVec,
+/// Wraps internal representation of serialized data for exchanging data between
+/// plugin to the host. Consumers should not rely on specific details of byte
+/// format struct contains: it is strict implementation detail which can
+/// change anytime.
+pub struct PluginSerializedBytes {
+    pub(crate) field: rkyv::AlignedVec,
 }
 
 #[cfg(feature = "plugin-base")]
-impl Serialized {
-    pub fn new_for_plugin(bytes: &[u8], len: i32) -> Serialized {
-        let mut vec = rkyv::AlignedVec::with_capacity(
-            len.try_into()
-                .expect("Cannot determine size of the serialized bytes"),
-        );
-        vec.extend_from_slice(bytes);
-        Serialized { field: vec }
+impl PluginSerializedBytes {
+    /**
+     * Constructs an instance from already serialized byte
+     * slices.
+     */
+    pub fn from_slice(bytes: &[u8]) -> PluginSerializedBytes {
+        let mut field = rkyv::AlignedVec::new();
+        field.extend_from_slice(bytes);
+        PluginSerializedBytes { field }
     }
 
-    pub fn from(vec: rkyv::AlignedVec) -> Serialized {
-        Serialized { field: vec }
-    }
-
-    /// Not an actual trait Into impl: simple wrapper to deserialize<T>:expect()
-    pub fn into<T>(self) -> T
-    where
-        T: rkyv::Archive,
-        T::Archived: rkyv::Deserialize<T, rkyv::de::deserializers::SharedDeserializeMap>,
-    {
-        Serialized::deserialize(&self).expect("Should able to deserialize")
-    }
-
-    #[allow(clippy::should_implement_trait)]
-    pub fn as_ref(&self) -> &rkyv::AlignedVec {
-        &self.field
-    }
-
-    pub fn serialize<W>(t: &W) -> Result<Serialized, Error>
+    /**
+     * Constructs an instance from versioned struct by serializing it.
+     *
+     * This is sort of mimic TryFrom behavior, since we can't use generic
+     * to implement TryFrom trait
+     */
+    pub fn try_serialize<W>(t: &VersionedSerializable<W>) -> Result<Self, Error>
     where
         W: rkyv::Serialize<rkyv::ser::serializers::AllocSerializer<512>>,
     {
         rkyv::to_bytes::<_, 512>(t)
-            .map(Serialized::from)
+            .map(|field| PluginSerializedBytes { field })
             .map_err(|err| match err {
                 rkyv::ser::serializers::CompositeSerializerError::SerializerError(e) => e.into(),
                 rkyv::ser::serializers::CompositeSerializerError::ScratchSpaceError(e) => {
@@ -94,7 +106,28 @@ impl Serialized {
             })
     }
 
-    pub fn deserialize<W>(bytes: &Serialized) -> Result<W, Error>
+    /*
+     * Internal fn to constructs an instance from raw bytes ptr.
+     */
+    fn from_raw_ptr(
+        raw_allocated_ptr: *const u8,
+        raw_allocated_ptr_len: usize,
+    ) -> PluginSerializedBytes {
+        let raw_ptr_bytes =
+            unsafe { std::slice::from_raw_parts(raw_allocated_ptr, raw_allocated_ptr_len) };
+
+        PluginSerializedBytes::from_slice(raw_ptr_bytes)
+    }
+
+    pub fn as_slice(&self) -> &[u8] {
+        self.field.as_slice()
+    }
+
+    pub fn as_ptr(&self) -> (*const u8, usize) {
+        (self.field.as_ptr(), self.field.len())
+    }
+
+    pub fn deserialize<W>(&self) -> Result<VersionedSerializable<W>, Error>
     where
         W: rkyv::Archive,
         W::Archived: rkyv::Deserialize<W, rkyv::de::deserializers::SharedDeserializeMap>,
@@ -102,65 +135,57 @@ impl Serialized {
         use anyhow::Context;
         use rkyv::Deserialize;
 
-        let bytes = &bytes.field;
-        let archived = unsafe { rkyv::archived_root::<W>(&bytes[..]) };
+        let archived = unsafe { rkyv::archived_root::<VersionedSerializable<W>>(&self.field[..]) };
 
         archived
             .deserialize(&mut rkyv::de::deserializers::SharedDeserializeMap::new())
             .with_context(|| format!("failed to deserialize `{}`", type_name::<W>()))
     }
+}
 
-    /// Convenient wrapper to Serialized::* to construct actual struct from raw
-    /// ptr. This is common workflow on both of runtime (host / plugin) to
-    /// deserialize struct from allocated / copied ptr.
-    ///
-    /// # Safety
-    /// This is naturally unsafe by constructing bytes slice from raw ptr.
-    pub unsafe fn deserialize_from_ptr<W>(
-        raw_allocated_ptr: *const u8,
-        raw_allocated_ptr_len: i32,
-    ) -> Result<W, Error>
-    where
-        W: rkyv::Archive,
-        W::Archived: rkyv::Deserialize<W, rkyv::de::deserializers::SharedDeserializeMap>,
-    {
-        // Create serialized bytes slice from ptr
-        let raw_ptr_bytes = unsafe {
-            std::slice::from_raw_parts(raw_allocated_ptr, raw_allocated_ptr_len.try_into()?)
-        };
+/// Simple wrapper around constructing PluginSerializedBytes from raw
+/// ptr to call deserialize to support common workflow on both of runtime
+/// (host / plugin) to instantiate a struct from allocated / copied ptr.
+///
+/// # Safety
+/// This is naturally unsafe by constructing bytes slice from raw ptr.
+pub unsafe fn deserialize_from_ptr<W>(
+    raw_allocated_ptr: *const u8,
+    raw_allocated_ptr_len: i32,
+) -> Result<VersionedSerializable<W>, Error>
+where
+    W: rkyv::Archive,
+    W::Archived: rkyv::Deserialize<W, rkyv::de::deserializers::SharedDeserializeMap>,
+{
+    let serialized =
+        PluginSerializedBytes::from_raw_ptr(raw_allocated_ptr, raw_allocated_ptr_len as usize);
 
-        let serialized = Serialized::new_for_plugin(raw_ptr_bytes, raw_allocated_ptr_len);
-        Serialized::deserialize(&serialized)
-    }
+    serialized.deserialize()
+}
 
-    /// Deserialize `Fallible` struct from raw ptr. This is similar to
-    /// `deserialize_from_ptr` but for the struct requires bounds to the
-    /// SharedSerializeRegistry which cannot be Infallible. Internally this does
-    /// not call deserialize with Infallible deserializer, use
-    /// SharedDeserializeMap instead.
-    ///
-    /// # Safety
-    /// This is unsafe by construting bytes slice from raw ptr also deserialize
-    /// it without slice bound check.
-    pub unsafe fn deserialize_from_ptr_fallible<W>(
-        raw_allocated_ptr: *const u8,
-        raw_allocated_ptr_len: i32,
-    ) -> Result<W, Error>
-    where
-        W: rkyv::Archive,
-        W::Archived: rkyv::Deserialize<W, rkyv::de::deserializers::SharedDeserializeMap>,
-    {
-        // Create serialized bytes slice from ptr
-        let raw_ptr_bytes = unsafe {
-            std::slice::from_raw_parts(raw_allocated_ptr, raw_allocated_ptr_len.try_into()?)
-        };
+/// Deserialize `Fallible` struct from raw ptr. This is similar to
+/// `deserialize_from_ptr` but for the struct requires bounds to the
+/// SharedSerializeRegistry which cannot be Infallible. Internally this does
+/// not call deserialize with Infallible deserializer, use
+/// SharedDeserializeMap instead.
+///
+/// # Safety
+/// This is unsafe by construting bytes slice from raw ptr also deserialize
+/// it without slice bound check.
+pub unsafe fn deserialize_from_ptr_into_fallible<W>(
+    raw_allocated_ptr: *const u8,
+    raw_allocated_ptr_len: i32,
+) -> Result<VersionedSerializable<W>, Error>
+where
+    W: rkyv::Archive,
+    W::Archived: rkyv::Deserialize<W, rkyv::de::deserializers::SharedDeserializeMap>,
+{
+    let serialized =
+        PluginSerializedBytes::from_raw_ptr(raw_allocated_ptr, raw_allocated_ptr_len as usize);
 
-        let serialized = Serialized::new_for_plugin(raw_ptr_bytes, raw_allocated_ptr_len);
-
-        unsafe {
-            rkyv::from_bytes_unchecked(serialized.as_ref())
-                .map_err(|err| Error::msg("Failed to deserialize given ptr"))
-        }
+    unsafe {
+        rkyv::from_bytes_unchecked(&serialized.field)
+            .map_err(|err| Error::msg("Failed to deserialize given ptr"))
     }
 }
 
@@ -191,10 +216,7 @@ impl<T> VersionedSerializable<T> {
         &self.0 .1
     }
 
-    pub fn take(&mut self) -> T
-    where
-        T: Default,
-    {
-        mem::take(&mut self.0 .1)
+    pub fn into_inner(self) -> T {
+        self.0 .1
     }
 }

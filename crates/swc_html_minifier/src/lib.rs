@@ -1,10 +1,16 @@
 #![deny(clippy::all)]
 
+use std::cmp::Ordering;
+
 use once_cell::sync::Lazy;
 use serde_json::Value;
 use swc_atoms::{js_word, JsWord};
 use swc_cached::regex::CachedRegex;
-use swc_common::{collections::AHashSet, sync::Lrc, FileName, FilePathMapping, Mark, SourceMap};
+use swc_common::{
+    collections::{AHashMap, AHashSet},
+    sync::Lrc,
+    FileName, FilePathMapping, Mark, SourceMap,
+};
 use swc_html_ast::*;
 use swc_html_parser::parser::ParserConfig;
 use swc_html_visit::{VisitMut, VisitMutWith};
@@ -334,6 +340,7 @@ struct Minifier {
     minify_additional_scripts_content: Option<Vec<(CachedRegex, MinifierType)>>,
 
     sort_space_separated_attribute_values: bool,
+    attribute_name_counter: Option<AHashMap<JsWord, usize>>,
 }
 
 fn get_white_space(namespace: Namespace, tag_name: &str) -> WhiteSpace {
@@ -619,6 +626,197 @@ impl Minifier {
                     "referrerpolicy",
                     "strict-origin-when-cross-origin"
                 )
+                | (Namespace::SVG, "a", "opacity", "1")
+                | (Namespace::SVG, "altGlyph", "opacity", "1")
+                | (Namespace::SVG, "altGlyph", "fill", "black")
+                | (Namespace::SVG, "altGlyph", "fill-opacity", "1")
+                | (Namespace::SVG, "altGlyph", "fill-rule", "nonzero")
+                | (Namespace::SVG, "altGlyph", "font-size", "medium")
+                | (Namespace::SVG, "altGlyph", "font-size-adjust", "none")
+                | (Namespace::SVG, "altGlyph", "font-stretch", "normal")
+                | (Namespace::SVG, "altGlyph", "font-style", "normal")
+                | (Namespace::SVG, "altGlyph", "font-variant", "normal")
+                | (Namespace::SVG, "altGlyph", "font-weight", "normal")
+                | (Namespace::SVG, "animate", "begin", "0s")
+                | (Namespace::SVG, "animate", "dur", "indefinite")
+                | (Namespace::SVG, "animate", "min", "0")
+                | (Namespace::SVG, "animate", "opacity", "1")
+                | (Namespace::SVG, "animate", "rotate", "0")
+                | (Namespace::SVG, "animate", "restart", "always")
+                | (Namespace::SVG, "animate", "fill", "remove")
+                | (Namespace::SVG, "animate", "calcMode", "linear")
+                | (Namespace::SVG, "animate", "additive", "replace")
+                | (Namespace::SVG, "animate", "accumulate", "none")
+                | (Namespace::SVG, "animateColor", "begin", "0s")
+                | (Namespace::SVG, "animateColor", "dur", "indefinite")
+                | (Namespace::SVG, "animateColor", "min", "0")
+                | (Namespace::SVG, "animateColor", "opacity", "1")
+                | (Namespace::SVG, "animateColor", "restart", "always")
+                | (Namespace::SVG, "animateColor", "fill", "remove")
+                | (Namespace::SVG, "animateColor", "calcMode", "linear")
+                | (Namespace::SVG, "animateColor", "additive", "replace")
+                | (Namespace::SVG, "animateColor", "accumulate", "none")
+                | (Namespace::SVG, "animateMotion", "begin", "0s")
+                | (Namespace::SVG, "animateMotion", "dur", "indefinite")
+                | (Namespace::SVG, "animateMotion", "min", "0")
+                | (Namespace::SVG, "animateMotion", "rotate", "0")
+                | (Namespace::SVG, "animateMotion", "restart", "always")
+                | (Namespace::SVG, "animateMotion", "fill", "remove")
+                | (Namespace::SVG, "animateMotion", "calcMode", "linear")
+                | (Namespace::SVG, "animateMotion", "additive", "replace")
+                | (Namespace::SVG, "animateMotion", "accumulate", "none")
+                | (Namespace::SVG, "animateTransform", "begin", "0s")
+                | (Namespace::SVG, "animateTransform", "dur", "indefinite")
+                | (Namespace::SVG, "animateTransform", "min", "0")
+                | (Namespace::SVG, "animateTransform", "restart", "always")
+                | (Namespace::SVG, "animateTransform", "fill", "remove")
+                | (Namespace::SVG, "animateTransform", "calcMode", "linear")
+                | (Namespace::SVG, "animateTransform", "additive", "replace")
+                | (Namespace::SVG, "animateTransform", "accumulate", "none")
+                | (Namespace::SVG, "circle", "cx", "0")
+                | (Namespace::SVG, "circle", "cy", "0")
+                | (Namespace::SVG, "circle", "r", "0")
+                | (Namespace::SVG, "circle", "fill", "black")
+                | (Namespace::SVG, "circle", "fill-opacity", "1")
+                | (Namespace::SVG, "circle", "opacity", "1")
+                | (Namespace::SVG, "clipPath", "opacity", "1")
+                | (Namespace::SVG, "defs", "opacity", "1")
+                | (Namespace::SVG, "discard", "begin", "0s")
+                | (Namespace::SVG, "ellipse", "fill", "black")
+                | (Namespace::SVG, "ellipse", "fill-opacity", "1")
+                | (Namespace::SVG, "ellipse", "rx", "auto")
+                | (Namespace::SVG, "ellipse", "ry", "auto")
+                | (Namespace::SVG, "ellipse", "cx", "0")
+                | (Namespace::SVG, "ellipse", "cy", "0")
+                | (Namespace::SVG, "ellipse", "opacity", "1")
+                | (Namespace::SVG, "feBlend", "opacity", "1")
+                | (Namespace::SVG, "feColorMatrix", "opacity", "1")
+                | (Namespace::SVG, "feComponentTransfer", "opacity", "1")
+                | (Namespace::SVG, "feComposite", "opacity", "1")
+                | (Namespace::SVG, "feComposite", "k1", "0")
+                | (Namespace::SVG, "feComposite", "k2", "0")
+                | (Namespace::SVG, "feComposite", "k3", "0")
+                | (Namespace::SVG, "feComposite", "k4", "0")
+                | (Namespace::SVG, "feConvolveMatrix", "opacity", "1")
+                | (Namespace::SVG, "feDiffuseLighting", "opacity", "1")
+                | (Namespace::SVG, "feDisplacementMap", "opacity", "1")
+                | (Namespace::SVG, "feDisplacementMap", "yChannelSelector", "a")
+                | (Namespace::SVG, "feFlood", "opacity", "1")
+                | (Namespace::SVG, "feGaussianBlur", "opacity", "1")
+                | (Namespace::SVG, "feImage", "opacity", "1")
+                | (Namespace::SVG, "feMerge", "opacity", "1")
+                | (Namespace::SVG, "feMorphology", "opacity", "1")
+                | (Namespace::SVG, "feMorphology", "radius", "0")
+                | (Namespace::SVG, "feOffset", "opacity", "1")
+                | (Namespace::SVG, "fePointLight", "z", "1")
+                | (Namespace::SVG, "feSpecularLighting", "opacity", "1")
+                | (Namespace::SVG, "feSpotLight", "z", "1")
+                | (Namespace::SVG, "feTile", "opacity", "1")
+                | (Namespace::SVG, "feTurbulence", "opacity", "1")
+                | (Namespace::SVG, "filter", "opacity", "1")
+                | (Namespace::SVG, "font", "opacity", "1")
+                | (Namespace::SVG, "foreignObject", "opacity", "1")
+                | (Namespace::SVG, "g", "opacity", "1")
+                | (Namespace::SVG, "glyph", "opacity", "1")
+                | (Namespace::SVG, "glyphRef", "opacity", "1")
+                | (Namespace::SVG, "image", "opacity", "1")
+                | (Namespace::SVG, "line", "opacity", "1")
+                | (Namespace::SVG, "line", "y1", "0")
+                | (Namespace::SVG, "line", "y2", "0")
+                | (Namespace::SVG, "linearGradient", "opacity", "1")
+                | (Namespace::SVG, "linearGradient", "y1", "0")
+                | (Namespace::SVG, "linearGradient", "y2", "0")
+                | (
+                    Namespace::SVG,
+                    "linearGradient",
+                    "gradientUnits",
+                    "objectBoundingBox"
+                )
+                | (Namespace::SVG, "linearGradient", "spreadMethod", "pad")
+                | (Namespace::SVG, "marker", "opacity", "1")
+                | (Namespace::SVG, "marker", "refX", "0")
+                | (Namespace::SVG, "marker", "refY", "0")
+                | (Namespace::SVG, "mask", "opacity", "1")
+                | (Namespace::SVG, "missing-glyph", "opacity", "1")
+                | (Namespace::SVG, "path", "opacity", "1")
+                | (Namespace::SVG, "path", "fill", "black")
+                | (Namespace::SVG, "path", "fill-opacity", "1")
+                | (Namespace::SVG, "path", "fill-rule", "nonzero")
+                | (Namespace::SVG, "pattern", "opacity", "1")
+                | (Namespace::SVG, "polygon", "opacity", "1")
+                | (Namespace::SVG, "polygon", "fill", "black")
+                | (Namespace::SVG, "polygon", "fill-opacity", "1")
+                | (Namespace::SVG, "polygon", "fill-rule", "nonzero")
+                | (Namespace::SVG, "polyline", "opacity", "1")
+                | (Namespace::SVG, "polyline", "fill", "black")
+                | (Namespace::SVG, "polyline", "fill-opacity", "1")
+                | (Namespace::SVG, "polyline", "fill-rule", "nonzero")
+                | (Namespace::SVG, "radialGradient", "opacity", "1")
+                | (Namespace::SVG, "radialGradient", "cx", "50%")
+                | (Namespace::SVG, "radialGradient", "cy", "50%")
+                | (Namespace::SVG, "radialGradient", "fr", "0")
+                | (
+                    Namespace::SVG,
+                    "radialGradient",
+                    "gradientUnits",
+                    "objectBoundingBox"
+                )
+                | (Namespace::SVG, "radialGradient", "r", "50%")
+                | (Namespace::SVG, "radialGradient", "spreadMethod", "pad")
+                | (Namespace::SVG, "rect", "opacity", "1")
+                | (Namespace::SVG, "rect", "rx", "auto")
+                | (Namespace::SVG, "rect", "ry", "auto")
+                | (Namespace::SVG, "set", "begin", "0s")
+                | (Namespace::SVG, "set", "dur", "indefinite")
+                | (Namespace::SVG, "set", "min", "0")
+                | (Namespace::SVG, "set", "restart", "always")
+                | (Namespace::SVG, "stop", "opacity", "1")
+                | (Namespace::SVG, "svg", "opacity", "1")
+                | (Namespace::SVG, "svg", "zoomAndPan", "magnify")
+                | (Namespace::SVG, "switch", "opacity", "1")
+                | (Namespace::SVG, "symbol", "opacity", "1")
+                | (Namespace::SVG, "text", "opacity", "1")
+                | (Namespace::SVG, "text", "fill", "black")
+                | (Namespace::SVG, "text", "fill-opacity", "1")
+                | (Namespace::SVG, "text", "fill-rule", "nonzero")
+                | (Namespace::SVG, "text", "font-size", "medium")
+                | (Namespace::SVG, "text", "font-size-adjust", "none")
+                | (Namespace::SVG, "text", "font-stretch", "normal")
+                | (Namespace::SVG, "text", "font-style", "normal")
+                | (Namespace::SVG, "text", "font-variant", "normal")
+                | (Namespace::SVG, "text", "font-weight", "normal")
+                | (Namespace::SVG, "textPath", "opacity", "1")
+                | (Namespace::SVG, "textPath", "fill", "black")
+                | (Namespace::SVG, "textPath", "fill-opacity", "1")
+                | (Namespace::SVG, "textPath", "fill-rule", "nonzero")
+                | (Namespace::SVG, "textPath", "font-size", "medium")
+                | (Namespace::SVG, "textPath", "font-size-adjust", "none")
+                | (Namespace::SVG, "textPath", "font-stretch", "normal")
+                | (Namespace::SVG, "textPath", "font-style", "normal")
+                | (Namespace::SVG, "textPath", "font-variant", "normal")
+                | (Namespace::SVG, "textPath", "font-weight", "normal")
+                | (Namespace::SVG, "tref", "opacity", "1")
+                | (Namespace::SVG, "tref", "fill", "black")
+                | (Namespace::SVG, "tref", "fill-opacity", "1")
+                | (Namespace::SVG, "tref", "fill-rule", "nonzero")
+                | (Namespace::SVG, "tref", "font-size", "medium")
+                | (Namespace::SVG, "tref", "font-size-adjust", "none")
+                | (Namespace::SVG, "tref", "font-weight", "normal")
+                | (Namespace::SVG, "tref", "font-stretch", "normal")
+                | (Namespace::SVG, "tref", "font-style", "normal")
+                | (Namespace::SVG, "tref", "font-variant", "normal")
+                | (Namespace::SVG, "tspan", "opacity", "1")
+                | (Namespace::SVG, "tspan", "fill", "black")
+                | (Namespace::SVG, "tspan", "fill-opacity", "1")
+                | (Namespace::SVG, "tspan", "fill-rule", "nonzero")
+                | (Namespace::SVG, "tspan", "font-size", "medium")
+                | (Namespace::SVG, "tspan", "font-size-adjust", "none")
+                | (Namespace::SVG, "tspan", "font-stretch", "normal")
+                | (Namespace::SVG, "tspan", "font-style", "normal")
+                | (Namespace::SVG, "tspan", "font-variant", "normal")
+                | (Namespace::SVG, "tspan", "font-weight", "normal")
+                | (Namespace::SVG, "use", "opacity", "1")
+                | (Namespace::SVG, "view", "zoomAndPan", "magnify")
                 | (
                     Namespace::MATHML,
                     "math",
@@ -1755,6 +1953,7 @@ impl Minifier {
             minify_additional_scripts_content: self.minify_additional_scripts_content.clone(),
             minify_additional_attributes: self.minify_additional_attributes.clone(),
             sort_space_separated_attribute_values: self.sort_space_separated_attribute_values,
+            sort_attributes: self.attribute_name_counter.is_some(),
         };
 
         match document_or_document_fragment {
@@ -1921,6 +2120,19 @@ impl VisitMut for Minifier {
 
             true
         });
+
+        if let Some(attribute_name_counter) = &self.attribute_name_counter {
+            n.attributes.sort_by(|a, b| {
+                let ordeing = attribute_name_counter
+                    .get(&b.name)
+                    .cmp(&attribute_name_counter.get(&a.name));
+
+                match ordeing {
+                    Ordering::Equal => b.name.cmp(&a.name),
+                    _ => ordeing,
+                }
+            });
+        }
     }
 
     fn visit_mut_attribute(&mut self, n: &mut Attribute) {
@@ -2288,6 +2500,18 @@ impl VisitMut for Minifier {
     }
 }
 
+struct AttributeNameCounter {
+    tree: AHashMap<JsWord, usize>,
+}
+
+impl VisitMut for AttributeNameCounter {
+    fn visit_mut_attribute(&mut self, n: &mut Attribute) {
+        n.visit_mut_children_with(self);
+
+        *self.tree.entry(n.name.clone()).or_insert(0) += 1;
+    }
+}
+
 fn create_minifier(context_element: Option<&Element>, options: &MinifyOptions) -> Minifier {
     let mut current_element = None;
     let mut is_pre = false;
@@ -2312,10 +2536,9 @@ fn create_minifier(context_element: Option<&Element>, options: &MinifyOptions) -
         collapse_whitespaces: options.collapse_whitespaces.clone(),
 
         remove_empty_metedata_elements: options.remove_empty_metedata_elements,
-
         remove_empty_attributes: options.remove_empty_attributes,
-        remove_redundant_attributes: options.remove_redundant_attributes,
         collapse_boolean_attributes: options.collapse_boolean_attributes,
+        remove_redundant_attributes: options.remove_redundant_attributes,
         normalize_attributes: options.normalize_attributes,
 
         minify_js: options.minify_js,
@@ -2325,21 +2548,42 @@ fn create_minifier(context_element: Option<&Element>, options: &MinifyOptions) -
         minify_additional_scripts_content: options.minify_additional_scripts_content.clone(),
 
         sort_space_separated_attribute_values: options.sort_space_separated_attribute_values,
+        attribute_name_counter: None,
     }
 }
 
 pub fn minify_document(document: &mut Document, options: &MinifyOptions) {
     let mut minifier = create_minifier(None, options);
 
+    if options.sort_attributes {
+        let mut attribute_name_counter = AttributeNameCounter {
+            tree: Default::default(),
+        };
+
+        document.visit_mut_with(&mut attribute_name_counter);
+
+        minifier.attribute_name_counter = Some(attribute_name_counter.tree);
+    }
+
     document.visit_mut_with(&mut minifier);
 }
 
 pub fn minify_document_fragment(
-    document: &mut DocumentFragment,
+    document_fragment: &mut DocumentFragment,
     context_element: &Element,
     options: &MinifyOptions,
 ) {
     let mut minifier = create_minifier(Some(context_element), options);
 
-    document.visit_mut_with(&mut minifier);
+    if options.sort_attributes {
+        let mut attribute_name_counter = AttributeNameCounter {
+            tree: Default::default(),
+        };
+
+        document_fragment.visit_mut_with(&mut attribute_name_counter);
+
+        minifier.attribute_name_counter = Some(attribute_name_counter.tree);
+    }
+
+    document_fragment.visit_mut_with(&mut minifier);
 }

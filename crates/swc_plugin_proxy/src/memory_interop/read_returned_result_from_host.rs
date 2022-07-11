@@ -1,5 +1,8 @@
 #[cfg_attr(not(target_arch = "wasm32"), allow(unused))]
-use swc_common::plugin::Serialized;
+use swc_common::plugin::{
+    deserialize_from_ptr, deserialize_from_ptr_into_fallible, PluginSerializedBytes,
+    VersionedSerializable,
+};
 
 /// A struct to exchange allocated data between memory spaces.
 #[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)]
@@ -20,11 +23,11 @@ where
     F: FnOnce(i32) -> i32,
 {
     // Allocate AllocatedBytesPtr to get return value from the host
-    let allocated_bytes_ptr = AllocatedBytesPtr(0, 0);
-    let serialized_allocated_bytes_ptr = Serialized::serialize(&allocated_bytes_ptr)
+    let allocated_bytes_ptr = VersionedSerializable::new(AllocatedBytesPtr(0, 0));
+    let serialized_allocated_bytes_ptr = PluginSerializedBytes::try_serialize(&allocated_bytes_ptr)
         .expect("Should able to serialize AllocatedBytesPtr");
-    let serialized_allocated_bytes_ptr_ref = serialized_allocated_bytes_ptr.as_ref();
-    let serialized_allocated_bytes_raw_ptr = serialized_allocated_bytes_ptr_ref.as_ptr();
+    let (serialized_allocated_bytes_raw_ptr, serialized_allocated_bytes_raw_ptr_size) =
+        serialized_allocated_bytes_ptr.as_ptr();
 
     #[cfg(target_arch = "wasm32")]
     {
@@ -41,14 +44,14 @@ where
 
     // Return reconstructted AllocatedBytesPtr to reveal ptr to the allocated bytes
     Some(unsafe {
-        Serialized::deserialize_from_ptr(
+        deserialize_from_ptr(
             serialized_allocated_bytes_raw_ptr,
-            serialized_allocated_bytes_ptr_ref
-                .len()
+            serialized_allocated_bytes_raw_ptr_size
                 .try_into()
                 .expect("Should able to convert ptr length"),
         )
         .expect("Should able to deserialize AllocatedBytesPtr")
+        .into_inner()
     })
 }
 
@@ -66,11 +69,12 @@ where
 
     // Using AllocatedBytesPtr's value, reconstruct actual return value
     allocated_returned_value_ptr.map(|allocated_returned_value_ptr| unsafe {
-        Serialized::deserialize_from_ptr(
+        deserialize_from_ptr(
             allocated_returned_value_ptr.0 as _,
             allocated_returned_value_ptr.1,
         )
         .expect("Returned value should be serializable")
+        .into_inner()
     })
 }
 
@@ -88,11 +92,11 @@ where
     R::Archived: rkyv::Deserialize<R, rkyv::de::deserializers::SharedDeserializeMap>,
 {
     // Allocate AllocatedBytesPtr to get return value from the host
-    let allocated_bytes_ptr = AllocatedBytesPtr(0, 0);
-    let serialized_allocated_bytes_ptr = Serialized::serialize(&allocated_bytes_ptr)
+    let allocated_bytes_ptr = VersionedSerializable::new(AllocatedBytesPtr(0, 0));
+    let serialized_allocated_bytes_ptr = PluginSerializedBytes::try_serialize(&allocated_bytes_ptr)
         .expect("Should able to serialize AllocatedBytesPtr");
-    let serialized_allocated_bytes_ptr_ref = serialized_allocated_bytes_ptr.as_ref();
-    let serialized_allocated_bytes_raw_ptr = serialized_allocated_bytes_ptr_ref.as_ptr();
+    let (serialized_allocated_bytes_raw_ptr, serialized_allocated_bytes_raw_ptr_size) =
+        serialized_allocated_bytes_ptr.as_ptr();
 
     #[cfg(target_arch = "wasm32")]
     {
@@ -109,22 +113,21 @@ where
 
     // Now reconstruct AllocatedBytesPtr to reveal ptr to the allocated bytes
     let allocated_returned_value_ptr: AllocatedBytesPtr = unsafe {
-        Serialized::deserialize_from_ptr(
+        deserialize_from_ptr(
             serialized_allocated_bytes_raw_ptr,
-            serialized_allocated_bytes_ptr_ref
-                .len()
-                .try_into()
-                .expect("Should able to convert ptr length"),
+            serialized_allocated_bytes_raw_ptr_size as i32,
         )
         .expect("Should able to deserialize AllocatedBytesPtr")
+        .into_inner()
     };
 
     // Using AllocatedBytesPtr's value, reconstruct actual return value
     Some(unsafe {
-        Serialized::deserialize_from_ptr_fallible(
+        deserialize_from_ptr_into_fallible(
             allocated_returned_value_ptr.0 as _,
             allocated_returned_value_ptr.1,
         )
         .expect("Returned value should be serializable")
+        .into_inner()
     })
 }

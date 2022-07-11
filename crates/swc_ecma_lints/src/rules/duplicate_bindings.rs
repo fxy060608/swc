@@ -87,11 +87,16 @@ impl DuplicateBindings {
     fn visit_with_stmt_like<T: StmtLike + VisitWith<Self>>(&mut self, s: &[T]) {
         let mut fn_name = AHashMap::default();
         for s in s {
-            if let Some(Stmt::Decl(Decl::Fn(s))) = s.as_stmt() {
-                if let Some(prev) = fn_name.get(&s.ident.sym) {
-                    emit_error(&s.ident.sym, s.ident.span, *prev)
+            if let Some(Stmt::Decl(Decl::Fn(FnDecl {
+                ident,
+                function: Function { body: Some(_), .. },
+                ..
+            }))) = s.as_stmt()
+            {
+                if let Some(prev) = fn_name.get(&ident.sym) {
+                    emit_error(&ident.sym, ident.span, *prev)
                 } else {
-                    fn_name.insert(s.ident.sym.clone(), s.ident.span);
+                    fn_name.insert(ident.sym.clone(), ident.span);
                 }
             }
 
@@ -265,6 +270,21 @@ impl Visit for DuplicateBindings {
                 s.local.sym.clone(),
                 BindingInfo {
                     span: s.local.span,
+                    unique: true,
+                    is_function: false,
+                },
+            );
+        }
+    }
+
+    fn visit_ts_import_equals_decl(&mut self, s: &TsImportEqualsDecl) {
+        s.visit_children_with(self);
+
+        if !s.is_type_only && !self.type_bindings.contains(&s.id.to_id()) {
+            self.add(
+                s.id.sym.clone(),
+                BindingInfo {
+                    span: s.id.span,
                     unique: true,
                     is_function: false,
                 },

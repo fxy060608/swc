@@ -1,6 +1,6 @@
 use indexmap::IndexMap;
 use swc_atoms::{js_word, JsWord};
-use swc_common::{collections::AHashSet, util::take::Take, Span, DUMMY_SP};
+use swc_common::{collections::AHashSet, util::take::Take, Span};
 use swc_ecma_ast::*;
 use swc_ecma_utils::{find_pat_ids, ident::IdentLike, private_ident, quote_ident, ExprFactory};
 use swc_ecma_visit::{noop_visit_mut_type, VisitMut, VisitMutWith};
@@ -158,8 +158,8 @@ impl VisitMut for ModuleDeclStrip {
                 ExportSpecifier::Namespace(..) => {
                     unreachable!("`export *` without src is invalid")
                 }
-                ExportSpecifier::Default(ExportDefaultSpecifier { exported }) => {
-                    ((js_word!("default"), DUMMY_SP), exported)
+                ExportSpecifier::Default(..) => {
+                    unreachable!("`export foo` without src is invalid")
                 }
                 ExportSpecifier::Named(ExportNamedSpecifier { orig, exported, .. }) => {
                     let orig = match orig {
@@ -203,18 +203,18 @@ impl VisitMut for ModuleDeclStrip {
             DefaultDecl::Class(class_expr) => {
                 let ident = class_expr
                     .ident
-                    .get_or_insert_with(|| private_ident!("_default"))
+                    .get_or_insert_with(|| private_ident!(n.span, "_default"))
                     .clone();
 
-                self.export.insert((js_word!("default"), DUMMY_SP), ident);
+                self.export.insert((js_word!("default"), n.span), ident);
             }
             DefaultDecl::Fn(fn_expr) => {
                 let ident = fn_expr
                     .ident
-                    .get_or_insert_with(|| private_ident!("_default"))
+                    .get_or_insert_with(|| private_ident!(n.span, "_default"))
                     .clone();
 
-                self.export.insert((js_word!("default"), DUMMY_SP), ident);
+                self.export.insert((js_word!("default"), n.span), ident);
             }
             DefaultDecl::TsInterfaceDecl(_) => {}
         }
@@ -230,10 +230,10 @@ impl VisitMut for ModuleDeclStrip {
     /// var _default = 1;
     /// ```
     fn visit_mut_export_default_expr(&mut self, n: &mut ExportDefaultExpr) {
-        let ident = private_ident!("_default");
+        let ident = private_ident!(n.span, "_default");
 
         self.export
-            .insert((js_word!("default"), DUMMY_SP), ident.clone());
+            .insert((js_word!("default"), n.span), ident.clone());
 
         self.export_default = Some(Stmt::Decl(
             n.expr
@@ -302,7 +302,7 @@ impl VisitMut for ModuleDeclStrip {
     /// export = expr;
     /// ```
     fn visit_mut_ts_export_assignment(&mut self, n: &mut TsExportAssignment) {
-        self.export_assign = Some(n.expr.take());
+        self.export_assign.get_or_insert(n.expr.take());
     }
 }
 
@@ -527,6 +527,7 @@ impl From<&ImportSpecifier> for LinkFlag {
 
             ImportSpecifier::Default(ImportDefaultSpecifier { .. })
             | ImportSpecifier::Named(ImportNamedSpecifier {
+                is_type_only: false,
                 imported:
                     Some(ModuleExportName::Ident(Ident {
                         sym: js_word!("default"),
@@ -557,6 +558,7 @@ impl From<&ExportSpecifier> for LinkFlag {
             // https://github.com/tc39/proposal-export-default-from
             ExportSpecifier::Default(..)
             | ExportSpecifier::Named(ExportNamedSpecifier {
+                is_type_only: false,
                 orig:
                     ModuleExportName::Ident(Ident {
                         sym: js_word!("default"),
