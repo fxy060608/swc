@@ -5,7 +5,30 @@
 
 
 
+- **(css/codegen)** Fix sourcemap of multibyte characters (#5183) ([5b70233](https://github.com/swc-project/swc/commit/5b70233400a5b67cf51650bebbd59dcd0699ba78))
+
+
+- **(css/parser)** Avoid skipping whitespaces if not required (#5181) ([7b28521](https://github.com/swc-project/swc/commit/7b28521d72776a33f5d51c8ac9fdc674268fa418))
+
+
+- **(node/types)** Fix AST type definitions (#5175) ([afd5171](https://github.com/swc-project/swc/commit/afd5171240835c6c2dbd5e06584409796ba08501))
+
+### Features
+
+
+
+- **(html/minifier)** Allow specifying options for other tools (#5125) ([dada2d7](https://github.com/swc-project/swc/commit/dada2d7d554fa0733a3c65c512777f1548d41a35))
+
+## [1.2.212] - 2022-07-11
+
+### Bug Fixes
+
+
+
 - **(es/modules)** Add the missing span for `export default` (#5170) ([997240c](https://github.com/swc-project/swc/commit/997240cfe68ff7787d73e93758f2d2304715e249))
+
+
+- **(es/modules)** Keep TDZ for `export default` if possible (#5164) ([56ad09a](https://github.com/swc-project/swc/commit/56ad09afb245b940a660a394908c1501fa5781ef))
 
 ### Features
 
@@ -15,6 +38,18 @@
 
 
 - **(visit)** Add index to `AstKind` (#5138) ([ac3a55a](https://github.com/swc-project/swc/commit/ac3a55a4357e8985614128e19b02461de7371185))
+
+### Miscellaneous Tasks
+
+
+
+- **(ci)** Fix benchmark action (#5176) ([7d4b496](https://github.com/swc-project/swc/commit/7d4b496e9ec394d8c93ad4cae31434ce74e63a8f))
+
+### Performance
+
+
+
+- **(es/minifier)** Remove wrong logic (#5178) ([d8f57ab](https://github.com/swc-project/swc/commit/d8f57abd26b37aea4f76a069ab091ac33ec1072f))
 
 ## [1.2.211] - 2022-07-09
 
