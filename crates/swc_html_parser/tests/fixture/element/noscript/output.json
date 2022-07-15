@@ -38,7 +38,9 @@
           "namespace": null,
           "prefix": null,
           "name": "lang",
-          "value": "en"
+          "rawName": "lang",
+          "value": "en",
+          "rawValue": "\"en\""
         }
       ],
       "children": [
@@ -161,7 +163,8 @@
                     "end": 135,
                     "ctxt": 0
                   },
-                  "data": " anchor linking to external file "
+                  "data": " anchor linking to external file ",
+                  "raw": "<!-- anchor linking to external file -->"
                 },
                 {
                   "type": "Text",
@@ -193,7 +196,9 @@
                       "namespace": null,
                       "prefix": null,
                       "name": "href",
-                      "value": "https://www.mozilla.org/"
+                      "rawName": "href",
+                      "value": "https://www.mozilla.org/",
+                      "rawValue": "\"https://www.mozilla.org/\""
                     }
                   ],
                   "children": [
@@ -255,7 +260,9 @@
                   "namespace": null,
                   "prefix": null,
                   "name": "href",
-                  "value": "https://www.mozilla.org/"
+                  "rawName": "href",
+                  "value": "https://www.mozilla.org/",
+                  "rawValue": "\"https://www.mozilla.org/\""
                 }
               ],
               "children": [
