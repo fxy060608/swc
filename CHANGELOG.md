@@ -1,11 +1,29 @@
 # Changelog
 ## [unreleased]
 
+### Bug Fixes
+
+
+
+- **(es/compat)** Preserve orders of `import`s and `export`s (#5249) ([2010409](https://github.com/swc-project/swc/commit/2010409bac0f73c5f4d04f6735db6142f621701a))
+
+
+- **(html/minifier)** Don't break unknown attributes (#5256) ([4f55459](https://github.com/swc-project/swc/commit/4f55459b013eeee8374ee9587e7d7c71d16262ec))
+
 ### Features
 
 
 
+- **(css/prefixer)** Implement `preset-env` (#5247) ([e78d23d](https://github.com/swc-project/swc/commit/e78d23d193585bb088f71602a33340d0a1ed1601))
+
+
 - **(es/codegen)** Optimize number and bigint literal (#5223) ([3f0856d](https://github.com/swc-project/swc/commit/3f0856db2ef7dde001cd482088a094f49de7ddac))
+
+
+- **(es/minifier)** Calculate correct size (#5253) ([6573324](https://github.com/swc-project/swc/commit/6573324d9c59000c81ae35ad615b0b7428bc75f9))
+
+
+- **(es/plugin)** Add experimental metadata field (#5254) ([bd1c2cc](https://github.com/swc-project/swc/commit/bd1c2cc7e6dcc04c3d8b59f34b4b88be29ec1ccb))
 
 
 - **(node)** Coerce fallback bindings (#5250) ([7e6ffff](https://github.com/swc-project/swc/commit/7e6ffffbd3834f220e940d447bf1632f70f3b9a7))
@@ -15,6 +33,18 @@
 
 ### Miscellaneous Tasks
 - **general**: Fix CI (#5251) ([d229917](https://github.com/swc-project/swc/commit/d229917588a7bfda8bf4023c42c4190552a3b0c6))
+
+### Testing
+
+
+
+- **(es/plugin)** Test plugins with different schema versions (#5255) ([b7c7e3a](https://github.com/swc-project/swc/commit/b7c7e3afb069da6804aafc67f5207da11ad36c17))
+
+### Build
+
+
+
+- **(cargo)** Align dependency versions (#5248) ([0d91741](https://github.com/swc-project/swc/commit/0d91741eb9dc9e2d3ae23f555e3b35c9c448cfc6))
 
 ## [1.2.218] - 2022-07-18
 
