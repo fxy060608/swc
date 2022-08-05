@@ -11,14 +11,14 @@ use glob::glob;
 use path_absolutize::Absolutize;
 use rayon::prelude::*;
 use relative_path::RelativePath;
-use swc::{
-    config::{Config, ConfigFile, Options},
-    try_with_handler, Compiler, HandlerOpts, TransformOutput,
+use swc_core::{
+    base::{
+        config::{Config, ConfigFile, Options},
+        try_with_handler, Compiler, HandlerOpts, TransformOutput,
+    },
+    common::{errors::ColorConfig, sync::Lazy, FileName, FilePathMapping, SourceFile, SourceMap},
+    trace_macro::swc_trace,
 };
-use swc_common::{
-    errors::ColorConfig, sync::Lazy, FileName, FilePathMapping, SourceFile, SourceMap,
-};
-use swc_trace_macro::swc_trace;
 use walkdir::WalkDir;
 
 use crate::util::trace::init_trace;

@@ -1,4 +1,10 @@
-use swc_plugin::{ast::*, plugin_transform, syntax_pos::DUMMY_SP, TransformPluginProgramMetadata};
+use swc_core::{
+    ast::*,
+    atoms::*,
+    common::DUMMY_SP,
+    plugin::{metadata::TransformPluginProgramMetadata, plugin_transform},
+    visit::*,
+};
 
 struct ConsoleOutputReplacer;
 

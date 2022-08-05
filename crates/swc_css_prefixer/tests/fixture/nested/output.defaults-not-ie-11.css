@@ -1,39 +1,9 @@
-@-webkit-keyframes test {
-  0% {
-    color: red;
-  }
-}
-@-moz-keyframes test {
-  0% {
-    color: red;
-  }
-}
-@-o-keyframes test {
-  0% {
-    color: red;
-  }
-}
 @keyframes test {
   0% {
     color: red;
   }
 }
 @supports (flex-wrap: wrap) {
-  @-webkit-keyframes test {
-    0% {
-      color: red;
-    }
-  }
-  @-moz-keyframes test {
-    0% {
-      color: red;
-    }
-  }
-  @-o-keyframes test {
-    0% {
-      color: red;
-    }
-  }
   @keyframes test {
     0% {
       color: red;
@@ -42,25 +12,8 @@
 }
 @supports (flex-wrap: wrap) {
   @supports (flex-wrap: wrap) {
-    @-webkit-keyframes test {
-      0% {
-        color: red;
-      }
-    }
-    @-moz-keyframes test {
-      0% {
-        color: red;
-      }
-    }
-    @-o-keyframes test {
-      0% {
-        color: red;
-      }
-    }
     @keyframes test {
       0% {
-        -webkit-flex-wrap: wrap;
-        -ms-flex-wrap: wrap;
         color: red;
       }
     }
@@ -68,18 +21,6 @@
 }
 .test {
   &.class::-webkit-input-placeholder {
-    color: red;
-  }
-  &.class:-moz-placeholder {
-    color: red;
-  }
-  &.class::-moz-placeholder {
-    color: red;
-  }
-  &.class:-ms-input-placeholder {
-    color: red;
-  }
-  &.class::-ms-input-placeholder {
     color: red;
   }
   &.class::placeholder {
@@ -89,18 +30,6 @@
 .test {
   &.class::-webkit-input-placeholder {
     -webkit-appearance: auto;
-    appearance: auto;
-  }
-  &.class:-moz-placeholder {
-    appearance: auto;
-  }
-  &.class::-moz-placeholder {
-    appearance: auto;
-  }
-  &.class:-ms-input-placeholder {
-    appearance: auto;
-  }
-  &.class::-ms-input-placeholder {
     appearance: auto;
   }
   &.class::placeholder {
@@ -142,18 +71,6 @@
     -webkit-appearance: auto;
     appearance: auto;
   }
-  &.class:-moz-placeholder {
-    appearance: auto;
-  }
-  &.class::-moz-placeholder {
-    appearance: auto;
-  }
-  &.class:-ms-input-placeholder {
-    appearance: auto;
-  }
-  &.class::-ms-input-placeholder {
-    appearance: auto;
-  }
   &.class::placeholder {
     -webkit-appearance: auto;
     appearance: auto;
@@ -167,18 +84,6 @@
   .test {
     &.class::-webkit-input-placeholder {
       -webkit-appearance: auto;
-      appearance: auto;
-    }
-    &.class:-moz-placeholder {
-      appearance: auto;
-    }
-    &.class::-moz-placeholder {
-      appearance: auto;
-    }
-    &.class:-ms-input-placeholder {
-      appearance: auto;
-    }
-    &.class::-ms-input-placeholder {
       appearance: auto;
     }
     &.class::placeholder {
