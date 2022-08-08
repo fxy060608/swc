@@ -5,7 +5,42 @@
 
 
 
+- **(es)** Temporarily disable `bytecheck` (#5414) ([2b5080e](https://github.com/swc-project/swc/commit/2b5080e291344337719035706f9ade6cdd4b4467))
+
+
+- **(es/utils)** Allow `quote_ident!` working with `swc_core` (#5409) ([c227325](https://github.com/swc-project/swc/commit/c2273255c0c2b90e606c5880b8e80a5cd8c370bf))
+
+
+- **(swc_core)** Update references for `quote!` (#5408) ([27e7e0b](https://github.com/swc-project/swc/commit/27e7e0b69b15a215a887b2a3f75a598ac01252b6))
+
+
+- **(swc_core)** Fix dep on `quote_macros` (#5415) ([420d936](https://github.com/swc-project/swc/commit/420d936c50265c958b3811772ee15fb468afcf58))
+
+### Features
+
+
+
+- **(dbg-swc)** Improve minifier comparator (#5411) ([d1da899](https://github.com/swc-project/swc/commit/d1da89939f169437e67031833ea09237968dd620))
+
+### Testing
+
+
+
+- **(es/minifier)** Organize simple size tests (#5402) ([7b8658e](https://github.com/swc-project/swc/commit/7b8658eef27cba4b1ed761d609c71f1c7bddaf9c))
+
+## [1.2.224] - 2022-08-06
+
+### Bug Fixes
+
+
+
+- **(es/codegen)** Emit extra dot if a float is too large (#5407) ([6dca81e](https://github.com/swc-project/swc/commit/6dca81e368f060d8247de0dd5183ea0826142b0f))
+
+
 - **(es/fixer)** Preserve parens for optional chaining expressions (#5388) ([9443419](https://github.com/swc-project/swc/commit/9443419591a47931bf27958ef5f69599484157a5))
+
+
+- **(es/minifier)** Inline vars declared in conditional paths (#5392) ([ca21fd0](https://github.com/swc-project/swc/commit/ca21fd0c4d0d7c074a1821d6d4c862f8dd5f611c))
 
 
 - **(es/modules)** Use an indirect call for a tagged template (#5382) ([cdb6164](https://github.com/swc-project/swc/commit/cdb6164937b285aa294a8d68459a2c39862d941f))
