@@ -5,7 +5,19 @@
 
 
 
+- **(cli)** Update plugin template (#5421) ([ce3bbe4](https://github.com/swc-project/swc/commit/ce3bbe4bb069b96252fde666904f593b176d6633))
+
+
 - **(es)** Temporarily disable `bytecheck` (#5414) ([2b5080e](https://github.com/swc-project/swc/commit/2b5080e291344337719035706f9ade6cdd4b4467))
+
+
+- **(es/ast)** Fix json deserialization of `AssignExpr` (#5179) ([53627af](https://github.com/swc-project/swc/commit/53627aff442422f421a961bb72eec05ae61dabb6))
+
+
+- **(es/fixer)** Remove useless parentheses around `**` (#5424) ([7116636](https://github.com/swc-project/swc/commit/71166360cc09a1911f49c09053c01578cb7c65e3))
+
+
+- **(es/fixer)** Remove needless parens for nested `??` (#5432) ([e359903](https://github.com/swc-project/swc/commit/e35990390b271fffca7e4e7a89971d82df0dc2e6))
 
 
 - **(es/utils)** Allow `quote_ident!` working with `swc_core` (#5409) ([c227325](https://github.com/swc-project/swc/commit/c2273255c0c2b90e606c5880b8e80a5cd8c370bf))
@@ -20,7 +32,19 @@
 
 
 
+- **(ast)** Make css/html ast serializable (#5427) ([56b1036](https://github.com/swc-project/swc/commit/56b10367a3acdc6e0a034ce7c6c8562bbaa9ddc6))
+
+
 - **(dbg-swc)** Improve minifier comparator (#5411) ([d1da899](https://github.com/swc-project/swc/commit/d1da89939f169437e67031833ea09237968dd620))
+
+
+- **(swc_core)** Add macros for wasm bindings (#5430) ([5348195](https://github.com/swc-project/swc/commit/5348195996c7ac70d584ab3be0d87a3ac931c44c))
+
+### Refactor
+
+
+
+- **(binding/macros)** Update import references (#5431) ([f43461d](https://github.com/swc-project/swc/commit/f43461d6459bf351d6379552d7e2e9c55656e4c1))
 
 ### Testing
 

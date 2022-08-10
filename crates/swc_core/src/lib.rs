@@ -93,6 +93,20 @@ pub mod utils {
     pub use swc_ecma_utils::*;
 }
 
+#[cfg(any(docsrs, feature = "__testing_transform"))]
+#[cfg_attr(docsrs, doc(cfg(feature = "__testing_transform")))]
+pub mod testing_transform {
+    pub use swc_ecma_transforms_testing::*;
+}
+
+#[cfg(any(docsrs, feature = "__binding_macros"))]
+#[cfg_attr(docsrs, doc(cfg(feature = "__binding_macros")))]
+pub mod binding_macros {
+    pub use binding_macros::*;
+}
+
 #[cfg(any(docsrs, feature = "allocator_node"))]
 #[cfg_attr(docsrs, doc(cfg(feature = "allocator_node")))]
 extern crate swc_node_base;
+
+pub static SWC_CORE_VERSION: &str = include_str!(concat!(env!("OUT_DIR"), "/core_pkg_version.txt"));
