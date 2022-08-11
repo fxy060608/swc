@@ -23,6 +23,9 @@
 - **(es/utils)** Allow `quote_ident!` working with `swc_core` (#5409) ([c227325](https://github.com/swc-project/swc/commit/c2273255c0c2b90e606c5880b8e80a5cd8c370bf))
 
 
+- **(plugin)** Disable remaining `bytecheck` (#5437) ([6a36a8d](https://github.com/swc-project/swc/commit/6a36a8d98203f4e22a14b483a3eadda86f3587bb))
+
+
 - **(swc_core)** Update references for `quote!` (#5408) ([27e7e0b](https://github.com/swc-project/swc/commit/27e7e0b69b15a215a887b2a3f75a598ac01252b6))
 
 
@@ -38,7 +41,19 @@
 - **(dbg-swc)** Improve minifier comparator (#5411) ([d1da899](https://github.com/swc-project/swc/commit/d1da89939f169437e67031833ea09237968dd620))
 
 
+- **(plugin)** Add some tracing for plugin host (#5438) ([001607f](https://github.com/swc-project/swc/commit/001607f3411825cc74fd73e0a378616c94603a9f))
+
+
 - **(swc_core)** Add macros for wasm bindings (#5430) ([5348195](https://github.com/swc-project/swc/commit/5348195996c7ac70d584ab3be0d87a3ac931c44c))
+
+### Miscellaneous Tasks
+
+
+
+- **(ci)** Reduce CI time (#5440) ([4bdb6a1](https://github.com/swc-project/swc/commit/4bdb6a1de426f57f0f96c2e8f3311333d1446030))
+
+
+- **(html/utils)** Fix cargo package metadata (#5439) ([0e79d31](https://github.com/swc-project/swc/commit/0e79d31a98624bb414ca5b3ddafd5080331d9898))
 
 ### Refactor
 
