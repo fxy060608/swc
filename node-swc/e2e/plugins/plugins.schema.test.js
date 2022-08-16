@@ -28,8 +28,8 @@ const buildHost = async (feature) => {
         "build",
         "--cargo-name",
         "binding_core_node",
-        "-p",
-        "binding_core_node",
+        "--cargo-cwd",
+        "./bindings/binding_core_node",
         `--cargo-flags=--no-default-features --features swc_v1 --features ${feature}`,
         "--config",
         `./node-swc/e2e/fixtures/napi.host.${feature}.config.js`,
@@ -65,10 +65,10 @@ const buildPlugin = async (feature) => {
 describe("Plugins", () => {
     describe("Transform AST schema versions", () => {
         const versionMatrix = [
-            {
-                host: "plugin_transform_schema_v1",
-                plugin: ["plugin_transform_schema_v1"],
-            },
+            // {
+            //     host: "plugin_transform_schema_v1",
+            //     plugin: ["plugin_transform_schema_v1"],
+            // },
             {
                 host: "__plugin_transform_vtest",
                 plugin: [

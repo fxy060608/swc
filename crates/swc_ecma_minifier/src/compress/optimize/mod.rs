@@ -658,8 +658,7 @@ where
                             ..
                         }) => {
                             if let PropName::Computed(key) = key {
-                                exprs
-                                    .extend(self.ignore_return_value(&mut *key.expr).map(Box::new));
+                                exprs.extend(self.ignore_return_value(&mut key.expr).map(Box::new));
                             }
 
                             if *is_static {
@@ -996,7 +995,7 @@ where
                     _ => false,
                 } =>
             {
-                let processed_arg = self.ignore_return_value(&mut **arg)?;
+                let processed_arg = self.ignore_return_value(arg)?;
 
                 *arg = Box::new(processed_arg);
 
@@ -1021,8 +1020,8 @@ where
             }) => {
                 report_change!("ignore_return_value: Reducing binary ({})", *op);
 
-                let left = self.ignore_return_value(&mut **left).map(Box::new);
-                let right = self.ignore_return_value(&mut **right).map(Box::new);
+                let left = self.ignore_return_value(left).map(Box::new);
+                let right = self.ignore_return_value(right).map(Box::new);
 
                 let mut seq = Expr::Seq(SeqExpr {
                     span: *span,
@@ -1093,7 +1092,7 @@ where
                             dont_use_negated_iife: idx != 0,
                             ..self.ctx
                         };
-                        self.with_ctx(ctx).ignore_return_value(&mut **expr)
+                        self.with_ctx(ctx).ignore_return_value(expr)
                     })
                     .map(Box::new)
                     .collect::<Vec<_>>();
@@ -1508,6 +1507,8 @@ where
                         Callee::Super(_) | Callee::Import(_) => false,
                         Callee::Expr(callee) => is_callee_this_aware(callee),
                     },
+                is_lhs_of_assign: false,
+                is_exact_lhs_of_assign: false,
                 ..self.ctx
             };
             e.callee.visit_mut_with(&mut *self.with_ctx(ctx));
@@ -1536,6 +1537,8 @@ where
             let ctx = Ctx {
                 in_call_arg: true,
                 is_this_aware_callee: false,
+                is_lhs_of_assign: false,
+                is_exact_lhs_of_assign: false,
                 ..self.ctx
             };
             // TODO: Prevent inline if callee is unknown.
@@ -1808,7 +1811,7 @@ where
                     }
                 }
                 _ => {
-                    self.optimize_bang_within_logical_ops(&mut *n.expr, true);
+                    self.optimize_bang_within_logical_ops(&mut n.expr, true);
                 }
             }
         }
@@ -1838,6 +1841,8 @@ where
 
         let ctx = Ctx {
             top_level: false,
+            is_lhs_of_assign: false,
+            is_exact_lhs_of_assign: false,
             ..self.ctx
         };
         f.visit_mut_children_with(&mut *self.with_ctx(ctx));
@@ -2073,6 +2078,8 @@ where
         {
             let ctx = Ctx {
                 is_callee: true,
+                is_exact_lhs_of_assign: false,
+                is_lhs_of_assign: false,
                 ..self.ctx
             };
             n.callee.visit_mut_with(&mut *self.with_ctx(ctx));
@@ -2081,6 +2088,8 @@ where
         {
             let ctx = Ctx {
                 in_call_arg: true,
+                is_exact_lhs_of_assign: false,
+                is_lhs_of_assign: false,
                 ..self.ctx
             };
             n.args.visit_mut_with(&mut *self.with_ctx(ctx));
@@ -2166,7 +2175,7 @@ where
         n.visit_mut_children_with(self);
 
         if let Some(arg) = &mut n.arg {
-            self.optimize_in_fn_termination(&mut **arg);
+            self.optimize_in_fn_termination(arg);
         }
     }
 
@@ -2216,10 +2225,10 @@ where
                         // If negate_iife is true, it's already handled by
                         // visit_mut_children_with(self) above.
                         if !self.options.negate_iife {
-                            self.negate_iife_in_cond(&mut **expr);
+                            self.negate_iife_in_cond(expr);
                         }
 
-                        self.ignore_return_value(&mut **expr).map(Box::new)
+                        self.ignore_return_value(expr).map(Box::new)
                     } else {
                         Some(expr.take())
                     }
@@ -2545,7 +2554,7 @@ where
 
         n.exprs
             .iter_mut()
-            .for_each(|expr| self.optimize_expr_in_str_ctx(&mut **expr));
+            .for_each(|expr| self.optimize_expr_in_str_ctx(expr));
     }
 
     #[cfg_attr(feature = "debug", tracing::instrument(skip_all))]
@@ -2800,7 +2809,7 @@ where
         n.visit_mut_children_with(self);
 
         if let Some(arg) = &mut n.arg {
-            self.compress_undefined(&mut **arg);
+            self.compress_undefined(arg);
 
             if !n.delegate && is_pure_undefined(&self.expr_ctx, arg) {
                 n.arg = None;
