@@ -93,7 +93,13 @@ where
         emit!(self, n.name);
 
         if let Some(prelude) = &n.prelude {
-            emit!(self, prelude);
+            emit!(
+                &mut *self.with_ctx(Ctx {
+                    in_at_rule_prelude: true,
+                    ..self.ctx
+                }),
+                prelude
+            );
         }
 
         if n.block.is_some() {
@@ -212,7 +218,15 @@ where
             }
             AtRulePrelude::SupportsPrelude(n) => {
                 match n.conditions.get(0) {
-                    Some(SupportsConditionType::SupportsInParens(_)) => {
+                    Some(SupportsConditionType::SupportsInParens(
+                        SupportsInParens::SupportsCondition(_),
+                    ))
+                    | Some(SupportsConditionType::SupportsInParens(SupportsInParens::Feature(
+                        SupportsFeature::Declaration(_),
+                    )))
+                    | Some(SupportsConditionType::SupportsInParens(
+                        SupportsInParens::GeneralEnclosed(GeneralEnclosed::SimpleBlock(_)),
+                    )) => {
                         formatting_space!(self);
                     }
                     _ => {
@@ -367,7 +381,13 @@ where
 
             if n.condition.is_some() {
                 space!(self);
-                emit!(self, n.keyword);
+
+                if n.keyword.is_some() {
+                    emit!(self, n.keyword);
+                } else {
+                    write_raw!(self, "and");
+                }
+
                 space!(self);
             }
         }
@@ -387,12 +407,26 @@ where
 
     #[emitter]
     fn emit_media_condition(&mut self, n: &MediaCondition) -> Result {
-        self.emit_list(&n.conditions, ListFormat::NotDelimited)?;
+        self.emit_list(
+            &n.conditions,
+            if self.config.minify {
+                ListFormat::NotDelimited
+            } else {
+                ListFormat::SpaceDelimited
+            },
+        )?;
     }
 
     #[emitter]
     fn emit_media_condition_without_or(&mut self, n: &MediaConditionWithoutOr) -> Result {
-        self.emit_list(&n.conditions, ListFormat::NotDelimited)?;
+        self.emit_list(
+            &n.conditions,
+            if self.config.minify {
+                ListFormat::NotDelimited
+            } else {
+                ListFormat::SpaceDelimited
+            },
+        )?;
     }
 
     #[emitter]
@@ -416,24 +450,36 @@ where
 
     #[emitter]
     fn emit_media_not(&mut self, n: &MediaNot) -> Result {
-        formatting_space!(self);
-        emit!(self, n.keyword);
+        if n.keyword.is_some() {
+            emit!(self, n.keyword);
+        } else {
+            write_raw!(self, "not");
+        }
+
         space!(self);
         emit!(self, n.condition);
     }
 
     #[emitter]
     fn emit_media_and(&mut self, n: &MediaAnd) -> Result {
-        formatting_space!(self);
-        emit!(self, n.keyword);
+        if n.keyword.is_some() {
+            emit!(self, n.keyword);
+        } else {
+            write_raw!(self, "and");
+        }
+
         space!(self);
         emit!(self, n.condition);
     }
 
     #[emitter]
     fn emit_media_or(&mut self, n: &MediaOr) -> Result {
-        formatting_space!(self);
-        emit!(self, n.keyword);
+        if n.keyword.is_some() {
+            emit!(self, n.keyword);
+        } else {
+            write_raw!(self, "or");
+        }
+
         space!(self);
         emit!(self, n.condition);
     }
@@ -525,7 +571,14 @@ where
 
     #[emitter]
     fn emit_supports_condition(&mut self, n: &SupportsCondition) -> Result {
-        self.emit_list(&n.conditions, ListFormat::NotDelimited)?;
+        self.emit_list(
+            &n.conditions,
+            if self.config.minify {
+                ListFormat::NotDelimited
+            } else {
+                ListFormat::SpaceDelimited
+            },
+        )?;
     }
 
     #[emitter]
@@ -540,24 +593,36 @@ where
 
     #[emitter]
     fn emit_supports_not(&mut self, n: &SupportsNot) -> Result {
-        formatting_space!(self);
-        emit!(self, n.keyword);
+        if n.keyword.is_some() {
+            emit!(self, n.keyword);
+        } else {
+            write_raw!(self, "not");
+        }
+
         space!(self);
         emit!(self, n.condition);
     }
 
     #[emitter]
     fn emit_supports_and(&mut self, n: &SupportsAnd) -> Result {
-        formatting_space!(self);
-        emit!(self, n.keyword);
+        if n.keyword.is_some() {
+            emit!(self, n.keyword);
+        } else {
+            write_raw!(self, "and");
+        }
+
         space!(self);
         emit!(self, n.condition);
     }
 
     #[emitter]
     fn emit_support_or(&mut self, n: &SupportsOr) -> Result {
-        formatting_space!(self);
-        emit!(self, n.keyword);
+        if n.keyword.is_some() {
+            emit!(self, n.keyword);
+        } else {
+            write_raw!(self, "or");
+        }
+
         space!(self);
         emit!(self, n.condition);
     }
@@ -1665,7 +1730,7 @@ where
     fn emit_selector_list(&mut self, n: &SelectorList) -> Result {
         self.emit_list(
             &n.children,
-            if self.config.minify {
+            if self.config.minify || self.ctx.in_at_rule_prelude {
                 ListFormat::CommaDelimited
             } else {
                 ListFormat::CommaDelimited | ListFormat::MultiLine
@@ -1728,8 +1793,8 @@ where
 
     #[emitter]
     fn emit_compound_selector(&mut self, n: &CompoundSelector) -> Result {
-        emit!(&mut *self.with_ctx(self.ctx), n.nesting_selector);
-        emit!(&mut *self.with_ctx(self.ctx), n.type_selector);
+        emit!(self, n.nesting_selector);
+        emit!(self, n.type_selector);
 
         self.emit_list(&n.subclass_selectors, ListFormat::NotDelimited)?;
     }

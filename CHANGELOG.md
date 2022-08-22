@@ -5,6 +5,173 @@
 
 
 
+- **(es)** Improve sourcemap (#5569) ([2f7e322](https://github.com/swc-project/swc/commit/2f7e3222140aba2a0e13e307f18b42f6b39f084d))
+
+
+- **(es/codgen)** Fix sourcemap of`BlockStmt` (#5570) ([288ae51](https://github.com/swc-project/swc/commit/288ae51fb130d5ea302fa89618921ccc3c57d7bc))
+
+
+- **(es/compat)** Use separate `SyntaxContext` for class names (#5566) ([b717a68](https://github.com/swc-project/swc/commit/b717a68199fc965632e9513d2c57a47af23231d8))
+
+
+- **(es/compat)** Fix destructuring assignments and updates of super properties (#5576) ([bee26a9](https://github.com/swc-project/swc/commit/bee26a9abb0478147aec2bedd533150204807057))
+
+
+- **(es/parser)** Allow expr to follow `ClassExpr` (#5572) ([78dd071](https://github.com/swc-project/swc/commit/78dd071dabf5f9b5ca9b213bb5f5f0e5d76b40ab))
+
+
+- **(es/parser)** Fix false-positives of yield used as a parameter in generator (#5564) ([c3f6258](https://github.com/swc-project/swc/commit/c3f62586bfbad6220cdc8cd7a678d9bec2445088))
+
+
+- **(es/quote)** Allow cloning (#5571) ([82cc3ca](https://github.com/swc-project/swc/commit/82cc3ca7a4f27f932ed4e8b4e620d1d8b5f41bdc))
+
+### Features
+
+
+
+- **(css/ast)** Make `keyword` optional (#5543) ([a3c1ac6](https://github.com/swc-project/swc/commit/a3c1ac67d708b6c95ef9a9b0892df90bdb26ffe5))
+
+
+- **(html/minifier)** Improve minification modes (#5568) ([3cb6fc2](https://github.com/swc-project/swc/commit/3cb6fc2a29b541c32ff95baf0a07021ffe0dd089))
+
+## [1.2.241] - 2022-08-19
+
+### Bug Fixes
+
+
+
+- **(ast)** Add attributes for `rkyv` (#5489) ([3569b20](https://github.com/swc-project/swc/commit/3569b20645a57999fd09ee62e082e08d2caeebcc))
+
+
+- **(ci)** Adjust script path (#5546) ([c833d08](https://github.com/swc-project/swc/commit/c833d088d5fc35cccb46aee884348d594f0fd972))
+
+
+- **(ci)** Wait exec asynchronously (#5547) ([719444c](https://github.com/swc-project/swc/commit/719444c42c6c29551de5a6a57a3dd3a1a09a7350))
+
+
+- **(css/codegen)** Improve codegen of `@media` (#5544) ([fa7abe2](https://github.com/swc-project/swc/commit/fa7abe26cf2a9eab1d8bcd481cf6fb2dd02188a3))
+
+
+- **(es/compat)** Handle `async` in class method parameters (#5560) ([f2c1164](https://github.com/swc-project/swc/commit/f2c116402621b64b49181407dba1bb7ae852cf13))
+
+
+- **(es/fixer)** Wrap `yield` expression in `extends` (#5555) ([b14d69e](https://github.com/swc-project/swc/commit/b14d69e9b0427751a86d2260f10d4af7495d7ae8))
+
+
+- **(es/helpers)** Add a missing helper (#5551) ([e930fea](https://github.com/swc-project/swc/commit/e930fea4cafce6452ace889a7a17c5abe071c492))
+
+### Features
+
+
+
+- **(css/minifier)** Remove duplications (#5542) ([780a4c2](https://github.com/swc-project/swc/commit/780a4c2b5dbc1c396d2212451b21e30a134ac3c4))
+
+
+- **(es/minifier)** Optimize more string property names (#5545) ([7487e33](https://github.com/swc-project/swc/commit/7487e3341dfff7532e4b3ff7c4868fc1fe5e04e0))
+
+
+- **(es/minifier)** Optimize numeric property names (#5548) ([38b8ca0](https://github.com/swc-project/swc/commit/38b8ca05adf22d7096e4cc6856cd5fb1734656cd))
+
+
+- **(es/minifier)** Remove more functions and classes (#5552) ([69f8945](https://github.com/swc-project/swc/commit/69f8945911e50d96978b0f49642cb79473178173))
+
+
+- **(swc_core)** Implement engine diagnostics (#5515) ([f1a4263](https://github.com/swc-project/swc/commit/f1a42639541ef5a356079b7fb177a621ddd5a2c0))
+
+### Miscellaneous Tasks
+
+
+
+- **(ci)** Fix publish action ([91d494d](https://github.com/swc-project/swc/commit/91d494dfd4cb49db8dac900bf8f52d5ae31b01a3))
+
+
+- **(ci)** Fix publish action ([bc9aef8](https://github.com/swc-project/swc/commit/bc9aef891e1dd4665c30854b67f6173767d96a22))
+
+### Testing
+
+
+
+- **(es/minifier)** Add tests for size (#5561) ([7f5095d](https://github.com/swc-project/swc/commit/7f5095dd5e569eab0e4415453144485aeef4d043))
+
+## [1.2.239] - 2022-08-18
+
+### Bug Fixes
+
+
+
+- **(css/codegen)** Improve output of `@supports` (#5529) ([0f45822](https://github.com/swc-project/swc/commit/0f45822410809b1d05658057a1ce8d8b446ee28c))
+
+
+- **(css/prefixer)** Handle supports (#5503) ([dc98234](https://github.com/swc-project/swc/commit/dc98234fab255a411d56a363b7a9e1d0c7ff131d))
+
+
+- **(css/prefixer)** Reduce duplicates (#5537) ([0985c15](https://github.com/swc-project/swc/commit/0985c1546b38a4072099e45af354c4534e0e23cb))
+
+
+- **(es/fixer)** Wrap first `function` or `class` of a sequence expression (#5508) ([f27ed73](https://github.com/swc-project/swc/commit/f27ed73594110b27b3937a7f5211503f0f72f3f9))
+
+
+- **(es/fixer)** Fix handling of `yield` and `await` (#5533) ([7394dee](https://github.com/swc-project/swc/commit/7394deef428e15bb9b03e0113e72b8b6b2ae07bc))
+
+
+- **(es/minifier)** Remove recklessly inline (#5528) ([5aa96e0](https://github.com/swc-project/swc/commit/5aa96e00d852a7a05a97be0ef625c5d798ef36da))
+
+
+- **(html/minifier)** Apply `fixer` (#5514) ([1a4d755](https://github.com/swc-project/swc/commit/1a4d7553b8688e567d1a5a3b0f51a1f50eb3810a))
+
+### Features
+
+
+
+- **(api/rust)** Implement more traits for public types (#5488) ([75c8e09](https://github.com/swc-project/swc/commit/75c8e09d6d412e1012a921d9f3932d6f253781e6))
+
+
+- **(css/prefixer)** Support more env properties and values (#5512) ([674c788](https://github.com/swc-project/swc/commit/674c788654714512000c64abf1a088e0f9f2820b))
+
+
+- **(dbg-swc)** Improve minifier comparator (#5541) ([935a2fb](https://github.com/swc-project/swc/commit/935a2fbd002398a9593135fb765127d24f4e4dbb))
+
+
+- **(es/minifier)** Ignore recursive usage for function calls and pure calls (#5526) ([d2f3e29](https://github.com/swc-project/swc/commit/d2f3e29bb054ffcb557fb54d535dc98640a77dc4))
+
+
+- **(es/plugin/runner)** Add more traces for the plugin host (#5538) ([d46418b](https://github.com/swc-project/swc/commit/d46418bb470761db48cd1a3e50578d4e1e82e577))
+
+
+- **(es/react)** Add `VisitMut` bound to the return type of react preset (#5499) ([14606d9](https://github.com/swc-project/swc/commit/14606d92225c67145d484f30902d798297a4ffe2))
+
+### Testing
+
+
+
+- **(es/minifier)** Remove useless, slow tests (#5502) ([69ce1b2](https://github.com/swc-project/swc/commit/69ce1b24d5ed1e6699678363195e1c2f8d2c7eee))
+
+## [1.2.237] - 2022-08-17
+
+### Bug Fixes
+
+
+
+- **(es/plugin/runner)** Provide guest memory allocator for the sourcemap (#5517) ([3bdb39c](https://github.com/swc-project/swc/commit/3bdb39c0eea3c8c5473ff6034be7f7f44d9ba9e7))
+
+
+- **(es/plugin/runner)** Revert wasmer@3 (#5521) ([4a9b1dd](https://github.com/swc-project/swc/commit/4a9b1dde1aaf84e233a9d1a59a1de539706e652b))
+
+### Features
+
+
+
+- **(bindings)** Update `swc_core` (#5518) ([b37b640](https://github.com/swc-project/swc/commit/b37b64013354d621b47bddca6e3bf6294f29b11d))
+
+
+- **(bindings)** Bump `swc_core` (#5525) ([ac60c0a](https://github.com/swc-project/swc/commit/ac60c0a2a01009a29ab71e7805eb8ee2aad40b34))
+
+## [1.2.235] - 2022-08-16
+
+### Bug Fixes
+
+
+
 - **(plugin/proxy)** Fix a compilation attribute (#5495) ([ca82f64](https://github.com/swc-project/swc/commit/ca82f64b0e4a550be86bd36d61b3e358b14a720a))
 
 
@@ -17,6 +184,9 @@
 - **(bindings)** Update `swc_core` (#5510) ([b9f88ff](https://github.com/swc-project/swc/commit/b9f88ff7203e0143de78f43ec0a4770907fa42da))
 
 
+- **(es/compat)** Fix syntax context of transpiled class methods (#5498) ([b9933b1](https://github.com/swc-project/swc/commit/b9933b159a208a0bccbb9bf7cd9383b6a9be0e51))
+
+
 - **(es/plugin)** Update `wasmer` to 3  (#5456) ([92f006c](https://github.com/swc-project/swc/commit/92f006c9a033bf4a49b48e842fd0668a96a13c61))
 
 
@@ -27,6 +197,9 @@
 
 
 - **(bindings)** Use separate workspace for bindings (#5506) ([496346a](https://github.com/swc-project/swc/commit/496346ac04483581c29444e205392c479e1f8c4b))
+
+
+- **(bindings)** Merge cargo workspace (#5511) ([bbf9e2f](https://github.com/swc-project/swc/commit/bbf9e2f24363094819c7d0aa390122db85645f39))
 
 ### Build
 

@@ -78,7 +78,7 @@ pub struct Script {
 
     pub body: Vec<Stmt>,
 
-    #[serde(default, rename = "interpreter")]
+    #[serde(default)]
     pub shebang: Option<Atom>,
 }
 

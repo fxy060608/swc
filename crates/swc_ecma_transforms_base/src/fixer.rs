@@ -194,13 +194,16 @@ impl VisitMut for Fixer<'_> {
         self.ctx = old;
 
         match &*expr.arg {
-            Expr::Cond(..)
-            | Expr::Assign(..)
-            | Expr::Bin(..)
-            | Expr::Unary(..)
-            | Expr::Update(..) => self.wrap(&mut expr.arg),
+            Expr::Cond(..) | Expr::Assign(..) | Expr::Bin(..) => self.wrap(&mut expr.arg),
             _ => {}
         }
+    }
+
+    fn visit_mut_yield_expr(&mut self, expr: &mut YieldExpr) {
+        let old = self.ctx;
+        self.ctx = Context::ForcedExpr;
+        expr.arg.visit_mut_with(self);
+        self.ctx = old;
     }
 
     fn visit_mut_bin_expr(&mut self, expr: &mut BinExpr) {
@@ -388,6 +391,7 @@ impl VisitMut for Fixer<'_> {
             Some(e)
                 if e.is_seq()
                     || e.is_await_expr()
+                    || e.is_yield_expr()
                     || e.is_bin()
                     || e.is_assign()
                     || e.is_cond()
@@ -708,7 +712,7 @@ impl Fixer<'_> {
 
                 let exprs_len = exprs.len();
                 // don't has child seq
-                let expr = if len == exprs_len {
+                let mut exprs = if len == exprs_len {
                     let mut exprs = exprs
                         .iter_mut()
                         .enumerate()
@@ -725,8 +729,7 @@ impl Fixer<'_> {
                         *e = *exprs.pop().unwrap();
                         return;
                     }
-                    let exprs = ignore_padding_value(exprs);
-                    Expr::Seq(SeqExpr { span: *span, exprs })
+                    ignore_padding_value(exprs)
                 } else {
                     let mut buf = Vec::with_capacity(len);
                     for (i, expr) in exprs.iter_mut().enumerate() {
@@ -772,10 +775,22 @@ impl Fixer<'_> {
                         return;
                     }
 
-                    let exprs = ignore_padding_value(buf);
-
-                    Expr::Seq(SeqExpr { span: *span, exprs })
+                    ignore_padding_value(buf)
                 };
+
+                if self.ctx == Context::Default {
+                    if let Some(expr) = exprs.first_mut() {
+                        match &mut **expr {
+                            Expr::Call(CallExpr {
+                                callee: Callee::Expr(callee_expr),
+                                ..
+                            }) if callee_expr.is_fn_expr() => self.wrap(callee_expr),
+                            _ => (),
+                        }
+                    }
+                }
+
+                let expr = Expr::Seq(SeqExpr { span: *span, exprs });
 
                 match self.ctx {
                     Context::ForcedExpr => {
@@ -1486,6 +1501,16 @@ var store = global[SHARED] || (global[SHARED] = {});
     );
 
     identical!(extends_cond, "class Foo extends (true ? Bar : Baz) {}");
+
+    identical!(
+        extends_await_yield,
+        "
+        async function* func() {
+            class A extends (await p) {}
+            class B extends (yield p) {}
+        }
+        "
+    );
 
     identical!(deno_10668_1, "console.log(null ?? (undefined && true))");
 
