@@ -1,4 +1,7 @@
-use std::{iter, mem};
+use std::{
+    iter,
+    mem::{self, replace},
+};
 
 use serde::Deserialize;
 use swc_common::{chain, util::take::Take, Mark, Spanned, DUMMY_SP};
@@ -7,7 +10,7 @@ use swc_ecma_transforms_base::{
     helper, helper_expr,
     perf::{Check, Parallel},
 };
-use swc_ecma_transforms_macros::{fast_path, parallel};
+use swc_ecma_transforms_macros::fast_path;
 use swc_ecma_utils::{
     alias_ident_for, alias_if_required, is_literal, private_ident, quote_ident, var::VarCollector,
     ExprFactory, StmtLike,
@@ -22,13 +25,13 @@ use swc_trace_macro::swc_trace;
 
 /// `@babel/plugin-proposal-object-rest-spread`
 #[tracing::instrument(level = "info", skip_all)]
-pub fn object_rest_spread(c: Config) -> impl Fold + VisitMut {
+pub fn object_rest_spread(config: Config) -> impl Fold + VisitMut {
     chain!(
         as_folder(ObjectRest {
-            c,
+            config,
             ..Default::default()
         }),
-        as_folder(ObjectSpread { c })
+        as_folder(ObjectSpread { config })
     )
 }
 
@@ -40,7 +43,7 @@ struct ObjectRest {
     mutable_vars: Vec<VarDeclarator>,
     /// Assignment expressions.
     exprs: Vec<Box<Expr>>,
-    c: Config,
+    config: Config,
 }
 
 #[derive(Debug, Clone, Copy, Default, Deserialize)]
@@ -470,7 +473,7 @@ impl ObjectRest {
 
         for mut stmt in stmts.drain(..) {
             let mut folder = ObjectRest {
-                c: self.c,
+                config: self.config,
                 ..Default::default()
             };
             stmt.visit_mut_with(&mut folder);
@@ -560,6 +563,14 @@ impl ObjectRest {
             // fast-path
             return (params.take(), body.take());
         }
+
+        let prev_state = replace(
+            self,
+            Self {
+                config: self.config,
+                ..Default::default()
+            },
+        );
 
         let params = params
             .drain(..)
@@ -654,7 +665,7 @@ impl ObjectRest {
             })
             .collect();
 
-        (
+        let ret = (
             params,
             BlockStmt {
                 stmts: if self.vars.is_empty() {
@@ -672,7 +683,11 @@ impl ObjectRest {
                 .collect(),
                 ..body.take()
             },
-        )
+        );
+
+        *self = prev_state;
+
+        ret
     }
 
     fn fold_rest(
@@ -883,7 +898,7 @@ impl ObjectRest {
                 right: Box::new(object_without_properties(
                     obj,
                     excluded_props,
-                    self.c.no_symbol,
+                    self.config.no_symbol,
                 )),
             })));
         } else {
@@ -894,7 +909,7 @@ impl ObjectRest {
                 init: Some(Box::new(object_without_properties(
                     obj,
                     excluded_props,
-                    self.c.no_symbol,
+                    self.config.no_symbol,
                 ))),
                 definite: false,
             });
@@ -1055,19 +1070,20 @@ impl VisitMut for PatSimplifier {
 
 #[derive(Clone, Copy)]
 struct ObjectSpread {
-    c: Config,
+    config: Config,
 }
 
 impl Parallel for ObjectSpread {
     fn create(&self) -> Self {
-        ObjectSpread { c: self.c }
+        ObjectSpread {
+            config: self.config,
+        }
     }
 
     fn merge(&mut self, _: Self) {}
 }
 
 #[swc_trace]
-#[parallel]
 impl VisitMut for ObjectSpread {
     noop_visit_mut_type!();
 
@@ -1080,7 +1096,7 @@ impl VisitMut for ObjectSpread {
                 return;
             }
 
-            let mut callee = if self.c.set_property {
+            let mut callee = if self.config.set_property {
                 helper!(extends, "extends")
             } else {
                 helper!(object_spread, "objectSpread")
@@ -1098,7 +1114,7 @@ impl VisitMut for ObjectSpread {
                     match prop {
                         PropOrSpread::Prop(..) => {
                             // before is spread element
-                            if !first && obj.props.is_empty() && !self.c.pure_getters {
+                            if !first && obj.props.is_empty() && !self.config.pure_getters {
                                 buf = vec![Expr::Call(CallExpr {
                                     span: DUMMY_SP,
                                     callee: callee.clone(),
@@ -1113,7 +1129,7 @@ impl VisitMut for ObjectSpread {
                             // Push object if it's not empty
                             if first || !obj.props.is_empty() {
                                 buf.push(obj.take().as_arg());
-                                if !first && !self.c.pure_getters {
+                                if !first && !self.config.pure_getters {
                                     buf = vec![Expr::Call(CallExpr {
                                         span: DUMMY_SP,
                                         callee: helper!(object_spread_props, "objectSpreadProps"),
@@ -1131,7 +1147,7 @@ impl VisitMut for ObjectSpread {
                 }
 
                 if !obj.props.is_empty() {
-                    if !self.c.pure_getters {
+                    if !self.config.pure_getters {
                         callee = helper!(object_spread_props, "objectSpreadProps");
                     }
                     buf.push(obj.as_arg());

@@ -1,0 +1,1 @@
+//// [parserMemberVariableDeclaration5.ts]

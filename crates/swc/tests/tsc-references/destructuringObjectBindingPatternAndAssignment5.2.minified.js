@@ -1,0 +1,1 @@
+//// [destructuringObjectBindingPatternAndAssignment5.ts]

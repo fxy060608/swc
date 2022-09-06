@@ -1,0 +1,1 @@
+//// [superCallInConstructorWithNoBaseType.ts]

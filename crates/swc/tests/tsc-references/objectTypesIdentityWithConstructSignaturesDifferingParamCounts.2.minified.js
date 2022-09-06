@@ -1,0 +1,1 @@
+//// [objectTypesIdentityWithConstructSignaturesDifferingParamCounts.ts]

@@ -1,0 +1,1 @@
+//// [classAbstractClinterfaceAssignability.ts]

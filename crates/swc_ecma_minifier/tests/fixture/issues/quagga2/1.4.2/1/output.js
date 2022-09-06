@@ -260,7 +260,7 @@
                         return sum;
                     }
                     return function() {
-                        var p1, p2, p12, m1, m2, m12, vet = [
+                        var p1, p2, p12, m12, vet = [
                             0
                         ], max = (1 << bitsPerPixel) - 1;
                         hist = function(imageWrapper, bitsPerPixel) {
@@ -268,7 +268,7 @@
                             for(var imageData = imageWrapper.data, length = imageData.length, bitShift = 8 - bitsPerPixel, bucketCnt = 1 << bitsPerPixel, hist = new Int32Array(bucketCnt); length--;)hist[imageData[length] >> bitShift]++;
                             return hist;
                         }(imageWrapper, bitsPerPixel);
-                        for(var k = 1; k < max; k++)p1 = px(0, k), p2 = px(k + 1, max), p12 = p1 * p2, 0 === p12 && (p12 = 1), m1 = mx(0, k) * p2, m2 = mx(k + 1, max) * p1, m12 = m1 - m2, vet[k] = m12 * m12 / p12;
+                        for(var k = 1; k < max; k++)0 == (p12 = (p1 = px(0, k)) * (p2 = px(k + 1, max))) && (p12 = 1), m12 = mx(0, k) * p2 - mx(k + 1, max) * p1, vet[k] = m12 * m12 / p12;
                         return array_helper.a.maxIndex(vet);
                     }() << 8 - bitsPerPixel;
                 }(imageWrapper);
@@ -517,7 +517,7 @@
                     {
                         key: "moments",
                         value: function(labelCount) {
-                            var x, y, val, ysq, i, label, mu11, mu02, mu20, x_, y_, tmp, data = this.data, height = this.size.y, width = this.size.x, labelSum = [], result = [], PI = Math.PI, PI_4 = PI / 4;
+                            var x, y, val, ysq, i, label, mu11, x_, y_, tmp, data = this.data, height = this.size.y, width = this.size.x, labelSum = [], result = [], PI = Math.PI, PI_4 = PI / 4;
                             if (labelCount <= 0) return result;
                             for(i = 0; i < labelCount; i++)labelSum[i] = {
                                 m00: 0,
@@ -530,7 +530,7 @@
                                 rad: 0
                             };
                             for(y = 0; y < height; y++)for(x = 0, ysq = y * y; x < width; x++)(val = data[y * width + x]) > 0 && (label = labelSum[val - 1], label.m00 += 1, label.m01 += y, label.m10 += x, label.m11 += x * y, label.m02 += ysq, label.m20 += x * x);
-                            for(i = 0; i < labelCount; i++)isNaN((label = labelSum[i]).m00) || 0 === label.m00 || (x_ = label.m10 / label.m00, y_ = label.m01 / label.m00, mu11 = label.m11 / label.m00 - x_ * y_, mu02 = label.m02 / label.m00 - y_ * y_, mu20 = label.m20 / label.m00 - x_ * x_, tmp = (mu02 - mu20) / (2 * mu11), tmp = 0.5 * Math.atan(tmp) + (mu11 >= 0 ? PI_4 : -PI_4) + PI, label.theta = (180 * tmp / PI + 90) % 180 - 90, label.theta < 0 && (label.theta += 180), label.rad = tmp > PI ? tmp - PI : tmp, label.vec = vec2.clone([
+                            for(i = 0; i < labelCount; i++)isNaN((label = labelSum[i]).m00) || 0 === label.m00 || (x_ = label.m10 / label.m00, y_ = label.m01 / label.m00, mu11 = label.m11 / label.m00 - x_ * y_, tmp = 0.5 * Math.atan(tmp = (label.m02 / label.m00 - y_ * y_ - (label.m20 / label.m00 - x_ * x_)) / (2 * mu11)) + (mu11 >= 0 ? PI_4 : -PI_4) + PI, label.theta = (180 * tmp / PI + 90) % 180 - 90, label.theta < 0 && (label.theta += 180), label.rad = tmp > PI ? tmp - PI : tmp, label.vec = vec2.clone([
                                 Math.cos(tmp),
                                 Math.sin(tmp), 
                             ]), result.push(label));
@@ -710,7 +710,7 @@
                     function _trace(current, color, label, edgelabel) {
                         var i, y, x;
                         for(i = 0; i < 7; i++){
-                            if (y = current.cy + searchDirections[current.dir][0], x = current.cx + searchDirections[current.dir][1], pos = y * width + x, imageData[pos] === color && (0 === labelData[pos] || labelData[pos] === label)) return labelData[pos] = label, current.cy = y, current.cx = x, !0;
+                            if (imageData[pos = (y = current.cy + searchDirections[current.dir][0]) * width + (x = current.cx + searchDirections[current.dir][1])] === color && (0 === labelData[pos] || labelData[pos] === label)) return labelData[pos] = label, current.cy = y, current.cx = x, !0;
                             0 === labelData[pos] && (labelData[pos] = edgelabel), current.dir = (current.dir + 1) % 8;
                         }
                         return !1;
@@ -736,7 +736,7 @@
                                     dir: 0
                                 };
                                 if (_trace(current, color, label, edgelabel)) {
-                                    Cv = Fv = vertex2D(sx, sy, current.dir), ldir = current.dir, P = vertex2D(current.cx, current.cy, 0), P.prev = Cv, Cv.next = P, P.next = null, Cv = P;
+                                    Cv = Fv = vertex2D(sx, sy, current.dir), ldir = current.dir, (P = vertex2D(current.cx, current.cy, 0)).prev = Cv, Cv.next = P, P.next = null, Cv = P;
                                     do current.dir = (current.dir + 6) % 8, _trace(current, color, label, edgelabel), ldir !== current.dir ? (Cv.dir = current.dir, (P = vertex2D(current.cx, current.cy, 0)).prev = Cv, Cv.next = P, P.next = null, Cv = P) : (Cv.dir = ldir, Cv.x = current.cx, Cv.y = current.cy), ldir = current.dir;
                                     while (current.cx !== sx || current.cy !== sy)
                                     Fv.prev = Cv.prev, Cv.prev.next = Fv;
@@ -891,8 +891,8 @@
                     locate: function() {
                         _config.halfSample && Object(_common_cv_utils__WEBPACK_IMPORTED_MODULE_3__.f)(_inputImageWrapper, _currentImageWrapper), Object(_common_cv_utils__WEBPACK_IMPORTED_MODULE_3__.i)(_currentImageWrapper, _binaryImageWrapper), _binaryImageWrapper.zeroBorder(), _config.debug.showCanvas && _binaryImageWrapper.show(_canvasContainer.dom.binary, 255);
                         var patchesFound = function() {
-                            var i, j, x, y, moments, rasterizer, rasterResult, patch, patchesFound = [];
-                            for(i = 0; i < _numPatches.x; i++)for(j = 0; j < _numPatches.y; j++)x = _subImageWrapper.size.x * i, y = _subImageWrapper.size.y * j, skeletonize(x, y), _skelImageWrapper.zeroBorder(), _common_array_helper__WEBPACK_IMPORTED_MODULE_4__.a.init(_labelImageWrapper.data, 0), rasterizer = _rasterizer__WEBPACK_IMPORTED_MODULE_6__.a.create(_skelImageWrapper, _labelImageWrapper), rasterResult = rasterizer.rasterize(0), _config.debug.showLabels && _labelImageWrapper.overlay(_canvasContainer.dom.binary, Math.floor(360 / rasterResult.count), {
+                            var i, j, x, y, moments, rasterResult, patch, patchesFound = [];
+                            for(i = 0; i < _numPatches.x; i++)for(j = 0; j < _numPatches.y; j++)skeletonize(x = _subImageWrapper.size.x * i, y = _subImageWrapper.size.y * j), _skelImageWrapper.zeroBorder(), _common_array_helper__WEBPACK_IMPORTED_MODULE_4__.a.init(_labelImageWrapper.data, 0), rasterResult = _rasterizer__WEBPACK_IMPORTED_MODULE_6__.a.create(_skelImageWrapper, _labelImageWrapper).rasterize(0), _config.debug.showLabels && _labelImageWrapper.overlay(_canvasContainer.dom.binary, Math.floor(360 / rasterResult.count), {
                                 x: x,
                                 y: y
                             }), moments = _labelImageWrapper.moments(rasterResult.count), patchesFound = patchesFound.concat(describePatch(moments, [
@@ -1209,13 +1209,13 @@
         function(module1, exports1) {
             var objectProto = Object.prototype;
             module1.exports = function(value) {
-                var Ctor = value && value.constructor, proto = "function" == typeof Ctor && Ctor.prototype || objectProto;
-                return value === proto;
+                var Ctor = value && value.constructor;
+                return value === ("function" == typeof Ctor && Ctor.prototype || objectProto);
             };
         },
         function(module1, exports1, __webpack_require__) {
             (function(module1) {
-                var root = __webpack_require__(17), stubFalse = __webpack_require__(134), freeExports = exports1 && !exports1.nodeType && exports1, freeModule = freeExports && "object" == typeof module1 && module1 && !module1.nodeType && module1, moduleExports = freeModule && freeModule.exports === freeExports, Buffer = moduleExports ? root.Buffer : void 0, nativeIsBuffer = Buffer ? Buffer.isBuffer : void 0;
+                var root = __webpack_require__(17), stubFalse = __webpack_require__(134), freeExports = exports1 && !exports1.nodeType && exports1, freeModule = freeExports && "object" == typeof module1 && module1 && !module1.nodeType && module1, Buffer = freeModule && freeModule.exports === freeExports ? root.Buffer : void 0, nativeIsBuffer = Buffer ? Buffer.isBuffer : void 0;
                 module1.exports = nativeIsBuffer || stubFalse;
             }).call(this, __webpack_require__(38)(module1));
         },
@@ -1259,7 +1259,7 @@
             };
         },
         function(module1, exports1, __webpack_require__) {
-            var baseSetToString = __webpack_require__(148), shortOut = __webpack_require__(150), setToString = shortOut(baseSetToString);
+            var baseSetToString = __webpack_require__(148), setToString = __webpack_require__(150)(baseSetToString);
             module1.exports = setToString;
         },
         function(module1, exports1, __webpack_require__) {
@@ -1527,7 +1527,7 @@
                             drawContour: function(canvas, firstContour) {
                                 var iq, q, p, ctx = canvas.getContext("2d"), pq = firstContour;
                                 for(ctx.strokeStyle = "red", ctx.fillStyle = "red", ctx.lineWidth = 1, iq = null !== pq ? pq.insideContours : null; null !== pq;){
-                                    switch(null !== iq ? (q = iq, iq = iq.nextpeer) : (q = pq, pq = pq.nextpeer, iq = null !== pq ? pq.insideContours : null), q.dir){
+                                    switch(null !== iq ? (q = iq, iq = iq.nextpeer) : (q = pq, iq = null !== (pq = pq.nextpeer) ? pq.insideContours : null), q.dir){
                                         case Rasterizer.CONTOUR_DIR.CW_DIR:
                                             ctx.strokeStyle = "red";
                                             break;
@@ -2185,11 +2185,11 @@
             };
         },
         function(module1, exports1) {
-            var HOT_SPAN = 16, nativeNow = Date.now;
+            var nativeNow = Date.now;
             module1.exports = function(func) {
                 var count = 0, lastCalled = 0;
                 return function() {
-                    var stamp = nativeNow(), remaining = HOT_SPAN - (stamp - lastCalled);
+                    var stamp = nativeNow(), remaining = 16 - (stamp - lastCalled);
                     if (lastCalled = stamp, remaining > 0) {
                         if (++count >= 800) return arguments[0];
                     } else count = 0;
@@ -2632,8 +2632,39 @@
                 "use strict";
                 var undefined, Op = Object.prototype, hasOwn = Op.hasOwnProperty, $Symbol = "function" == typeof Symbol ? Symbol : {}, iteratorSymbol = $Symbol.iterator || "@@iterator", asyncIteratorSymbol = $Symbol.asyncIterator || "@@asyncIterator", toStringTagSymbol = $Symbol.toStringTag || "@@toStringTag";
                 function wrap(innerFn, outerFn, self1, tryLocsList) {
-                    var generator = Object.create((outerFn && outerFn.prototype instanceof Generator ? outerFn : Generator).prototype), context = new Context(tryLocsList || []);
-                    return generator._invoke = makeInvokeMethod(innerFn, self1, context), generator;
+                    var innerFn1, self2, context, state, generator = Object.create((outerFn && outerFn.prototype instanceof Generator ? outerFn : Generator).prototype), context1 = new Context(tryLocsList || []);
+                    return generator._invoke = (innerFn1 = innerFn, self2 = self1, context = context1, state = GenStateSuspendedStart, function(method, arg) {
+                        if (state === GenStateExecuting) throw Error("Generator is already running");
+                        if (state === GenStateCompleted) {
+                            if ("throw" === method) throw arg;
+                            return doneResult();
+                        }
+                        for(context.method = method, context.arg = arg;;){
+                            var delegate = context.delegate;
+                            if (delegate) {
+                                var delegateResult = maybeInvokeDelegate(delegate, context);
+                                if (delegateResult) {
+                                    if (delegateResult === ContinueSentinel) continue;
+                                    return delegateResult;
+                                }
+                            }
+                            if ("next" === context.method) context.sent = context._sent = context.arg;
+                            else if ("throw" === context.method) {
+                                if (state === GenStateSuspendedStart) throw state = GenStateCompleted, context.arg;
+                                context.dispatchException(context.arg);
+                            } else "return" === context.method && context.abrupt("return", context.arg);
+                            state = GenStateExecuting;
+                            var record = tryCatch(innerFn1, self2, context);
+                            if ("normal" === record.type) {
+                                if (state = context.done ? GenStateCompleted : "suspendedYield", record.arg === ContinueSentinel) continue;
+                                return {
+                                    value: record.arg,
+                                    done: context.done
+                                };
+                            }
+                            "throw" === record.type && (state = GenStateCompleted, context.method = "throw", context.arg = record.arg);
+                        }
+                    }), generator;
                 }
                 function tryCatch(fn, obj, arg) {
                     try {
@@ -2695,41 +2726,6 @@
                             });
                         }
                         return previousPromise = previousPromise ? previousPromise.then(callInvokeWithMethodAndArg, callInvokeWithMethodAndArg) : callInvokeWithMethodAndArg();
-                    };
-                }
-                function makeInvokeMethod(innerFn, self1, context) {
-                    var state = GenStateSuspendedStart;
-                    return function(method, arg) {
-                        if (state === GenStateExecuting) throw Error("Generator is already running");
-                        if (state === GenStateCompleted) {
-                            if ("throw" === method) throw arg;
-                            return doneResult();
-                        }
-                        for(context.method = method, context.arg = arg;;){
-                            var delegate = context.delegate;
-                            if (delegate) {
-                                var delegateResult = maybeInvokeDelegate(delegate, context);
-                                if (delegateResult) {
-                                    if (delegateResult === ContinueSentinel) continue;
-                                    return delegateResult;
-                                }
-                            }
-                            if ("next" === context.method) context.sent = context._sent = context.arg;
-                            else if ("throw" === context.method) {
-                                if (state === GenStateSuspendedStart) throw state = GenStateCompleted, context.arg;
-                                context.dispatchException(context.arg);
-                            } else "return" === context.method && context.abrupt("return", context.arg);
-                            state = GenStateExecuting;
-                            var record = tryCatch(innerFn, self1, context);
-                            if ("normal" === record.type) {
-                                if (state = context.done ? GenStateCompleted : "suspendedYield", record.arg === ContinueSentinel) continue;
-                                return {
-                                    value: record.arg,
-                                    done: context.done
-                                };
-                            }
-                            "throw" === record.type && (state = GenStateCompleted, context.method = "throw", context.arg = record.arg);
-                        }
                     };
                 }
                 function maybeInvokeDelegate(delegate, context) {
@@ -3244,7 +3240,7 @@
                 for(currentDir = line[0] > center ? Slope.DIR.UP : Slope.DIR.DOWN, extrema.push({
                     pos: 0,
                     val: line[0]
-                }), i = 0; i < line.length - 2; i++)slope = line[i + 1] - line[i], slope2 = line[i + 2] - line[i + 1], dir = slope + slope2 < rThreshold && line[i + 1] < 1.5 * center ? Slope.DIR.DOWN : slope + slope2 > threshold && line[i + 1] > 0.5 * center ? Slope.DIR.UP : currentDir, currentDir !== dir && (extrema.push({
+                }), i = 0; i < line.length - 2; i++)dir = (slope = line[i + 1] - line[i]) + (slope2 = line[i + 2] - line[i + 1]) < rThreshold && line[i + 1] < 1.5 * center ? Slope.DIR.DOWN : slope + slope2 > threshold && line[i + 1] > 0.5 * center ? Slope.DIR.UP : currentDir, currentDir !== dir && (extrema.push({
                     pos: i,
                     val: line[i]
                 }), currentDir = dir);
@@ -3270,7 +3266,7 @@
             };
             var BarcodeDirection1, bresenham = Bresenham, image_debug = __webpack_require__(9), classCallCheck = __webpack_require__(3), classCallCheck_default = __webpack_require__.n(classCallCheck), createClass = __webpack_require__(4), createClass_default = __webpack_require__.n(createClass), assertThisInitialized = __webpack_require__(1), assertThisInitialized_default = __webpack_require__.n(assertThisInitialized), inherits = __webpack_require__(6), inherits_default = __webpack_require__.n(inherits), possibleConstructorReturn = __webpack_require__(5), possibleConstructorReturn_default = __webpack_require__.n(possibleConstructorReturn), getPrototypeOf = __webpack_require__(2), getPrototypeOf_default = __webpack_require__.n(getPrototypeOf), defineProperty = __webpack_require__(0), defineProperty_default = __webpack_require__.n(defineProperty), array_helper = __webpack_require__(10);
             (BarcodeDirection1 = BarcodeDirection || (BarcodeDirection = {}))[BarcodeDirection1.Forward = 1] = "Forward", BarcodeDirection1[BarcodeDirection1.Reverse = -1] = "Reverse";
-            var barcode_reader_BarcodeReader = function() {
+            var barcode_reader = function() {
                 function BarcodeReader(config, supplements) {
                     return classCallCheck_default()(this, BarcodeReader), defineProperty_default()(this, "_row", []), defineProperty_default()(this, "config", {}), defineProperty_default()(this, "supplements", []), defineProperty_default()(this, "SINGLE_CODE_ERROR", 0), defineProperty_default()(this, "FORMAT", "unknown"), defineProperty_default()(this, "CONFIG_KEYS", {}), this._row = [], this.config = config || {}, supplements && (this.supplements = supplements), this;
                 }
@@ -3285,13 +3281,13 @@
                     {
                         key: "_matchPattern",
                         value: function(counter, code, maxSingleError) {
-                            var error = 0, singleError = 0, sum = 0, modulo = 0, barWidth = 0, count = 0, scaled = 0;
+                            var error = 0, singleError = 0, sum = 0, modulo = 0, barWidth = 0, scaled = 0;
                             maxSingleError = maxSingleError || this.SINGLE_CODE_ERROR || 1;
                             for(var i = 0; i < counter.length; i++)sum += counter[i], modulo += code[i];
                             if (sum < modulo) return Number.MAX_VALUE;
                             maxSingleError *= barWidth = sum / modulo;
                             for(var _i = 0; _i < counter.length; _i++){
-                                if (count = counter[_i], scaled = code[_i] * barWidth, singleError = Math.abs(count - scaled) / scaled, singleError > maxSingleError) return Number.MAX_VALUE;
+                                if ((singleError = Math.abs(counter[_i] - (scaled = code[_i] * barWidth)) / scaled) > maxSingleError) return Number.MAX_VALUE;
                                 error += singleError;
                             }
                             return error / modulo;
@@ -3360,7 +3356,7 @@
                         }
                     }, 
                 ]), BarcodeReader;
-            }(), barcode_reader = barcode_reader_BarcodeReader, code_128_reader = function(_BarcodeReader) {
+            }(), code_128_reader = function(_BarcodeReader) {
                 inherits_default()(Code128Reader, _BarcodeReader);
                 var Derived, hasNativeReflectConstruct, _super = (Derived = Code128Reader, hasNativeReflectConstruct = function() {
                     if ("undefined" == typeof Reflect || !Reflect.construct || Reflect.construct.sham) return !1;
@@ -5768,7 +5764,7 @@
                         key: "_findStart",
                         value: function() {
                             for(var leadingWhitespaceStart = 0, offset = this._nextSet(this._row), startInfo = null, narrowBarWidth = 1; !startInfo && (startInfo = this._findPattern(this.START_PATTERN, offset, !1, !0));){
-                                if (narrowBarWidth = Math.floor((startInfo.end - startInfo.start) / 4), leadingWhitespaceStart = startInfo.start - 10 * narrowBarWidth, leadingWhitespaceStart >= 0 && this._matchRange(leadingWhitespaceStart, startInfo.start, 0)) return startInfo;
+                                if (narrowBarWidth = Math.floor((startInfo.end - startInfo.start) / 4), (leadingWhitespaceStart = startInfo.start - 10 * narrowBarWidth) >= 0 && this._matchRange(leadingWhitespaceStart, startInfo.start, 0)) return startInfo;
                                 offset = startInfo.end, startInfo = null;
                             }
                             return null;
@@ -6016,7 +6012,7 @@
                         value: function() {
                             for(var startInfo = null, offset = this._nextSet(this._row), narrowBarWidth = 1, leadingWhitespaceStart = 0; !startInfo;){
                                 if (!(startInfo = this._findPattern(_2of5_reader_START_PATTERN, offset, !1, !0))) return null;
-                                if (narrowBarWidth = Math.floor((startInfo.end - startInfo.start) / START_PATTERN_LENGTH), leadingWhitespaceStart = startInfo.start - 5 * narrowBarWidth, leadingWhitespaceStart >= 0 && this._matchRange(leadingWhitespaceStart, startInfo.start, 0)) break;
+                                if (narrowBarWidth = Math.floor((startInfo.end - startInfo.start) / START_PATTERN_LENGTH), (leadingWhitespaceStart = startInfo.start - 5 * narrowBarWidth) >= 0 && this._matchRange(leadingWhitespaceStart, startInfo.start, 0)) break;
                                 offset = startInfo.end, startInfo = null;
                             }
                             return startInfo;
@@ -6596,7 +6592,7 @@
                         } else events = {};
                     }
                 };
-            }(), asyncToGenerator = __webpack_require__(20), asyncToGenerator_default = __webpack_require__.n(asyncToGenerator), regenerator = __webpack_require__(12), regenerator_default = __webpack_require__.n(regenerator), pick = __webpack_require__(85), pick_default = __webpack_require__.n(pick), wrapNativeSuper = __webpack_require__(86), wrapNativeSuper_default = __webpack_require__.n(wrapNativeSuper), Exception_Exception = function(_Error) {
+            }(), asyncToGenerator = __webpack_require__(20), asyncToGenerator_default = __webpack_require__.n(asyncToGenerator), regenerator = __webpack_require__(12), regenerator_default = __webpack_require__.n(regenerator), pick = __webpack_require__(85), pick_default = __webpack_require__.n(pick), wrapNativeSuper = __webpack_require__(86), Exception_Exception = function(_Error) {
                 inherits_default()(Exception, _Error);
                 var Derived, hasNativeReflectConstruct, _super = (Derived = Exception, hasNativeReflectConstruct = function() {
                     if ("undefined" == typeof Reflect || !Reflect.construct || Reflect.construct.sham) return !1;
@@ -6619,7 +6615,7 @@
                     return classCallCheck_default()(this, Exception), _this = _super.call(this, m), defineProperty_default()(assertThisInitialized_default()(_this), "code", void 0), _this.code = code, Object.setPrototypeOf(assertThisInitialized_default()(_this), Exception.prototype), _this;
                 }
                 return Exception;
-            }(wrapNativeSuper_default()(Error)), ERROR_DESC = "This may mean that the user has declined camera access, or the browser does not support media APIs. If you are running in iOS, you must use Safari.";
+            }(__webpack_require__.n(wrapNativeSuper)()(Error)), ERROR_DESC = "This may mean that the user has declined camera access, or the browser does not support media APIs. If you are running in iOS, you must use Safari.";
             function enumerateDevices() {
                 try {
                     return navigator.mediaDevices.enumerateDevices();
@@ -6835,7 +6831,10 @@
                 });
             }
             function readEXIFData(file, start, exifTags) {
-                if ("Exif" !== getStringFromBuffer(file, start, 4)) return !1;
+                if ("Exif" !== function(buffer, start, length) {
+                    for(var outstr = "", n = start; n < start + 4; n++)outstr += String.fromCharCode(buffer.getUint8(n));
+                    return outstr;
+                }(file, start, 4)) return !1;
                 var bigEnd, tiffOffset = start + 6;
                 if (0x4949 === file.getUint16(tiffOffset)) bigEnd = !1;
                 else {
@@ -6844,22 +6843,17 @@
                 }
                 if (0x002a !== file.getUint16(tiffOffset + 2, !bigEnd)) return !1;
                 var firstIFDOffset = file.getUint32(tiffOffset + 4, !bigEnd);
-                return !(firstIFDOffset < 0x00000008) && readTags(file, tiffOffset, tiffOffset + firstIFDOffset, exifTags, bigEnd);
-            }
-            function readTags(file, tiffStart, dirStart, strings, bigEnd) {
-                for(var entries = file.getUint16(dirStart, !bigEnd), tags = {}, i = 0; i < entries; i++){
-                    var entryOffset = dirStart + 12 * i + 2, tag = strings[file.getUint16(entryOffset, !bigEnd)];
-                    tag && (tags[tag] = readTagValue(file, entryOffset, tiffStart, dirStart, bigEnd));
-                }
-                return tags;
+                return !(firstIFDOffset < 0x00000008) && function(file, tiffStart, dirStart, strings, bigEnd) {
+                    for(var entries = file.getUint16(dirStart, !bigEnd), tags = {}, i = 0; i < entries; i++){
+                        var entryOffset = dirStart + 12 * i + 2, tag = strings[file.getUint16(entryOffset, !bigEnd)];
+                        tag && (tags[tag] = readTagValue(file, entryOffset, tiffStart, dirStart, bigEnd));
+                    }
+                    return tags;
+                }(file, tiffOffset, tiffOffset + firstIFDOffset, exifTags, bigEnd);
             }
             function readTagValue(file, entryOffset, tiffStart, dirStart, bigEnd) {
                 var type = file.getUint16(entryOffset + 2, !bigEnd), numValues = file.getUint32(entryOffset + 4, !bigEnd);
                 return 3 === type && 1 === numValues ? file.getUint16(entryOffset + 8, !bigEnd) : null;
-            }
-            function getStringFromBuffer(buffer, start, length) {
-                for(var outstr = "", n = start; n < start + length; n++)outstr += String.fromCharCode(buffer.getUint8(n));
-                return outstr;
             }
             var ImageLoader = {};
             function addOnloadHandler(img, htmlImagesArray) {

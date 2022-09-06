@@ -973,7 +973,13 @@ where
                     //
                     let ids_used_by_a_init = match a {
                         Mergable::Var(a) => a.init.as_ref().map(|init| {
-                            collect_infects_from(init, AliasConfig { marks: self.marks })
+                            collect_infects_from(
+                                init,
+                                AliasConfig {
+                                    marks: Some(self.marks),
+                                    ignore_nested: true,
+                                },
+                            )
                         }),
                         Mergable::Expr(a) => match a {
                             Expr::Assign(AssignExpr {
@@ -985,7 +991,10 @@ where
                                 if left.as_ident().is_some() {
                                     Some(collect_infects_from(
                                         right,
-                                        AliasConfig { marks: self.marks },
+                                        AliasConfig {
+                                            marks: Some(self.marks),
+                                            ignore_nested: true,
+                                        },
                                     ))
                                 } else {
                                     None
@@ -997,7 +1006,9 @@ where
                     };
 
                     if let Some(ids_used_by_a_init) = ids_used_by_a_init {
-                        let deps = self.data.expand_infected(ids_used_by_a_init, 64);
+                        let deps =
+                            self.data
+                                .expand_infected(self.module_info, ids_used_by_a_init, 64);
 
                         let deps = match deps {
                             Ok(v) => v,
@@ -1079,6 +1090,10 @@ where
                             }
                         }
                     }
+                }
+
+                if !self.is_skippable_for_seq(a, &Expr::Ident(left_id.clone())) {
+                    return false;
                 }
 
                 if let Expr::Lit(..) = &*e.right {
@@ -1867,35 +1882,6 @@ where
         }
         if contains_arguments(&**a_right) {
             return Ok(false);
-        }
-
-        {
-            // Abort this if there's some side effects.
-            //
-            //
-            // (rand = _.random(
-            //     index++
-            // )),
-            // (shuffled[index - 1] = shuffled[rand]),
-            // (shuffled[rand] = value);
-            //
-            //
-            // rand should not be inlined because of `index`.
-
-            let deps = idents_used_by_ignoring_nested(&*a_right);
-
-            let used_by_b = idents_used_by(&*b);
-
-            for dep_id in &deps {
-                if *dep_id == left_id.to_id() {
-                    continue;
-                }
-
-                if used_by_b.contains(dep_id) {
-                    log_abort!("[X] sequences: Aborting because of deps");
-                    return Err(());
-                }
-            }
         }
 
         {

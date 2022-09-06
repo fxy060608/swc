@@ -1,0 +1,1 @@
+//// [objectTypesIdentityWithOptionality.ts]

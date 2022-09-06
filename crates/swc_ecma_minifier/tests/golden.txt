@@ -135,6 +135,7 @@ collapse_vars/collapse_vars_array/input.js
 collapse_vars/collapse_vars_closures/input.js
 collapse_vars/collapse_vars_eval_and_with/input.js
 collapse_vars/collapse_vars_issue_721/input.js
+collapse_vars/collapse_vars_lvalues_drop_assign/input.js
 collapse_vars/collapse_vars_properties/input.js
 collapse_vars/collapse_vars_regexp/input.js
 collapse_vars/collapse_vars_seq/input.js
@@ -384,6 +385,7 @@ drop_unused/cascade_drop_assign/input.js
 drop_unused/const_assign/input.js
 drop_unused/defun_lambda_same_name/input.js
 drop_unused/double_assign_3/input.js
+drop_unused/drop_assign/input.js
 drop_unused/drop_fnames/input.js
 drop_unused/drop_toplevel_all/input.js
 drop_unused/drop_value/input.js
@@ -488,7 +490,6 @@ evaluate/string_charCodeAt/input.js
 evaluate/unary_prefix/input.js
 evaluate/unsafe_array_bad_index/input.js
 evaluate/unsafe_constant/input.js
-evaluate/unsafe_object_accessor/input.js
 evaluate/unsafe_string/input.js
 evaluate/unsafe_string_bad_index/input.js
 expansions/avoid_spread_getset_object/input.js
@@ -557,6 +558,7 @@ functions/issue_1841_2/input.js
 functions/issue_2097/input.js
 functions/issue_2101/input.js
 functions/issue_2531_2/input.js
+functions/issue_2531_3/input.js
 functions/issue_2630_3/input.js
 functions/issue_2647_1/input.js
 functions/issue_2647_2/input.js
@@ -618,6 +620,7 @@ harmony/format_methods/input.js
 harmony/import_all_statement/input.js
 harmony/import_meta/input.js
 harmony/import_statement/input.js
+harmony/import_statement_mangling/input.js
 harmony/issue_1613/input.js
 harmony/issue_1753/input.js
 harmony/issue_2028/input.js
@@ -642,7 +645,6 @@ hoist/dont_hoist_var_destructurings/input.js
 hoist/hoist_funs/input.js
 hoist/hoist_no_destructurings/input.js
 hoist/hoist_vars/input.js
-hoist_props/contains_this_1/input.js
 hoist_props/contains_this_3/input.js
 hoist_props/direct_access_2/input.js
 hoist_props/direct_access_3/input.js
@@ -694,6 +696,7 @@ ie8/dont_screw/input.js
 ie8/dont_screw_constants/input.js
 ie8/issue_1586_2/input.js
 ie8/issue_2120_2/input.js
+ie8/issue_2254_1/input.js
 ie8/issue_2254_2/input.js
 if_return/if_if_return_return/input.js
 if_return/if_return_1/input.js
@@ -734,6 +737,7 @@ issue_1105/with_in_global_scope/input.js
 issue_12/keep_name_of_getter/input.js
 issue_12/keep_name_of_setter/input.js
 issue_12/setter_with_operator_keys/input.js
+issue_1202/mangle_keep_fnames_false/input.js
 issue_1202/mangle_keep_fnames_true/input.js
 issue_1212/issue_1212_debug_false/input.js
 issue_1212/issue_1212_debug_true/input.js
@@ -754,6 +758,7 @@ issue_1447/else_with_empty_block/input.js
 issue_1447/else_with_empty_statement/input.js
 issue_1588/runtime_error/input.js
 issue_1588/safe_undefined/input.js
+issue_1588/screw_ie8/input.js
 issue_1588/support_ie8/input.js
 issue_1609/chained_evaluation_1/input.js
 issue_1609/chained_evaluation_2/input.js
@@ -883,6 +888,7 @@ join_vars/issue_1079_with_mixed/input.js
 join_vars/issue_1079_with_vars/input.js
 join_vars/only_vars/input.js
 keep_names/drop_classnames/input.js
+keep_names/drop_fnames/input.js
 keep_names/keep_classnames/input.js
 keep_names/keep_fnames/input.js
 keep_names/keep_fnames_and_avoid_collisions/input.js
@@ -1117,6 +1123,7 @@ reduce_vars/defun_assign/input.js
 reduce_vars/defun_call/input.js
 reduce_vars/defun_catch_4/input.js
 reduce_vars/defun_catch_5/input.js
+reduce_vars/defun_inline_1/input.js
 reduce_vars/defun_inline_2/input.js
 reduce_vars/defun_inline_3/input.js
 reduce_vars/defun_single_use_loop/input.js
@@ -1191,6 +1198,7 @@ reduce_vars/issue_2455/input.js
 reduce_vars/issue_2496/input.js
 reduce_vars/issue_2598/input.js
 reduce_vars/issue_2670/input.js
+reduce_vars/issue_2757_2/input.js
 reduce_vars/issue_2799_1/input.js
 reduce_vars/issue_2860_1/input.js
 reduce_vars/issue_2869/input.js
@@ -1225,7 +1233,6 @@ reduce_vars/method_1/input.js
 reduce_vars/method_2/input.js
 reduce_vars/multi_def_1/input.js
 reduce_vars/multi_def_2/input.js
-reduce_vars/multi_def_3/input.js
 reduce_vars/named_function_with_recursive_ref_reuse/input.js
 reduce_vars/obj_for_2/input.js
 reduce_vars/obj_var_1/input.js
@@ -1412,6 +1419,7 @@ template_string/tagged_template_function_inline_1/input.js
 template_string/tagged_template_function_inline_2/input.js
 template_string/tagged_template_function_inline_3/input.js
 template_string/tagged_template_function_inline_4/input.js
+template_string/tagged_template_function_inline_5/input.js
 template_string/tagged_template_parens/input.js
 template_string/tagged_template_valid_strict_legacy_octal/input.js
 template_string/tagged_template_with_comment/input.js

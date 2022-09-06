@@ -1,0 +1,1 @@
+//// [objectTypeWithDuplicateNumericProperty.ts]

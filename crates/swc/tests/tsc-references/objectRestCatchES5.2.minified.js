@@ -1,0 +1,1 @@
+//// [objectRestCatchES5.ts]

@@ -1,0 +1,1 @@
+//// [constructorWithAssignableReturnExpression.ts]

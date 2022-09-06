@@ -1,0 +1,1 @@
+//// [privateNamesAndkeyof.ts]

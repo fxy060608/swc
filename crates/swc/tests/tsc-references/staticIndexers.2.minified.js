@@ -1,0 +1,1 @@
+//// [staticIndexers.ts]

@@ -1,0 +1,1 @@
+//// [privateNameES5Ban.ts]

@@ -1,0 +1,1 @@
+//// [emptyArrayBindingPatternParameter04.ts]

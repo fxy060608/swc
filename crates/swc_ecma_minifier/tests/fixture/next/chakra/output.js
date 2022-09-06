@@ -307,18 +307,12 @@
                 }
             });
             function bound01(n, max) {
-                isOnePointZero(n) && (n = "100%");
-                var isPercent = isPercentage(n);
+                "string" == typeof (n1 = n) && -1 !== n1.indexOf(".") && 1 === parseFloat(n1) && (n = "100%");
+                var n1, n2, isPercent = "string" == typeof (n2 = n) && -1 !== n2.indexOf("%");
                 return (n = 360 === max ? n : Math.min(max, Math.max(0, parseFloat(n))), isPercent && (n = parseInt(String(n * max), 10) / 100), 0.000001 > Math.abs(n - max)) ? 1 : n = 360 === max ? (n < 0 ? n % max + max : n % max) / parseFloat(String(max)) : n % max / parseFloat(String(max));
             }
             function clamp01(val) {
                 return Math.min(1, Math.max(0, val));
-            }
-            function isOnePointZero(n) {
-                return "string" == typeof n && -1 !== n.indexOf(".") && 1 === parseFloat(n);
-            }
-            function isPercentage(n) {
-                return "string" == typeof n && -1 !== n.indexOf("%");
             }
             function boundAlpha(a) {
                 return a = parseFloat(a), (isNaN(a) || a < 0 || a > 1) && (a = 1), a;
@@ -566,11 +560,11 @@
                         g: (0xff00 & color1) >> 8,
                         b: 0xff & color1
                     }), this.originalInput = color;
-                    var color1, color2, r, g, b, h, s, v, i, f, p, q, t, mod, r1, g1, b1, rgb, a, s1, v1, l, ok, format, _a, rgb1 = (rgb = {
+                    var color1, color2, r, g, b, h, s, v, i, f, p, q, t, mod, r1, g1, rgb, a, s1, v1, l, ok, format, _a, rgb1 = (color2 = color, rgb = {
                         r: 0,
                         g: 0,
                         b: 0
-                    }, a = 1, s1 = null, v1 = null, l = null, ok = !1, format = !1, "string" == typeof (color2 = color) && (color2 = function(color) {
+                    }, a = 1, s1 = null, v1 = null, l = null, ok = !1, format = !1, "string" == typeof color2 && (color2 = function(color) {
                         if (0 === (color = color.trim().toLowerCase()).length) return !1;
                         var named = !1;
                         if (names[color]) color = names[color], named = !0;
@@ -636,31 +630,31 @@
                         r: 255 * bound01(r, 255),
                         g: 255 * bound01(g, 255),
                         b: 255 * bound01(b, 255)
-                    }), ok = !0, format = "%" === String(color2.r).substr(-1) ? "prgb" : "rgb") : isValidCSSUnit(color2.h) && isValidCSSUnit(color2.s) && isValidCSSUnit(color2.v) ? (s1 = convertToPercentage(color2.s), v1 = convertToPercentage(color2.v), rgb = (h = color2.h, s = s1, v = v1, h = 6 * bound01(h, 360), s = bound01(s, 100), v = bound01(v, 100), i = Math.floor(h), f = h - i, p = v * (1 - s), q = v * (1 - f * s), t = v * (1 - (1 - f) * s), mod = i % 6, r1 = [
+                    }), ok = !0, format = "%" === String(color2.r).substr(-1) ? "prgb" : "rgb") : isValidCSSUnit(color2.h) && isValidCSSUnit(color2.s) && isValidCSSUnit(color2.v) ? (s1 = convertToPercentage(color2.s), v1 = convertToPercentage(color2.v), rgb = (h = color2.h, s = s1, v = v1, h = 6 * bound01(h, 360), s = bound01(s, 100), v = bound01(v, 100), i = Math.floor(h), f = h - i, p = v * (1 - s), q = v * (1 - f * s), t = v * (1 - (1 - f) * s), r1 = [
                         v,
                         q,
                         p,
                         p,
                         t,
                         v
-                    ][mod], g1 = [
+                    ][mod = i % 6], g1 = [
                         t,
                         v,
                         v,
                         q,
                         p,
                         p
-                    ][mod], b1 = [
-                        p,
-                        p,
-                        t,
-                        v,
-                        v,
-                        q
                     ][mod], {
                         r: 255 * r1,
                         g: 255 * g1,
-                        b: 255 * b1
+                        b: 255 * [
+                            p,
+                            p,
+                            t,
+                            v,
+                            v,
+                            q
+                        ][mod]
                     }), ok = !0, format = "hsv") : isValidCSSUnit(color2.h) && isValidCSSUnit(color2.s) && isValidCSSUnit(color2.l) && (s1 = convertToPercentage(color2.s), l = convertToPercentage(color2.l), rgb = function(h, s, l) {
                         if (h = bound01(h, 360), s = bound01(s, 100), l = bound01(l, 100), 0 === s) g = l, b = l, r = l;
                         else {
@@ -761,15 +755,15 @@
                     if (0 === this.a) return "transparent";
                     if (this.a < 1) return !1;
                     for(var hex = "#" + rgbToHex(this.r, this.g, this.b, !1), _i = 0, _a = Object.entries(names); _i < _a.length; _i++){
-                        var _b = _a[_i], key = _b[0], value = _b[1];
-                        if (hex === value) return key;
+                        var _b = _a[_i], key = _b[0];
+                        if (hex === _b[1]) return key;
                     }
                     return !1;
                 }, TinyColor.prototype.toString = function(format) {
                     var formatSet = Boolean(format);
                     format = null != format ? format : this.format;
-                    var formattedString = !1, hasAlpha = this.a < 1 && this.a >= 0, needsAlphaFormat = !formatSet && hasAlpha && (format.startsWith("hex") || "name" === format);
-                    return needsAlphaFormat ? "name" === format && 0 === this.a ? this.toName() : this.toRgbString() : ("rgb" === format && (formattedString = this.toRgbString()), "prgb" === format && (formattedString = this.toPercentageRgbString()), ("hex" === format || "hex6" === format) && (formattedString = this.toHexString()), "hex3" === format && (formattedString = this.toHexString(!0)), "hex4" === format && (formattedString = this.toHex8String(!0)), "hex8" === format && (formattedString = this.toHex8String()), "name" === format && (formattedString = this.toName()), "hsl" === format && (formattedString = this.toHslString()), "hsv" === format && (formattedString = this.toHsvString()), formattedString || this.toHexString());
+                    var formattedString = !1, hasAlpha = this.a < 1 && this.a >= 0;
+                    return !formatSet && hasAlpha && (format.startsWith("hex") || "name" === format) ? "name" === format && 0 === this.a ? this.toName() : this.toRgbString() : ("rgb" === format && (formattedString = this.toRgbString()), "prgb" === format && (formattedString = this.toPercentageRgbString()), ("hex" === format || "hex6" === format) && (formattedString = this.toHexString()), "hex3" === format && (formattedString = this.toHexString(!0)), "hex4" === format && (formattedString = this.toHex8String(!0)), "hex8" === format && (formattedString = this.toHex8String()), "name" === format && (formattedString = this.toName()), "hsl" === format && (formattedString = this.toHslString()), "hsv" === format && (formattedString = this.toHsvString()), formattedString || this.toHexString());
                 }, TinyColor.prototype.toNumber = function() {
                     return (Math.round(this.r) << 16) + (Math.round(this.g) << 8) + Math.round(this.b);
                 }, TinyColor.prototype.clone = function() {
@@ -880,9 +874,7 @@
             function randomWithin(range, seed) {
                 if (void 0 === seed) return Math.floor(range[0] + Math.random() * (range[1] + 1 - range[0]));
                 var max = range[1] || 1, min = range[0] || 0;
-                seed = (9301 * seed + 49297) % 233280;
-                var rnd = seed / 233280.0;
-                return Math.floor(min + rnd * (max - min));
+                return Math.floor(min + (seed = (9301 * seed + 49297) % 233280) / 233280.0 * (max - min));
             }
             function defineColor(bound) {
                 var sMin = bound.lowerBounds[0][0], sMax = bound.lowerBounds[bound.lowerBounds.length - 1][0], bMin = bound.lowerBounds[bound.lowerBounds.length - 1][1], bMax = bound.lowerBounds[0][1];
@@ -1294,10 +1286,9 @@
                         key: "selectors",
                         get: function() {
                             return (0, chakra_ui_utils_esm.sq)(Object.entries(this.map).map(function(_ref) {
-                                var key = _ref[0], part = _ref[1];
                                 return [
-                                    key,
-                                    part.selector
+                                    _ref[0],
+                                    _ref[1].selector
                                 ];
                             }));
                         }
@@ -1306,10 +1297,9 @@
                         key: "classNames",
                         get: function() {
                             return (0, chakra_ui_utils_esm.sq)(Object.entries(this.map).map(function(_ref2) {
-                                var key = _ref2[0], part = _ref2[1];
                                 return [
-                                    key,
-                                    part.className
+                                    _ref2[0],
+                                    _ref2[1].className
                                 ];
                             }));
                         }
@@ -1401,17 +1391,14 @@
                 return valueStr.includes("\\.") ? value : Number.isInteger(parseFloat(value.toString())) ? value : valueStr.replace(".", "\\.");
             }
             function cssVar(name, options) {
-                var value, prefix, value1, prefix1, name1, fallback, cssVariable = (value = name, void 0 === (prefix = null == options ? void 0 : options.prefix) && (prefix = ""), "--" + (value1 = value, void 0 === (prefix1 = prefix) && (prefix1 = ""), [
+                var value, prefix, value1, prefix1, name1, fallback, fallback1, cssVariable = (value = name, void 0 === (prefix = null == options ? void 0 : options.prefix) && (prefix = ""), "--" + (value1 = value, void 0 === (prefix1 = prefix) && (prefix1 = ""), [
                     prefix1,
                     chakra_ui_theme_tools_esm_escape(value1)
                 ].filter(Boolean).join("-")));
                 return {
                     variable: cssVariable,
-                    reference: (name1 = cssVariable, fallback = getFallback(null == options ? void 0 : options.fallback), "var(" + chakra_ui_theme_tools_esm_escape(name1) + (fallback ? ", " + fallback : "") + ")")
+                    reference: (name1 = cssVariable, fallback = "string" == typeof (fallback1 = null == options ? void 0 : options.fallback) ? fallback1 : null == fallback1 ? void 0 : fallback1.reference, "var(" + chakra_ui_theme_tools_esm_escape(name1) + (fallback ? ", " + fallback : "") + ")")
                 };
-            }
-            function getFallback(fallback) {
-                return "string" == typeof fallback ? fallback : null == fallback ? void 0 : fallback.reference;
             }
             var accordionAnatomy = anatomy("accordion").parts("root", "container", "button", "panel").extend("icon"), alertAnatomy = anatomy("alert").parts("title", "description", "container").extend("icon", "spinner"), avatarAnatomy = anatomy("avatar").parts("label", "badge", "container").extend("excessLabel", "group"), breadcrumbAnatomy = anatomy("breadcrumb").parts("link", "item", "container").extend("separator");
             anatomy("button").parts();
@@ -1645,7 +1632,7 @@
                             0,
                             360
                         ];
-                    }(hue), res = randomWithin(hueRange, seed), res < 0 && (res = 360 + res), res), s = function(hue, options) {
+                    }(hue), (res = randomWithin(hueRange, seed)) < 0 && (res = 360 + res), res), s = function(hue, options) {
                         if ("monochrome" === options.hue) return 0;
                         if ("random" === options.luminosity) return randomWithin([
                             0,
@@ -1701,7 +1688,7 @@
                     var index = 0;
                     if (0 === str.length) return list[0];
                     for(var i = 0; i < str.length; i += 1)index = str.charCodeAt(i) + ((index << 5) - index), index &= index;
-                    return index = (index % list.length + list.length) % list.length, list[index];
+                    return list[index = (index % list.length + list.length) % list.length];
                 }(opts.string, opts.colors) : opts.string && !opts.colors ? function(str) {
                     var hash = 0;
                     if (0 === str.length) return hash.toString();
@@ -2462,15 +2449,6 @@
             }, baseStyleOverlay = {
                 bg: "blackAlpha.600",
                 zIndex: "modal"
-            }, baseStyleDialogContainer = function(props) {
-                var isCentered = props.isCentered, scrollBehavior = props.scrollBehavior;
-                return {
-                    display: "flex",
-                    zIndex: "modal",
-                    justifyContent: "center",
-                    alignItems: isCentered ? "center" : "flex-start",
-                    overflow: "inside" === scrollBehavior ? "hidden" : "auto"
-                };
             }, baseStyleDialog = function(props) {
                 var scrollBehavior = props.scrollBehavior;
                 return {
@@ -2495,9 +2473,16 @@
                 px: 6,
                 py: 4
             }, baseStyle$h = function(props) {
+                var props1;
                 return {
                     overlay: baseStyleOverlay,
-                    dialogContainer: baseStyleDialogContainer(props),
+                    dialogContainer: {
+                        display: "flex",
+                        zIndex: "modal",
+                        justifyContent: "center",
+                        alignItems: (props1 = props).isCentered ? "center" : "flex-start",
+                        overflow: "inside" === props1.scrollBehavior ? "hidden" : "auto"
+                    },
                     dialog: baseStyleDialog(props),
                     header: baseStyleHeader$1,
                     closeButton: baseStyleCloseButton$2,
@@ -4467,21 +4452,35 @@
                     });
                 },
                 notify: function(message, options) {
-                    var toast = createToast(message, options), position = toast.position, id = toast.id;
+                    var message1, options1, _options$id, _options$position, id, position, toast = (message1 = message, void 0 === (options1 = options) && (options1 = {}), counter += 1, id = null != (_options$id = options1.id) ? _options$id : counter, position = null != (_options$position = options1.position) ? _options$position : "bottom", {
+                        id: id,
+                        message: message1,
+                        position: position,
+                        duration: options1.duration,
+                        onCloseComplete: options1.onCloseComplete,
+                        onRequestRemove: function() {
+                            return toastStore.removeToast(String(id), position);
+                        },
+                        status: options1.status,
+                        requestClose: !1,
+                        containerStyle: options1.containerStyle
+                    }), position1 = toast.position, id1 = toast.id;
                     return setState(function(prevToasts) {
-                        var _prevToasts$position, _prevToasts$position2, _extends3, toasts = position.includes("top") ? [
+                        var _prevToasts$position, _prevToasts$position2, _extends3, toasts = position1.includes("top") ? [
                             toast
-                        ].concat(null != (_prevToasts$position = prevToasts[position]) ? _prevToasts$position : []) : [].concat(null != (_prevToasts$position2 = prevToasts[position]) ? _prevToasts$position2 : [], [
+                        ].concat(null != (_prevToasts$position = prevToasts[position1]) ? _prevToasts$position : []) : [].concat(null != (_prevToasts$position2 = prevToasts[position1]) ? _prevToasts$position2 : [], [
                             toast
                         ]);
-                        return chakra_ui_toast_esm_extends({}, prevToasts, ((_extends3 = {})[position] = toasts, _extends3));
-                    }), id;
+                        return chakra_ui_toast_esm_extends({}, prevToasts, ((_extends3 = {})[position1] = toasts, _extends3));
+                    }), id1;
                 },
                 update: function(id, options) {
                     id && setState(function(prevState) {
-                        var nextState = chakra_ui_toast_esm_extends({}, prevState), _findToast = findToast(nextState, id), position = _findToast.position, index = _findToast.index;
+                        var options1, _options, render, _options$toastCompone, ToastComponent, nextState = chakra_ui_toast_esm_extends({}, prevState), _findToast = findToast(nextState, id), position = _findToast.position, index = _findToast.index;
                         return position && -1 !== index && (nextState[position][index] = chakra_ui_toast_esm_extends({}, nextState[position][index], options, {
-                            message: createRenderToast(options)
+                            message: (void 0 === (options1 = options) && (options1 = {}), render = (_options = options1).render, ToastComponent = void 0 === (_options$toastCompone = _options.toastComponent) ? Toast : _options$toastCompone, function(props) {
+                                return (0, chakra_ui_utils_esm.mf)(render) ? render(props) : react.createElement(ToastComponent, chakra_ui_toast_esm_extends({}, props, options1));
+                            })
                         })), nextState;
                     });
                 },
@@ -4517,25 +4516,7 @@
                 isActive: function(id) {
                     return Boolean(findToast(toastStore.getState(), id).position);
                 }
-            }), counter = 0;
-            function createToast(message, options) {
-                void 0 === options && (options = {}), counter += 1;
-                var _options$id, _options$position, id = null != (_options$id = options.id) ? _options$id : counter, position = null != (_options$position = options.position) ? _options$position : "bottom";
-                return {
-                    id: id,
-                    message: message,
-                    position: position,
-                    duration: options.duration,
-                    onCloseComplete: options.onCloseComplete,
-                    onRequestRemove: function() {
-                        return toastStore.removeToast(String(id), position);
-                    },
-                    status: options.status,
-                    requestClose: !1,
-                    containerStyle: options.containerStyle
-                };
-            }
-            var Toast = function(props) {
+            }), counter = 0, Toast = function(props) {
                 var status = props.status, _props$variant = props.variant, id = props.id, title = props.title, isClosable = props.isClosable, onClose = props.onClose, description = props.description, icon = props.icon, alertTitleId = void 0 !== id ? "toast-" + id + "-title" : void 0;
                 return react.createElement(chakra_ui_alert_esm_Alert, {
                     status: status,
@@ -4562,15 +4543,7 @@
                     insetEnd: 1,
                     top: 1
                 }));
-            };
-            function createRenderToast(options) {
-                void 0 === options && (options = {});
-                var _options = options, render = _options.render, _options$toastCompone = _options.toastComponent, ToastComponent = void 0 === _options$toastCompone ? Toast : _options$toastCompone;
-                return function(props) {
-                    return (0, chakra_ui_utils_esm.mf)(render) ? render(props) : react.createElement(ToastComponent, chakra_ui_toast_esm_extends({}, props, options));
-                };
-            }
-            var toastMotionVariants = {
+            }, toastMotionVariants = {
                 initial: function(props) {
                     var _ref, position = props.position, dir = [
                         "top",
@@ -4710,10 +4683,12 @@
                     })));
                 });
                 return react.createElement(react.Fragment, null, children, react.createElement(Portal, portalProps, toastList));
-            }, chakra_ui_react_esm_excluded = (chakra_ui_utils_esm.ZT, chakra_ui_utils_esm.ZT, [
+            };
+            chakra_ui_utils_esm.ZT, chakra_ui_utils_esm.ZT;
+            var chakra_ui_react_esm_excluded = [
                 "children",
                 "toastOptions"
-            ]), ChakraProvider = function(_ref) {
+            ], ChakraProvider = function(_ref) {
                 var children = _ref.children, toastOptions = _ref.toastOptions, restProps = function(source, excluded) {
                     if (null == source) return {};
                     var key, i, target = {}, sourceKeys = Object.keys(source);

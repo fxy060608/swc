@@ -1,0 +1,1 @@
+//// [privateNameInLhsReceiverExpression.ts]

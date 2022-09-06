@@ -1,0 +1,1 @@
+//// [directDependenceBetweenTypeAliases.ts]

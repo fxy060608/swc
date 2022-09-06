@@ -1,0 +1,1 @@
+//// [objectTypeHidingMembersOfObjectAssignmentCompat2.ts]

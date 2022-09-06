@@ -1,0 +1,1 @@
+//// [thisTypeErrors2.ts]

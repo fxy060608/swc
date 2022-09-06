@@ -1,0 +1,1 @@
+//// [duplicateNumericIndexers.ts]

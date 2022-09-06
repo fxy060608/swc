@@ -1,0 +1,1 @@
+//// [parserIndexMemberDeclaration1.ts]

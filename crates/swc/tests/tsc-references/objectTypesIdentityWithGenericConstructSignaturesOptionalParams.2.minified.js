@@ -1,0 +1,1 @@
+//// [objectTypesIdentityWithGenericConstructSignaturesOptionalParams.ts]

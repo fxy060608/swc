@@ -1,0 +1,1 @@
+//// [classWithOnlyPublicMembersEquivalentToInterface.ts]

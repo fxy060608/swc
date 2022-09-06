@@ -1,0 +1,1 @@
+//// [assignmentCompatWithObjectMembers5.ts]

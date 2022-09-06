@@ -1,0 +1,1 @@
+//// [privateNamesInterfaceExtendingClass.ts]

@@ -1,0 +1,1 @@
+//// [privateNameFieldClassExpression.ts]

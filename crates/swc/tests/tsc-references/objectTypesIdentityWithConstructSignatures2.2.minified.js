@@ -1,0 +1,1 @@
+//// [objectTypesIdentityWithConstructSignatures2.ts]

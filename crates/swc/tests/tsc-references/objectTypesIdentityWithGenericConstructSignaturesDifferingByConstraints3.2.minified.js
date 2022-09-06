@@ -1,0 +1,1 @@
+//// [objectTypesIdentityWithGenericConstructSignaturesDifferingByConstraints3.ts]

@@ -1,0 +1,1 @@
+//// [arrayLiteralSpreadES5iterable.ts]

@@ -1,0 +1,1 @@
+//// [privateNameNestedClassAccessorsShadowing.ts]

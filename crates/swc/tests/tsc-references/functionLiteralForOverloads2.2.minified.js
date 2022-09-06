@@ -1,0 +1,1 @@
+//// [functionLiteralForOverloads2.ts]

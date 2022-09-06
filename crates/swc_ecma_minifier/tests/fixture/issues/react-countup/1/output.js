@@ -95,9 +95,14 @@
                 }();
             }
             exports.default = function(_param) {
-                var sizerSvg, src = _param.src, sizes = _param.sizes, _unoptimized = _param.unoptimized, unoptimized = void 0 !== _unoptimized && _unoptimized, _priority = _param.priority, priority = void 0 !== _priority && _priority, loading = _param.loading, _lazyBoundary = _param.lazyBoundary, lazyBoundary = void 0 === _lazyBoundary ? "200px" : _lazyBoundary, className = _param.className, quality = _param.quality, width = _param.width, height = _param.height, objectFit = _param.objectFit, objectPosition = _param.objectPosition, onLoadingComplete = _param.onLoadingComplete, _loader = _param.loader, loader = void 0 === _loader ? defaultImageLoader : _loader, _placeholder = _param.placeholder, placeholder = void 0 === _placeholder ? "empty" : _placeholder, blurDataURL = _param.blurDataURL, all = function(source, excluded) {
+                var sizerSvg, src = _param.src, sizes = _param.sizes, _unoptimized = _param.unoptimized, unoptimized = void 0 !== _unoptimized && _unoptimized, _priority = _param.priority, priority = void 0 !== _priority && _priority, loading = _param.loading, _lazyBoundary = _param.lazyBoundary, className = _param.className, quality = _param.quality, width = _param.width, height = _param.height, objectFit = _param.objectFit, objectPosition = _param.objectPosition, onLoadingComplete = _param.onLoadingComplete, _loader = _param.loader, loader = void 0 === _loader ? defaultImageLoader : _loader, _placeholder = _param.placeholder, placeholder = void 0 === _placeholder ? "empty" : _placeholder, blurDataURL = _param.blurDataURL, rest = function(source, excluded) {
                     if (null == source) return {};
-                    var key, i, target = _objectWithoutPropertiesLoose(source, excluded);
+                    var key, i, target = function(source, excluded) {
+                        if (null == source) return {};
+                        var key, i, target = {}, sourceKeys = Object.keys(source);
+                        for(i = 0; i < sourceKeys.length; i++)key = sourceKeys[i], excluded.indexOf(key) >= 0 || (target[key] = source[key]);
+                        return target;
+                    }(source, excluded);
                     if (Object.getOwnPropertySymbols) {
                         var sourceSymbolKeys = Object.getOwnPropertySymbols(source);
                         for(i = 0; i < sourceSymbolKeys.length; i++)key = sourceSymbolKeys[i], !(excluded.indexOf(key) >= 0) && Object.prototype.propertyIsEnumerable.call(source, key) && (target[key] = source[key]);
@@ -120,7 +125,7 @@
                     "loader",
                     "placeholder",
                     "blurDataURL", 
-                ]), rest = all, layout = sizes ? "responsive" : "intrinsic";
+                ]), layout = sizes ? "responsive" : "intrinsic";
                 "layout" in rest && (rest.layout && (layout = rest.layout), delete rest.layout);
                 var src1, staticSrc = "";
                 if ("object" == typeof (src1 = src) && (isStaticRequire(src1) || void 0 !== src1.src)) {
@@ -134,7 +139,7 @@
                 var arr, ref2 = function(arr) {
                     if (Array.isArray(arr)) return arr;
                 }(arr = _useIntersection.useIntersection({
-                    rootMargin: lazyBoundary,
+                    rootMargin: void 0 === _lazyBoundary ? "200px" : _lazyBoundary,
                     disabled: !isLazy
                 })) || function(arr, i) {
                     var _arr = [], _n = !0, _d = !1, _e = void 0;
@@ -246,13 +251,10 @@
                             if (img) {
                                 var handleLoad = function() {
                                     img.src !== emptyDataURL && ("decode" in img ? img.decode() : Promise.resolve()).catch(function() {}).then(function() {
-                                        if ("blur" === placeholder && (img.style.filter = "none", img.style.backgroundSize = "none", img.style.backgroundImage = "none"), loadedImageURLs.add(src), onLoadingComplete) {
-                                            var naturalWidth = img.naturalWidth, naturalHeight = img.naturalHeight;
-                                            onLoadingComplete({
-                                                naturalWidth: naturalWidth,
-                                                naturalHeight: naturalHeight
-                                            });
-                                        }
+                                        "blur" === placeholder && (img.style.filter = "none", img.style.backgroundSize = "none", img.style.backgroundImage = "none"), loadedImageURLs.add(src), onLoadingComplete && onLoadingComplete({
+                                            naturalWidth: img.naturalWidth,
+                                            naturalHeight: img.naturalHeight
+                                        });
                                     });
                                 };
                                 img.complete ? handleLoad() : img.onload = handleLoad;
@@ -306,12 +308,6 @@
                 }(i);
                 return target;
             }
-            function _objectWithoutPropertiesLoose(source, excluded) {
-                if (null == source) return {};
-                var key, i, target = {}, sourceKeys = Object.keys(source);
-                for(i = 0; i < sourceKeys.length; i++)key = sourceKeys[i], excluded.indexOf(key) >= 0 || (target[key] = source[key]);
-                return target;
-            }
             var loadedImageURLs = new Set(), emptyDataURL = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7", loaders = new Map([
                 [
                     "default",
@@ -330,11 +326,11 @@
                 [
                     "cloudinary",
                     function(param) {
-                        var root = param.root, src = param.src, width = param.width, quality = param.quality, paramsString = [
+                        var root = param.root, src = param.src, paramsString = [
                             "f_auto",
                             "c_limit",
-                            "w_" + width,
-                            "q_" + (quality || "auto"), 
+                            "w_" + param.width,
+                            "q_" + (param.quality || "auto"), 
                         ].join(",") + "/";
                         return "".concat(root).concat(paramsString).concat(normalizeSrc(src));
                     }
@@ -481,7 +477,26 @@
                 }(arr, 2) || function() {
                     throw TypeError("Invalid attempt to destructure non-iterable instance");
                 }(), visible = ref[0], setVisible = ref[1], setRef = _react.useCallback(function(el) {
-                    unobserve.current && (unobserve.current(), unobserve.current = void 0), !isDisabled && !visible && el && el.tagName && (unobserve.current = observe(el, function(isVisible) {
+                    unobserve.current && (unobserve.current(), unobserve.current = void 0), !isDisabled && !visible && el && el.tagName && (unobserve.current = function(element, callback, options) {
+                        var ref = function(options) {
+                            var id = options.rootMargin || "", instance = observers.get(id);
+                            if (instance) return instance;
+                            var elements = new Map(), observer = new IntersectionObserver(function(entries) {
+                                entries.forEach(function(entry) {
+                                    var callback = elements.get(entry.target), isVisible = entry.isIntersecting || entry.intersectionRatio > 0;
+                                    callback && isVisible && callback(isVisible);
+                                });
+                            }, options);
+                            return observers.set(id, instance = {
+                                id: id,
+                                observer: observer,
+                                elements: elements
+                            }), instance;
+                        }(options), id = ref.id, observer = ref.observer, elements = ref.elements;
+                        return elements.set(element, callback), observer.observe(element), function() {
+                            elements.delete(element), observer.unobserve(element), 0 === elements.size && (observer.disconnect(), observers.delete(id));
+                        };
+                    }(el, function(isVisible) {
                         return isVisible && setVisible(isVisible);
                     }, {
                         rootMargin: rootMargin
@@ -507,29 +522,7 @@
                     visible
                 ];
             };
-            var _react = __webpack_require__(7294), _requestIdleCallback = __webpack_require__(9311), hasIntersectionObserver = "undefined" != typeof IntersectionObserver;
-            function observe(element, callback, options) {
-                var ref = createObserver(options), id = ref.id, observer = ref.observer, elements = ref.elements;
-                return elements.set(element, callback), observer.observe(element), function() {
-                    elements.delete(element), observer.unobserve(element), 0 === elements.size && (observer.disconnect(), observers.delete(id));
-                };
-            }
-            var observers = new Map();
-            function createObserver(options) {
-                var id = options.rootMargin || "", instance = observers.get(id);
-                if (instance) return instance;
-                var elements = new Map(), observer = new IntersectionObserver(function(entries) {
-                    entries.forEach(function(entry) {
-                        var callback = elements.get(entry.target), isVisible = entry.isIntersecting || entry.intersectionRatio > 0;
-                        callback && isVisible && callback(isVisible);
-                    });
-                }, options);
-                return observers.set(id, instance = {
-                    id: id,
-                    observer: observer,
-                    elements: elements
-                }), instance;
-            }
+            var _react = __webpack_require__(7294), _requestIdleCallback = __webpack_require__(9311), hasIntersectionObserver = "undefined" != typeof IntersectionObserver, observers = new Map();
         },
         6978: function(__unused_webpack_module, exports) {
             "use strict";

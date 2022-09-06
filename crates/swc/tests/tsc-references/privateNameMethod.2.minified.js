@@ -1,0 +1,1 @@
+//// [privateNameMethod.ts]

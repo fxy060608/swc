@@ -1,0 +1,1 @@
+//// [emptyObjectBindingPatternParameter04.ts]

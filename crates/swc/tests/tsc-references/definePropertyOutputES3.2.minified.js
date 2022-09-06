@@ -1,0 +1,1 @@
+//// [definePropertyOutputES3.ts]

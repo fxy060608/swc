@@ -1,0 +1,1 @@
+//// [classConstructorAccessibility3.ts]

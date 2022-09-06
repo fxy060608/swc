@@ -1,0 +1,2 @@
+//// [instanceMemberWithComputedPropertyName.ts]
+"use strict";

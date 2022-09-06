@@ -1,0 +1,1 @@
+//// [parserGenericClass2.ts]

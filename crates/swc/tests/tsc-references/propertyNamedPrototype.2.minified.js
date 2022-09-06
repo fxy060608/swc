@@ -1,0 +1,1 @@
+//// [propertyNamedPrototype.ts]

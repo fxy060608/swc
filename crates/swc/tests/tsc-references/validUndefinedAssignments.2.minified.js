@@ -1,0 +1,1 @@
+//// [validUndefinedAssignments.ts]

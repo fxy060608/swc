@@ -1,0 +1,1 @@
+//// [thisInInstanceMemberInitializer.ts]

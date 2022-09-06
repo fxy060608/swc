@@ -1,12 +1,17 @@
 use std::{
+    io::Write,
     path::{Path, PathBuf},
     sync::Arc,
 };
 
 use anyhow::{Context, Result};
 use clap::Args;
+use flate2::{write::ZlibEncoder, Compression};
 use rayon::prelude::*;
-use swc_common::{SourceFile, SourceMap, GLOBALS};
+use swc_common::{
+    errors::{ColorConfig, Handler, HANDLER},
+    SourceFile, SourceMap, GLOBALS,
+};
 use tracing::info;
 
 use crate::util::{
@@ -60,6 +65,12 @@ impl EnsureSize {
                     println!();
                     println!("{}", f.fm.name);
                 }
+                if f.swc.gzipped_size > terser.gzipped_size {
+                    println!("  Gzipped");
+                    println!("    swc: {} bytes", f.swc.gzipped_size);
+                    println!("    terser: {} bytes", terser.gzipped_size);
+                }
+
                 if f.swc.mangled_size > terser.mangled_size {
                     println!("  Mangled");
                     println!("    swc: {} bytes", f.swc.mangled_size);
@@ -73,34 +84,64 @@ impl EnsureSize {
                 }
             }
         }
+        {
+            let swc_total = results.iter().map(|f| f.swc.mangled_size).sum::<usize>();
+            let terser_total = results
+                .iter()
+                .flat_map(|f| f.terser.map(|v| v.mangled_size))
+                .sum::<usize>();
 
-        let swc_total = results.iter().map(|f| f.swc.mangled_size).sum::<usize>();
-        let terser_total = results
-            .iter()
-            .flat_map(|f| f.terser.map(|v| v.mangled_size))
-            .sum::<usize>();
+            println!("Total");
+            println!("  swc: {} bytes", swc_total);
+            println!("  terser: {} bytes", terser_total);
+            println!("  Size ratio: {}", swc_total as f64 / terser_total as f64);
 
-        println!("Total");
-        println!("  swc: {} bytes", swc_total);
-        println!("  terser: {} bytes", terser_total);
-        println!("  Size ratio: {}", swc_total as f64 / terser_total as f64);
+            let swc_smaller_file_count = results
+                .iter()
+                .filter(|f| {
+                    if let Some(terser) = &f.terser {
+                        f.swc.mangled_size <= terser.mangled_size
+                    } else {
+                        false
+                    }
+                })
+                .count();
+            println!(
+                "swc produced smaller or equal output for {} files out of {} files, {:.2}%",
+                swc_smaller_file_count,
+                all_files.len(),
+                100.0 * swc_smaller_file_count as f64 / results.len() as f64
+            );
+        }
+        {
+            let swc_total = results.iter().map(|f| f.swc.gzipped_size).sum::<usize>();
+            let terser_total = results
+                .iter()
+                .flat_map(|f| f.terser.map(|v| v.gzipped_size))
+                .sum::<usize>();
 
-        let swc_smaller_file_count = results
-            .iter()
-            .filter(|f| {
-                if let Some(terser) = &f.terser {
-                    f.swc.mangled_size <= terser.mangled_size
-                } else {
-                    false
-                }
-            })
-            .count();
-        println!(
-            "swc produced smaller or equal output for {} files out of {} files, {:.2}%",
-            swc_smaller_file_count,
-            all_files.len(),
-            100.0 * swc_smaller_file_count as f64 / results.len() as f64
-        );
+            println!("Total (gzipped)");
+            println!("  swc: {} bytes", swc_total);
+            println!("  terser: {} bytes", terser_total);
+            println!("  Size ratio: {}", swc_total as f64 / terser_total as f64);
+
+            let swc_smaller_file_count = results
+                .iter()
+                .filter(|f| {
+                    if let Some(terser) = &f.terser {
+                        f.swc.gzipped_size <= terser.gzipped_size
+                    } else {
+                        false
+                    }
+                })
+                .count();
+            println!(
+                "swc produced smaller or equal output for {} files out of {} files, {:.2}%",
+                swc_smaller_file_count,
+                all_files.len(),
+                100.0 * swc_smaller_file_count as f64 / results.len() as f64
+            );
+        }
 
         Ok(())
     }
@@ -110,61 +151,74 @@ impl EnsureSize {
             info!("Checking {}", js_file.display());
 
             let fm = cm.load_file(js_file).context("failed to load file")?;
+            let handler =
+                Handler::with_tty_emitter(ColorConfig::Never, true, false, Some(cm.clone()));
+            HANDLER.set(&handler, || {
+                let code_mangled = {
+                    let minified_mangled = get_minified(cm.clone(), js_file, true, true)?;
 
-            let code_mangled = {
-                let minified_mangled = get_minified(cm.clone(), js_file, true, true)?;
+                    print_js(cm.clone(), &minified_mangled.module, true)
+                        .context("failed to convert ast to code")?
+                };
 
-                print_js(cm.clone(), &minified_mangled.module, true)
-                    .context("failed to convert ast to code")?
-            };
+                let swc_no_mangle = {
+                    let minified_no_mangled = get_minified(cm.clone(), js_file, true, false)?;
 
-            let swc_no_mangle = {
-                let minified_no_mangled = get_minified(cm.clone(), js_file, true, false)?;
+                    print_js(cm, &minified_no_mangled.module, true)
+                        .context("failed to convert ast to code")?
+                };
 
-                print_js(cm, &minified_no_mangled.module, true)
-                    .context("failed to convert ast to code")?
-            };
+                // eprintln!("The output size of swc minifier: {}", code_mangled.len());
 
-            // eprintln!("The output size of swc minifier: {}", code_mangled.len());
+                let mut file_size = FileSize {
+                    fm,
+                    swc: MinifierOutput {
+                        mangled_size: code_mangled.len(),
+                        no_mangle_size: swc_no_mangle.len(),
+                        gzipped_size: gzipped_size(&code_mangled),
+                    },
+                    terser: Default::default(),
+                    esbuild: Default::default(),
+                };
 
-            let mut file_size = FileSize {
-                fm,
-                swc: MinifierOutput {
-                    mangled_size: code_mangled.len(),
-                    no_mangle_size: swc_no_mangle.len(),
-                },
-                terser: Default::default(),
-                esbuild: Default::default(),
-            };
+                if !self.no_terser {
+                    let terser_mangled = get_terser_output(js_file, true, true)?;
+                    let terser_no_mangle = get_terser_output(js_file, true, false)?;
 
-            if !self.no_terser {
-                let terser_mangled = get_terser_output(js_file, true, true)?;
-                let terser_no_mangle = get_terser_output(js_file, true, false)?;
+                    file_size.terser = Some(MinifierOutput {
+                        mangled_size: terser_mangled.len(),
+                        no_mangle_size: terser_no_mangle.len(),
+                        gzipped_size: gzipped_size(&terser_mangled),
+                    });
+                }
 
-                file_size.terser = Some(MinifierOutput {
-                    mangled_size: terser_mangled.len(),
-                    no_mangle_size: terser_no_mangle.len(),
-                });
-            }
+                if !self.no_esbuild {
+                    let esbuild_mangled = get_esbuild_output(js_file, true)?;
+                    let esbuild_no_mangle = get_esbuild_output(js_file, false)?;
 
-            if !self.no_esbuild {
-                let esbuild_mangled = get_esbuild_output(js_file, true)?;
-                let esbuild_no_mangle = get_esbuild_output(js_file, false)?;
+                    file_size.esbuild = Some(MinifierOutput {
+                        mangled_size: esbuild_mangled.len(),
+                        no_mangle_size: esbuild_no_mangle.len(),
+                        gzipped_size: gzipped_size(&esbuild_mangled),
+                    });
+                }
 
-                file_size.esbuild = Some(MinifierOutput {
-                    mangled_size: esbuild_mangled.len(),
-                    no_mangle_size: esbuild_no_mangle.len(),
-                });
-            }
+                if file_size.terser.is_none() && file_size.esbuild.is_none() {
+                    return Ok(None);
+                }
 
-            if file_size.terser.is_none() && file_size.esbuild.is_none() {
-                return Ok(None);
-            }
-
-            Ok(Some(file_size))
+                Ok(Some(file_size))
+            })
         })
         .with_context(|| format!("failed to check file: {}", js_file.display()))
     }
+}
+
+fn gzipped_size(code: &str) -> usize {
+    let mut e = ZlibEncoder::new(Vec::new(), Compression::new(9));
+    e.write_all(code.as_bytes()).unwrap();
+    let compressed_bytes = e.finish().unwrap();
+    compressed_bytes.len()
 }
 
 #[allow(unused)]
@@ -184,4 +238,7 @@ struct FileSize {
 struct MinifierOutput {
     mangled_size: usize,
     no_mangle_size: usize,
+
+    /// Minify + mangle + gzip
+    gzipped_size: usize,
 }

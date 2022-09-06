@@ -1,0 +1,1 @@
+//// [privateNameFieldAccess.ts]

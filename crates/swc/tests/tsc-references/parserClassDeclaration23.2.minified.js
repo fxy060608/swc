@@ -1,0 +1,1 @@
+//// [parserClassDeclaration23.ts]

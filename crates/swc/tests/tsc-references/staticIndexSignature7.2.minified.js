@@ -1,0 +1,1 @@
+//// [staticIndexSignature7.ts]

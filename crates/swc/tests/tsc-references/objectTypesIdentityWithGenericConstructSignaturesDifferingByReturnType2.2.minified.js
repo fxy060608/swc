@@ -1,0 +1,1 @@
+//// [objectTypesIdentityWithGenericConstructSignaturesDifferingByReturnType2.ts]

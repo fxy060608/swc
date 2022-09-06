@@ -1,0 +1,2 @@
+//// [functionConstraintSatisfaction.ts]
+Function();

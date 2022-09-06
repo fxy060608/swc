@@ -1,0 +1,1 @@
+//// [typeGuardsInClassAccessors.ts]

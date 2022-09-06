@@ -1,0 +1,1 @@
+//// [destructuringWithLiteralInitializers2.ts]

@@ -1,0 +1,1 @@
+//// [modifierOnClassExpressionMemberInFunction.ts]

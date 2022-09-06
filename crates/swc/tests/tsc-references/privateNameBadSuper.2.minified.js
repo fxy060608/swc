@@ -1,0 +1,1 @@
+//// [privateNameBadSuper.ts]

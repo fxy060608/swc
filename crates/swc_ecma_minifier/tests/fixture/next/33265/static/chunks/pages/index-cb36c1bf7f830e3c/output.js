@@ -55,9 +55,11 @@
                 BigInt("0x1000000000000"),
                 BigInt("0x100000000000000"),
                 BigInt("0x10000000000000000"), 
-            ], bytesToNumber = (a = new Uint16Array([
+            ];
+            a = new Uint16Array([
                 0xffcc
-            ]), 0xff === (b = new Uint8Array(a.buffer, a.byteOffset, a.byteLength))[0] || b[0], function(bytes, _temp) {
+            ]), 0xff === (b = new Uint8Array(a.buffer, a.byteOffset, a.byteLength))[0] || b[0];
+            var bytesToNumber = function(bytes, _temp) {
                 var _ref = void 0 === _temp ? {} : _temp, _ref$signed = _ref.signed, _ref$le = _ref.le, le = void 0 !== _ref$le && _ref$le;
                 bytes = toUint8(bytes);
                 var fn = le ? "reduce" : "reduceRight", number = (bytes[fn] ? bytes[fn] : Array.prototype[fn]).call(bytes, function(total, byte, i) {
@@ -69,7 +71,7 @@
                     (number = BigInt(number)) > max && (number -= max, number -= max, number -= BigInt(2));
                 }
                 return Number(number);
-            }), numberToBytes = function(number, _temp2) {
+            }, numberToBytes = function(number, _temp2) {
                 var _ref2$le = (void 0 === _temp2 ? {} : _temp2).le, le = void 0 !== _ref2$le && _ref2$le;
                 ("bigint" != typeof number && "number" != typeof number || "number" == typeof number && number != number) && (number = 0), number = BigInt(number);
                 for(var byteCount = Math.ceil(number.toString(2).length / 8), bytes = new Uint8Array(new ArrayBuffer(byteCount)), i = 0; i < byteCount; i++){
@@ -161,8 +163,7 @@
                 "Text"
             ], translateLegacyCodec = function(codec) {
                 return codec ? codec.replace(/avc1\.(\d+)\.(\d+)/i, function(orig, profile, avcLevel) {
-                    var profileHex = ("00" + Number(profile).toString(16)).slice(-2), avcLevelHex = ("00" + Number(avcLevel).toString(16)).slice(-2);
-                    return "avc1." + profileHex + "00" + avcLevelHex;
+                    return "avc1." + ("00" + Number(profile).toString(16)).slice(-2) + "00" + ("00" + Number(avcLevel).toString(16)).slice(-2);
                 }) : codec;
             }, parseCodecs = function(codecString) {
                 void 0 === codecString && (codecString = "");
@@ -245,12 +246,6 @@
             ]);
             var normalizePath = function(path) {
                 return "string" == typeof path ? (0, byte_helpers.qX)(path) : path;
-            }, normalizePaths = function(paths) {
-                return Array.isArray(paths) ? paths.map(function(p) {
-                    return normalizePath(p);
-                }) : [
-                    normalizePath(paths)
-                ];
             }, parseDescriptors = function(bytes) {
                 bytes = (0, byte_helpers.Ki)(bytes);
                 for(var results = [], i = 0; bytes.length > i;){
@@ -323,8 +318,12 @@
                 }, 
             ];
             var findBox = function findBox(bytes, paths, complete) {
-                void 0 === complete && (complete = !1), paths = normalizePaths(paths), bytes = (0, byte_helpers.Ki)(bytes);
-                var results = [];
+                void 0 === complete && (complete = !1), paths = Array.isArray(paths1 = paths) ? paths1.map(function(p) {
+                    return normalizePath(p);
+                }) : [
+                    normalizePath(paths1)
+                ], bytes = (0, byte_helpers.Ki)(bytes);
+                var paths1, results = [];
                 if (!paths.length) return results;
                 for(var i = 0; i < bytes.length;){
                     var size = (bytes[i] << 24 | bytes[i + 1] << 16 | bytes[i + 2] << 8 | bytes[i + 3]) >>> 0, type = bytes.subarray(i + 4, i + 8);
@@ -464,15 +463,13 @@
                 }) : [
                     ebml_helpers_normalizePath(paths1)
                 ], bytes = (0, byte_helpers.Ki)(bytes);
-                var paths1, results = [];
+                var results = [];
                 if (!paths.length) return results;
                 for(var i = 0; i < bytes.length;){
                     var id = getvint(bytes, i, !1), dataHeader = getvint(bytes, i + id.length), dataStart = i + id.length + dataHeader.length;
                     0x7f === dataHeader.value && (dataHeader.value = getInfinityDataSize(id, bytes, dataStart), dataHeader.value !== bytes.length && (dataHeader.value -= dataStart));
-                    var dataEnd = dataStart + dataHeader.value > bytes.length ? bytes.length : dataStart + dataHeader.value, data = bytes.subarray(dataStart, dataEnd);
-                    (0, byte_helpers.G3)(paths[0], id.bytes) && (1 === paths.length ? results.push(data) : results = results.concat(findEbml(data, paths.slice(1))));
-                    var totalLength = id.length + dataHeader.length + data.length;
-                    i += totalLength;
+                    var paths1, dataEnd = dataStart + dataHeader.value > bytes.length ? bytes.length : dataStart + dataHeader.value, data = bytes.subarray(dataStart, dataEnd);
+                    (0, byte_helpers.G3)(paths[0], id.bytes) && (1 === paths.length ? results.push(data) : results = results.concat(findEbml(data, paths.slice(1)))), i += id.length + dataHeader.length + data.length;
                 }
                 return results;
             }, id3_helpers = __webpack_require__(8925), NAL_TYPE_ONE = (0, byte_helpers.Ki)([
@@ -798,7 +795,10 @@
                         var cause = responseBody;
                         if (decodeResponseBody) {
                             if (window1.TextDecoder) {
-                                var charset = getCharset(response.headers && response.headers["content-type"]);
+                                var contentTypeHeader, charset = (void 0 === (contentTypeHeader = response.headers && response.headers["content-type"]) && (contentTypeHeader = ""), contentTypeHeader.toLowerCase().split(";").reduce(function(charset, contentType) {
+                                    var _contentType$split = contentType.split("="), type = _contentType$split[0], value = _contentType$split[1];
+                                    return "charset" === type.trim() ? value.trim() : charset;
+                                }, "utf-8"));
                                 try {
                                     cause = new TextDecoder(charset).decode(responseBody);
                                 } catch (e) {}
@@ -812,12 +812,6 @@
                     callback(null, responseBody);
                 };
             };
-            function getCharset(contentTypeHeader) {
-                return void 0 === contentTypeHeader && (contentTypeHeader = ""), contentTypeHeader.toLowerCase().split(";").reduce(function(charset, contentType) {
-                    var _contentType$split = contentType.split("="), type = _contentType$split[0], value = _contentType$split[1];
-                    return "charset" === type.trim() ? value.trim() : charset;
-                }, "utf-8");
-            }
             module.exports = httpResponseHandler;
         },
         9603: function(module, __unused_webpack_exports, __webpack_require__) {
@@ -860,7 +854,14 @@
                         return 0 !== (status = options.useXDR && void 0 === xhr.status ? 200 : 1223 === xhr.status ? 204 : xhr.status) ? (response = {
                             body: function() {
                                 var body = void 0;
-                                if (body = xhr.response ? xhr.response : xhr.responseText || getXml(xhr), isJson) try {
+                                if (body = xhr.response ? xhr.response : xhr.responseText || function(xhr) {
+                                    try {
+                                        if ("document" === xhr.responseType) return xhr.responseXML;
+                                        var firefoxBugTakenEffect = xhr.responseXML && "parsererror" === xhr.responseXML.documentElement.nodeName;
+                                        if ("" === xhr.responseType && !firefoxBugTakenEffect) return xhr.responseXML;
+                                    } catch (e) {}
+                                    return null;
+                                }(xhr), isJson) try {
                                     body = JSON.parse(body);
                                 } catch (e) {}
                                 return body;
@@ -899,14 +900,6 @@
                     return !0;
                 }(options.headers)) throw Error("Headers cannot be set on an XDomainRequest object");
                 return "responseType" in options && (xhr.responseType = options.responseType), "beforeSend" in options && "function" == typeof options.beforeSend && options.beforeSend(xhr), xhr.send(body || null), xhr;
-            }
-            function getXml(xhr) {
-                try {
-                    if ("document" === xhr.responseType) return xhr.responseXML;
-                    var firefoxBugTakenEffect = xhr.responseXML && "parsererror" === xhr.responseXML.documentElement.nodeName;
-                    if ("" === xhr.responseType && !firefoxBugTakenEffect) return xhr.responseXML;
-                } catch (e) {}
-                return null;
             }
             module.exports = createXHR, module.exports.default = createXHR, createXHR.XMLHttpRequest = window1.XMLHttpRequest || function() {}, createXHR.XDomainRequest = "withCredentials" in new createXHR.XMLHttpRequest() ? createXHR.XMLHttpRequest : window1.XDomainRequest, function(array, iterator) {
                 for(var i = 0; i < array.length; i++)iterator(array[i]);
@@ -1111,8 +1104,8 @@
             function _addNamedNode(el, list, newAttr, oldAttr) {
                 if (oldAttr ? list[_findNodeIndex(list, oldAttr)] = newAttr : list[list.length++] = newAttr, el) {
                     newAttr.ownerElement = el;
-                    var doc = el.ownerDocument;
-                    doc && (oldAttr && _onRemoveAttribute(doc, el, oldAttr), _onAddAttribute(doc, el, newAttr));
+                    var doc, el1, newAttr1, doc1 = el.ownerDocument;
+                    doc1 && (oldAttr && _onRemoveAttribute(doc1, el, oldAttr), doc = doc1, el1 = el, newAttr1 = newAttr, doc && doc._inc++, newAttr1.namespaceURI === NAMESPACE.XMLNS && (el1._nsMap[newAttr1.prefix ? newAttr1.localName : ""] = newAttr1.value));
                 }
             }
             function _removeNamedNode(el, list, attr) {
@@ -1136,9 +1129,6 @@
                 while (node = node.nextSibling)
             }
             function Document() {}
-            function _onAddAttribute(doc, el, newAttr) {
-                doc && doc._inc++, newAttr.namespaceURI === NAMESPACE.XMLNS && (el._nsMap[newAttr.prefix ? newAttr.localName : ""] = newAttr.value);
-            }
             function _onRemoveAttribute(doc, el, newAttr, remove) {
                 doc && doc._inc++, newAttr.namespaceURI === NAMESPACE.XMLNS && delete el._nsMap[newAttr.prefix ? newAttr.localName : ""];
             }
@@ -2102,7 +2092,10 @@
                         var end = source.indexOf("]]>", start + 9);
                         return domBuilder.startCDATA(), domBuilder.characters(source, start + 9, end - start - 9), domBuilder.endCDATA(), end + 3;
                     }
-                    var matchs = split(source, start), len = matchs.length;
+                    var matchs = function(source, start) {
+                        var match, buf = [], reg = /'[^']+'|"[^"]+"|[^\s<>\/=]+=?|(\/?\s*>|<)/g;
+                        for(reg.lastIndex = start, reg.exec(source); match = reg.exec(source);)if (buf.push(match), match[1]) return buf;
+                    }(source, start), len = matchs.length;
                     if (len > 1 && /!doctype/i.test(matchs[0][0])) {
                         var name = matchs[1][0], pubid = !1, sysid = !1;
                         len > 3 && (/^public$/i.test(matchs[2][0]) ? (pubid = matchs[3][0], sysid = len > 4 && matchs[4][0]) : /^system$/i.test(matchs[2][0]) && (sysid = matchs[3][0]));
@@ -2123,21 +2116,13 @@
             function ElementAttributes() {
                 this.attributeNames = {};
             }
-            function split(source, start) {
-                var match, buf = [], reg = /'[^']+'|"[^"]+"|[^\s<>\/=]+=?|(\/?\s*>|<)/g;
-                for(reg.lastIndex = start, reg.exec(source); match = reg.exec(source);)if (buf.push(match), match[1]) return buf;
-            }
             ParseError.prototype = Error(), ParseError.prototype.name = ParseError.name, XMLReader.prototype = {
                 parse: function(source, defaultNSMap, entityMap) {
                     var domBuilder = this.domBuilder;
                     domBuilder.startDocument(), _copy(defaultNSMap, defaultNSMap = {}), function(source, defaultNSMapCopy, entityMap, domBuilder, errorHandler) {
                         function entityReplacer(a) {
-                            var k = a.slice(1, -1);
-                            return k in entityMap ? entityMap[k] : "#" === k.charAt(0) ? function(code) {
-                                if (!(code > 0xffff)) return String.fromCharCode(code);
-                                var surrogate1 = 0xd800 + ((code -= 0x10000) >> 10), surrogate2 = 0xdc00 + (0x3ff & code);
-                                return String.fromCharCode(surrogate1, surrogate2);
-                            }(parseInt(k.substr(1).replace("x", "0x"))) : (errorHandler.error("entity not found:" + a), a);
+                            var code, k = a.slice(1, -1);
+                            return k in entityMap ? entityMap[k] : "#" === k.charAt(0) ? (code = parseInt(k.substr(1).replace("x", "0x"))) > 0xffff ? String.fromCharCode(0xd800 + ((code -= 0x10000) >> 10), 0xdc00 + (0x3ff & code)) : String.fromCharCode(code) : (errorHandler.error("entity not found:" + a), a);
                         }
                         function appendText(end) {
                             if (end > start) {
@@ -2389,10 +2374,8 @@
             }(Stream), parseByterange = function(byterangeString) {
                 var match = /([0-9.]*)?@?([0-9.]*)?/.exec(byterangeString || ""), result = {};
                 return match[1] && (result.length = parseInt(match[1], 10)), match[2] && (result.offset = parseInt(match[2], 10)), result;
-            }, attributeSeparator = function() {
-                return RegExp('(?:^|,)((?:[^=]*)=(?:"[^"]*"|[^,]*))');
             }, parseAttributes = function(attributes) {
-                for(var attr, attrs = attributes.split(attributeSeparator()), result = {}, i = attrs.length; i--;)"" !== attrs[i] && ((attr = /([^=]*)=(.*)/.exec(attrs[i]).slice(1))[0] = attr[0].replace(/^\s+|\s+$/g, ""), attr[1] = attr[1].replace(/^\s+|\s+$/g, ""), attr[1] = attr[1].replace(/^['"](.*)['"]$/g, "$1"), result[attr[0]] = attr[1]);
+                for(var attr, attrs = attributes.split(RegExp('(?:^|,)((?:[^=]*)=(?:"[^"]*"|[^,]*))')), result = {}, i = attrs.length; i--;)"" !== attrs[i] && ((attr = /([^=]*)=(.*)/.exec(attrs[i]).slice(1))[0] = attr[0].replace(/^\s+|\s+$/g, ""), attr[1] = attr[1].replace(/^\s+|\s+$/g, ""), attr[1] = attr[1].replace(/^['"](.*)['"]$/g, "$1"), result[attr[0]] = attr[1]);
                 return result;
             }, ParseStream = function(_Stream) {
                 function ParseStream() {
@@ -3076,7 +3059,7 @@
                     };
                 }
             }, parseByDuration = function(attributes) {
-                var attributes1, type = attributes.type, duration = attributes.duration, _attributes$timescale4 = attributes.timescale, periodDuration = attributes.periodDuration, sourceDuration = attributes.sourceDuration, _segmentRange$type = segmentRange[type](attributes), start = _segmentRange$type.start, end = _segmentRange$type.end, segments = range(start, end).map((attributes1 = attributes, function(number, index) {
+                var attributes1, type = attributes.type, duration = attributes.duration, _attributes$timescale4 = attributes.timescale, periodDuration = attributes.periodDuration, sourceDuration = attributes.sourceDuration, _segmentRange$type = segmentRange[type](attributes), segments = range(_segmentRange$type.start, _segmentRange$type.end).map((attributes1 = attributes, function(number, index) {
                     var duration = attributes1.duration, _attributes$timescale3 = attributes1.timescale, periodIndex = attributes1.periodIndex, _attributes$startNumb = attributes1.startNumber;
                     return {
                         number: (void 0 === _attributes$startNumb ? 1 : _attributes$startNumb) + number,
@@ -3113,14 +3096,14 @@
                 for(var initSegment = playlist.sidx.map ? playlist.sidx.map : null, sourceDuration = playlist.sidx.duration, timeline = playlist.timeline || 0, sidxByteRange = playlist.sidx.byterange, sidxEnd = sidxByteRange.offset + sidxByteRange.length, timescale = sidx.timescale, mediaReferences = sidx.references.filter(function(r) {
                     return 1 !== r.referenceType;
                 }), segments = [], type = playlist.endList ? "static" : "dynamic", startIndex = sidxEnd + sidx.firstOffset, i = 0; i < mediaReferences.length; i++){
-                    var reference = sidx.references[i], size = reference.referencedSize, duration = reference.subsegmentDuration, endIndex = startIndex + size - 1, indexRange = startIndex + "-" + endIndex, attributes = {
+                    var reference = sidx.references[i], size = reference.referencedSize, duration = reference.subsegmentDuration, endIndex = startIndex + size - 1, attributes = {
                         baseUrl: baseUrl,
                         timescale: timescale,
                         timeline: timeline,
                         periodIndex: timeline,
                         duration: duration,
                         sourceDuration: sourceDuration,
-                        indexRange: indexRange,
+                        indexRange: startIndex + "-" + endIndex,
                         type: type
                     }, segment = segmentsFromBase(attributes)[0];
                     initSegment && (segment.map = initSegment), segments.push(segment), startIndex += size;
@@ -3202,11 +3185,7 @@
                     var formatted = addSidxSegmentsToPlaylist$1(formatAudioPlaylist(playlist, isAudioOnly), sidxMapping);
                     return a[label].playlists.push(formatted), void 0 === mainPlaylist && "main" === role && ((mainPlaylist = playlist).default = !0), a;
                 }, {});
-                if (!mainPlaylist) {
-                    var firstLabel = Object.keys(formattedPlaylists)[0];
-                    formattedPlaylists[firstLabel].default = !0;
-                }
-                return formattedPlaylists;
+                return mainPlaylist || (formattedPlaylists[Object.keys(formattedPlaylists)[0]].default = !0), formattedPlaylists;
             }, formatVideoPlaylist = function(_ref3) {
                 var _attributes2, attributes = _ref3.attributes, segments = _ref3.segments, sidx = _ref3.sidx, playlist = {
                     attributes: ((_attributes2 = {
@@ -3326,7 +3305,8 @@
                     }, 
                 ]).map(function(segment) {
                     templateValues.Number = segment.number, templateValues.Time = segment.time;
-                    var uri = constructTemplateUrl(attributes.media || "", templateValues), timescale = attributes.timescale || 1, presentationTimeOffset = attributes.presentationTimeOffset || 0, presentationTime = attributes.periodStart + (segment.time - presentationTimeOffset) / timescale, map = {
+                    var uri = constructTemplateUrl(attributes.media || "", templateValues), timescale = attributes.timescale || 1, presentationTimeOffset = attributes.presentationTimeOffset || 0, presentationTime = attributes.periodStart + (segment.time - presentationTimeOffset) / timescale;
+                    return {
                         uri: uri,
                         timeline: segment.timeline,
                         duration: segment.duration,
@@ -3335,7 +3315,6 @@
                         number: segment.number,
                         presentationTime: presentationTime
                     };
-                    return map;
                 });
             }, SegmentURLToSegmentObject = function(attributes, segmentUrl) {
                 var baseUrl = attributes.baseUrl, _attributes$initializ = attributes.initialization, initialization = void 0 === _attributes$initializ ? {} : _attributes$initializ, initSegment = urlTypeToSegment({
@@ -3693,7 +3672,7 @@
             });
             var jsx_runtime = __webpack_require__(5893), react = __webpack_require__(7294), Home_module = __webpack_require__(214), Home_module_default = __webpack_require__.n(Home_module), video_es = __webpack_require__(5215);
             __webpack_require__(3512);
-            var VideoJS = function(props) {
+            var components_VideoJS = function(props) {
                 var videoRef = react.useRef(null), playerRef = react.useRef(null), options = props.options, onReady = props.onReady;
                 return react.useEffect(function() {
                     if (!playerRef.current) {
@@ -3720,7 +3699,7 @@
                         className: "video-js vjs-big-play-centered"
                     })
                 });
-            }, components_VideoJS = VideoJS;
+            };
             function Home() {
                 var playerRef = (0, react.useRef)(null), handlePlayerReady = function(player) {
                     playerRef.current = player, player.on("waiting", function() {
@@ -3877,10 +3856,7 @@
                 ];
                 for(var i in groups)if ("string" == typeof groups[i]) {
                     var kv = groups[i].split(keyValueDelim);
-                    if (2 === kv.length) {
-                        var k = kv[0], v = kv[1];
-                        callback(k, v);
-                    }
+                    2 === kv.length && callback(kv[0], kv[1]);
                 }
             }
             function parseCue(input, cue, regionList) {
@@ -4692,8 +4668,7 @@
                         return this.bottom > container.bottom;
                 }
             }, BoxPosition.prototype.intersectPercentage = function(b2) {
-                var x = Math.max(0, Math.min(this.right, b2.right) - Math.max(this.left, b2.left)), y = Math.max(0, Math.min(this.bottom, b2.bottom) - Math.max(this.top, b2.top));
-                return x * y / (this.height * this.width);
+                return Math.max(0, Math.min(this.right, b2.right) - Math.max(this.left, b2.left)) * Math.max(0, Math.min(this.bottom, b2.bottom) - Math.max(this.top, b2.top)) / (this.height * this.width);
             }, BoxPosition.prototype.toCSSCompatValues = function(reference) {
                 return {
                     top: this.top - reference.top,
@@ -4705,16 +4680,14 @@
                 };
             }, BoxPosition.getSimpleBoxPosition = function(obj) {
                 var height = obj.div ? obj.div.offsetHeight : obj.tagName ? obj.offsetHeight : 0, width = obj.div ? obj.div.offsetWidth : obj.tagName ? obj.offsetWidth : 0, top = obj.div ? obj.div.offsetTop : obj.tagName ? obj.offsetTop : 0;
-                obj = obj.div ? obj.div.getBoundingClientRect() : obj.tagName ? obj.getBoundingClientRect() : obj;
-                var ret = {
-                    left: obj.left,
+                return {
+                    left: (obj = obj.div ? obj.div.getBoundingClientRect() : obj.tagName ? obj.getBoundingClientRect() : obj).left,
                     right: obj.right,
                     top: obj.top || top,
                     height: obj.height || height,
                     bottom: obj.bottom || top + (obj.height || height),
                     width: obj.width || width
                 };
-                return ret;
             }, WebVTT1.StringDecoder = function() {
                 return {
                     decode: function(data) {
@@ -5135,7 +5108,7 @@
                 var lens = getLens(b64), validLen = lens[0], placeHoldersLen = lens[1];
                 return (validLen + placeHoldersLen) * 3 / 4 - placeHoldersLen;
             }, exports.toByteArray = function(b64) {
-                var tmp, i, placeHoldersLen, lens = getLens(b64), validLen = lens[0], placeHoldersLen1 = lens[1], arr = new Arr((validLen + (placeHoldersLen = placeHoldersLen1)) * 3 / 4 - placeHoldersLen), curByte = 0, len = placeHoldersLen1 > 0 ? validLen - 4 : validLen;
+                var tmp, i, validLen, placeHoldersLen, lens = getLens(b64), validLen1 = lens[0], placeHoldersLen1 = lens[1], arr = new Arr((validLen = validLen1, placeHoldersLen = placeHoldersLen1, (validLen + placeHoldersLen) * 3 / 4 - placeHoldersLen)), curByte = 0, len = placeHoldersLen1 > 0 ? validLen1 - 4 : validLen1;
                 for(i = 0; i < len; i += 4)tmp = revLookup[b64.charCodeAt(i)] << 18 | revLookup[b64.charCodeAt(i + 1)] << 12 | revLookup[b64.charCodeAt(i + 2)] << 6 | revLookup[b64.charCodeAt(i + 3)], arr[curByte++] = tmp >> 16 & 0xff, arr[curByte++] = tmp >> 8 & 0xff, arr[curByte++] = 0xff & tmp;
                 return 2 === placeHoldersLen1 && (tmp = revLookup[b64.charCodeAt(i)] << 2 | revLookup[b64.charCodeAt(i + 1)] >> 4, arr[curByte++] = 0xff & tmp), 1 === placeHoldersLen1 && (tmp = revLookup[b64.charCodeAt(i)] << 10 | revLookup[b64.charCodeAt(i + 1)] << 4 | revLookup[b64.charCodeAt(i + 2)] >> 2, arr[curByte++] = tmp >> 8 & 0xff, arr[curByte++] = 0xff & tmp), arr;
             }, exports.fromByteArray = function(uint8) {
@@ -5179,14 +5152,29 @@
                 return from(arg, encodingOrOffset, length);
             }
             function from(value, encodingOrOffset, length) {
-                if ("string" == typeof value) return fromString(value, encodingOrOffset);
+                if ("string" == typeof value) return function(string, encoding) {
+                    if (("string" != typeof encoding || "" === encoding) && (encoding = "utf8"), !Buffer.isEncoding(encoding)) throw TypeError("Unknown encoding: " + encoding);
+                    var length = 0 | byteLength(string, encoding), buf = createBuffer(length), actual = buf.write(string, encoding);
+                    return actual !== length && (buf = buf.slice(0, actual)), buf;
+                }(value, encodingOrOffset);
                 if (ArrayBuffer.isView(value)) return fromArrayLike(value);
                 if (null == value) throw TypeError("The first argument must be one of type string, Buffer, ArrayBuffer, Array, or Array-like Object. Received type " + typeof value);
-                if (isInstance(value, ArrayBuffer) || value && isInstance(value.buffer, ArrayBuffer) || "undefined" != typeof SharedArrayBuffer && (isInstance(value, SharedArrayBuffer) || value && isInstance(value.buffer, SharedArrayBuffer))) return fromArrayBuffer(value, encodingOrOffset, length);
+                if (isInstance(value, ArrayBuffer) || value && isInstance(value.buffer, ArrayBuffer) || "undefined" != typeof SharedArrayBuffer && (isInstance(value, SharedArrayBuffer) || value && isInstance(value.buffer, SharedArrayBuffer))) return function(array, byteOffset, length) {
+                    var buf;
+                    if (byteOffset < 0 || array.byteLength < byteOffset) throw RangeError('"offset" is outside of buffer bounds');
+                    if (array.byteLength < byteOffset + (length || 0)) throw RangeError('"length" is outside of buffer bounds');
+                    return Object.setPrototypeOf(buf = void 0 === byteOffset && void 0 === length ? new Uint8Array(array) : void 0 === length ? new Uint8Array(array, byteOffset) : new Uint8Array(array, byteOffset, length), Buffer.prototype), buf;
+                }(value, encodingOrOffset, length);
                 if ("number" == typeof value) throw TypeError('The "value" argument must not be of type number. Received type number');
                 var valueOf = value.valueOf && value.valueOf();
                 if (null != valueOf && valueOf !== value) return Buffer.from(valueOf, encodingOrOffset, length);
-                var b = fromObject(value);
+                var b = function(obj) {
+                    if (Buffer.isBuffer(obj)) {
+                        var obj1, len = 0 | checked(obj.length), buf = createBuffer(len);
+                        return 0 === buf.length || obj.copy(buf, 0, 0, len), buf;
+                    }
+                    return void 0 !== obj.length ? "number" != typeof obj.length || (obj1 = obj.length) != obj1 ? createBuffer(0) : fromArrayLike(obj) : "Buffer" === obj.type && Array.isArray(obj.data) ? fromArrayLike(obj.data) : void 0;
+                }(value);
                 if (b) return b;
                 if ("undefined" != typeof Symbol && null != Symbol.toPrimitive && "function" == typeof value[Symbol.toPrimitive]) return Buffer.from(value[Symbol.toPrimitive]("string"), encodingOrOffset, length);
                 throw TypeError("The first argument must be one of type string, Buffer, ArrayBuffer, Array, or Array-like Object. Received type " + typeof value);
@@ -5198,27 +5186,9 @@
             function allocUnsafe(size) {
                 return assertSize(size), createBuffer(size < 0 ? 0 : 0 | checked(size));
             }
-            function fromString(string, encoding) {
-                if (("string" != typeof encoding || "" === encoding) && (encoding = "utf8"), !Buffer.isEncoding(encoding)) throw TypeError("Unknown encoding: " + encoding);
-                var length = 0 | byteLength(string, encoding), buf = createBuffer(length), actual = buf.write(string, encoding);
-                return actual !== length && (buf = buf.slice(0, actual)), buf;
-            }
             function fromArrayLike(array) {
                 for(var length = array.length < 0 ? 0 : 0 | checked(array.length), buf = createBuffer(length), i = 0; i < length; i += 1)buf[i] = 255 & array[i];
                 return buf;
-            }
-            function fromArrayBuffer(array, byteOffset, length) {
-                var buf;
-                if (byteOffset < 0 || array.byteLength < byteOffset) throw RangeError('"offset" is outside of buffer bounds');
-                if (array.byteLength < byteOffset + (length || 0)) throw RangeError('"length" is outside of buffer bounds');
-                return Object.setPrototypeOf(buf = void 0 === byteOffset && void 0 === length ? new Uint8Array(array) : void 0 === length ? new Uint8Array(array, byteOffset) : new Uint8Array(array, byteOffset, length), Buffer.prototype), buf;
-            }
-            function fromObject(obj) {
-                if (Buffer.isBuffer(obj)) {
-                    var obj1, len = 0 | checked(obj.length), buf = createBuffer(len);
-                    return 0 === buf.length || obj.copy(buf, 0, 0, len), buf;
-                }
-                return void 0 !== obj.length ? "number" != typeof obj.length || (obj1 = obj.length) != obj1 ? createBuffer(0) : fromArrayLike(obj) : "Buffer" === obj.type && Array.isArray(obj.data) ? fromArrayLike(obj.data) : void 0;
             }
             function checked(length) {
                 if (length >= 0x7fffffff) throw RangeError("Attempt to allocate Buffer larger than maximum size: 0x" + 0x7fffffff.toString(16) + " bytes");
@@ -5338,13 +5308,19 @@
                 return blitBuffer(utf8ToBytes(string, buf.length - offset), buf, offset, length);
             }
             function asciiWrite(buf, string, offset, length) {
-                return blitBuffer(asciiToBytes(string), buf, offset, length);
+                return blitBuffer(function(str) {
+                    for(var byteArray = [], i = 0; i < str.length; ++i)byteArray.push(0xff & str.charCodeAt(i));
+                    return byteArray;
+                }(string), buf, offset, length);
             }
             function base64Write(buf, string, offset, length) {
                 return blitBuffer(base64ToBytes(string), buf, offset, length);
             }
             function ucs2Write(buf, string, offset, length) {
-                return blitBuffer(utf16leToBytes(string, buf.length - offset), buf, offset, length);
+                return blitBuffer(function(str, units) {
+                    for(var c, hi, lo, byteArray = [], i = 0; i < str.length && !((units -= 2) < 0); ++i)hi = (c = str.charCodeAt(i)) >> 8, lo = c % 256, byteArray.push(lo), byteArray.push(hi);
+                    return byteArray;
+                }(string, buf.length - offset), buf, offset, length);
             }
             function base64Slice(buf, start, end) {
                 return 0 === start && end === buf.length ? base64.fromByteArray(buf) : base64.fromByteArray(buf.slice(start, end));
@@ -5368,13 +5344,12 @@
                     }
                     null === codePoint ? (codePoint = 0xfffd, bytesPerSequence = 1) : codePoint > 0xffff && (codePoint -= 0x10000, res.push(codePoint >>> 10 & 0x3ff | 0xd800), codePoint = 0xdc00 | 0x3ff & codePoint), res.push(codePoint), i += bytesPerSequence;
                 }
-                return decodeCodePointsArray(res);
-            }
-            function decodeCodePointsArray(codePoints) {
-                var len = codePoints.length;
-                if (len <= 0x1000) return String.fromCharCode.apply(String, codePoints);
-                for(var res = "", i = 0; i < len;)res += String.fromCharCode.apply(String, codePoints.slice(i, i += 0x1000));
-                return res;
+                return function(codePoints) {
+                    var len = codePoints.length;
+                    if (len <= 0x1000) return String.fromCharCode.apply(String, codePoints);
+                    for(var res = "", i = 0; i < len;)res += String.fromCharCode.apply(String, codePoints.slice(i, i += 0x1000));
+                    return res;
+                }(res);
             }
             function asciiSlice(buf, start, end) {
                 var ret = "";
@@ -5741,14 +5716,6 @@
                     } else throw Error("Invalid code point");
                 }
                 return bytes;
-            }
-            function asciiToBytes(str) {
-                for(var byteArray = [], i = 0; i < str.length; ++i)byteArray.push(0xff & str.charCodeAt(i));
-                return byteArray;
-            }
-            function utf16leToBytes(str, units) {
-                for(var c, hi, lo, byteArray = [], i = 0; i < str.length && !((units -= 2) < 0); ++i)hi = (c = str.charCodeAt(i)) >> 8, lo = c % 256, byteArray.push(lo), byteArray.push(hi);
-                return byteArray;
             }
             function base64ToBytes(str) {
                 return base64.toByteArray(function(str) {

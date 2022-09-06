@@ -1,0 +1,1 @@
+//// [recursiveTypesUsedAsFunctionParameters.ts]

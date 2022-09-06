@@ -1,0 +1,2 @@
+//// [strictPropertyInitialization.ts]
+Symbol();

@@ -1,0 +1,1 @@
+//// [contextuallyTypedClassExpressionMethodDeclaration01.ts]

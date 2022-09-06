@@ -1,0 +1,1 @@
+//// [classAbstractProperties.ts]

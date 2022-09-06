@@ -1,0 +1,1 @@
+//// [narrowingGenericTypeFromInstanceof01.ts]

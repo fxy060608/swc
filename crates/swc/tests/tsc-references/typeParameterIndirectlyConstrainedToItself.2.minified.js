@@ -1,0 +1,1 @@
+//// [typeParameterIndirectlyConstrainedToItself.ts]

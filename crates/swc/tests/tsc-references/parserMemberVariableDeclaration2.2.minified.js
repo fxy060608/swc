@@ -1,0 +1,1 @@
+//// [parserMemberVariableDeclaration2.ts]

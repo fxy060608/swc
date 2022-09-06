@@ -1,0 +1,1 @@
+//// [mergedInterfacesWithMultipleBases3.ts]

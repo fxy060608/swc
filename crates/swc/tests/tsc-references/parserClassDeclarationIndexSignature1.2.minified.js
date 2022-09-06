@@ -1,0 +1,1 @@
+//// [parserClassDeclarationIndexSignature1.ts]

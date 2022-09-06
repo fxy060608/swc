@@ -64,15 +64,13 @@
                     this.service = service, this.serviceName = serviceName, this.errors = errors;
                 }
                 create(code, ...data) {
-                    const customData = data[0] || {}, fullCode = `${this.service}/${code}`, template = this.errors[code], message = template ? replaceTemplate(template, customData) : "Error", fullMessage = `${this.serviceName}: ${message} (${fullCode}).`, error = new FirebaseError(fullCode, fullMessage, customData);
+                    var template, data1;
+                    const customData = data[0] || {}, fullCode = `${this.service}/${code}`, template1 = this.errors[code], message = template1 ? (template = template1, data1 = customData, template.replace(PATTERN, (_, key)=>{
+                        const value = data1[key];
+                        return null != value ? String(value) : `<${key}?>`;
+                    })) : "Error", fullMessage = `${this.serviceName}: ${message} (${fullCode}).`, error = new FirebaseError(fullCode, fullMessage, customData);
                     return error;
                 }
-            }
-            function replaceTemplate(template, data) {
-                return template.replace(PATTERN, (_, key)=>{
-                    const value = data[key];
-                    return null != value ? String(value) : `<${key}?>`;
-                });
             }
             const PATTERN = /\{\$([^}]+)}/g;
             function getModularInstance(service) {
@@ -325,7 +323,13 @@
             };
             var cb = "closure_lm_" + (1e6 * Math.random() | 0), db = {};
             function fb(a, b, c, d, e) {
-                if (d && d.once) return gb(a, b, c, d, e);
+                if (d && d.once) return function gb(a, b, c, d, e) {
+                    if (Array.isArray(b)) {
+                        for(var f = 0; f < b.length; f++)gb(a, b[f], c, d, e);
+                        return null;
+                    }
+                    return c = hb(c), a && a[B] ? a.O(b, c, p(d) ? !!d.capture : !!d, e) : ib(a, b, c, !0, d, e);
+                }(a, b, c, d, e);
                 if (Array.isArray(b)) {
                     for(var f = 0; f < b.length; f++)fb(a, b[f], c, d, e);
                     return null;
@@ -336,25 +340,17 @@
                 if (!b) throw Error("Invalid event type");
                 var h = p(e) ? !!e.capture : !!e, n = jb(a);
                 if (n || (a[cb] = n = new $a(a)), (c = n.add(b, c, d, h, f)).proxy) return c;
-                if (d = kb(), c.proxy = d, d.src = a, d.listener = c, a.addEventListener) Va || (e = h), void 0 === e && (e = !1), a.addEventListener(b.toString(), d, e);
+                if (d = function() {
+                    function a(c) {
+                        return b.call(a.src, a.listener, c);
+                    }
+                    var b = mb;
+                    return a;
+                }(), c.proxy = d, d.src = a, d.listener = c, a.addEventListener) Va || (e = h), void 0 === e && (e = !1), a.addEventListener(b.toString(), d, e);
                 else if (a.attachEvent) a.attachEvent(lb(b.toString()), d);
                 else if (a.addListener && a.removeListener) a.addListener(d);
                 else throw Error("addEventListener and attachEvent are unavailable.");
                 return c;
-            }
-            function kb() {
-                function a(c) {
-                    return b.call(a.src, a.listener, c);
-                }
-                var b = mb;
-                return a;
-            }
-            function gb(a, b, c, d, e) {
-                if (Array.isArray(b)) {
-                    for(var f = 0; f < b.length; f++)gb(a, b[f], c, d, e);
-                    return null;
-                }
-                return c = hb(c), a && a[B] ? a.O(b, c, p(d) ? !!d.capture : !!d, e) : ib(a, b, c, !0, d, e);
             }
             function ob(a) {
                 if ("number" != typeof a && a && !a.ca) {
@@ -468,13 +464,10 @@
                 }, 0);
             }
             function zb(a, b) {
-                Ab || Bb(), Cb || (Ab(), Cb = !0), tb.add(a, b);
-            }
-            function Bb() {
-                var a = l.Promise.resolve(void 0);
-                Ab = function() {
-                    a.then(Db);
-                };
+                var a1;
+                Ab || (a1 = l.Promise.resolve(void 0), Ab = function() {
+                    a1.then(Db);
+                }), Cb || (Ab(), Cb = !0), tb.add(a, b);
             }
             var Cb = !1, tb = new class {
                 constructor(){
@@ -559,30 +552,29 @@
             }
             function F(a, b, c, d) {
                 a.info(function() {
-                    return "XMLHTTP TEXT (" + b + "): " + Pb(a, c) + (d ? " " + d : "");
-                });
-            }
-            function Pb(a, b) {
-                if (!a.g) return b;
-                if (!b) return null;
-                try {
-                    var c = JSON.parse(b);
-                    if (c) {
-                        for(a = 0; a < c.length; a++)if (Array.isArray(c[a])) {
-                            var d = c[a];
-                            if (!(2 > d.length)) {
-                                var e = d[1];
-                                if (Array.isArray(e) && !(1 > e.length)) {
-                                    var f = e[0];
-                                    if ("noop" != f && "stop" != f && "close" != f) for(var h = 1; h < e.length; h++)e[h] = "";
+                    return "XMLHTTP TEXT (" + b + "): " + function(a, b) {
+                        if (!a.g) return b;
+                        if (!b) return null;
+                        try {
+                            var c = JSON.parse(b);
+                            if (c) {
+                                for(a = 0; a < c.length; a++)if (Array.isArray(c[a])) {
+                                    var d = c[a];
+                                    if (!(2 > d.length)) {
+                                        var e = d[1];
+                                        if (Array.isArray(e) && !(1 > e.length)) {
+                                            var f = e[0];
+                                            if ("noop" != f && "stop" != f && "close" != f) for(var h = 1; h < e.length; h++)e[h] = "";
+                                        }
+                                    }
                                 }
                             }
+                            return rb(c);
+                        } catch (n) {
+                            return b;
                         }
-                    }
-                    return rb(c);
-                } catch (n) {
-                    return b;
-                }
+                    }(a, c) + (d ? " " + d : "");
+                });
             }
             E.prototype.M = function() {
                 E.Z.M.call(this), Lb(this);
@@ -968,7 +960,11 @@
                 } else a.m = null;
             }
             function Sc(a, b, c) {
-                b instanceof Rc ? (a.h = b, Zc(a.h, a.g)) : (c || (b = Uc(b, $c)), a.h = new Rc(b, a.g));
+                var a1, b1;
+                b instanceof Rc ? (a.h = b, a1 = a.h, (b1 = a.g) && !a1.j && (V(a1), a1.i = null, a1.g.forEach(function(c, d) {
+                    var e = d.toLowerCase();
+                    d != e && (dd(this, d), mc(this, e, c));
+                }, a1)), a1.j = b1) : (c || (b = Uc(b, $c)), a.h = new Rc(b, a.g));
             }
             function R(a, b, c) {
                 a.h.set(b, c);
@@ -1024,12 +1020,6 @@
             function W(a, b) {
                 return b = String(b), a.j && (b = b.toLowerCase()), b;
             }
-            function Zc(a, b) {
-                b && !a.j && (V(a), a.i = null, a.g.forEach(function(c, d) {
-                    var e = d.toLowerCase();
-                    d != e && (dd(this, d), mc(this, e, c));
-                }, a)), a.j = b;
-            }
             (k = Rc.prototype).add = function(a, b) {
                 V(this), this.i = null, a = W(this, a);
                 var c = this.g.get(a);
@@ -1054,7 +1044,7 @@
                 }
                 return b;
             }, k.set = function(a, b) {
-                return V(this), this.i = null, a = W(this, a), ed(this, a) && (this.h -= this.g.get(a).length), this.g.set(a, [
+                return V(this), this.i = null, ed(this, a = W(this, a)) && (this.h -= this.g.get(a).length), this.g.set(a, [
                     b
                 ]), this.h += 1, this;
             }, k.get = function(a, b) {
@@ -1425,7 +1415,7 @@
                         if (1 == d) {
                             c = b.s ? b.s.length : 0, b = Date.now() - b.F;
                             var a1, b1, e = a.C;
-                            d = Sb(), D(d, new Vb(d, c, b, e)), Hc(a);
+                            D(d = Sb(), new Vb(d, c, b, e)), Hc(a);
                         } else Gc(a);
                     } else if (3 == (e = b.o) || 0 == e && 0 < a.I || !(1 == d && (a1 = a, b1 = b, !(Cc(a1.i) >= a1.i.j - (a1.m ? 1 : 0)) && (a1.m ? (a1.l = b1.D.concat(a1.l), !0) : 1 != a1.G && 2 != a1.G && !(a1.C >= (a1.Xa ? 0 : a1.Ya)) && (a1.m = K(q(a1.Ha, a1, b1), Od(a1, a1.C)), a1.C++, !0))) || 2 == d && Bc(a))) switch(c && 0 < c.length && ((b = a.i).i = b.i.concat(c)), e){
                         case 1:
@@ -1639,7 +1629,7 @@
                                 b = 1e3;
                             }
                             else b = 1e3;
-                            b = Pd(this, e, b), c = N(this.F), R(c, "RID", a), R(c, "CVER", 22), this.D && R(c, "X-HTTP-Session-Id", this.D), Kd(this, c), this.o && f && Gd(c, this.o, f), Dc(this.i, e), this.Ra && R(c, "TYPE", "init"), this.ja ? (R(c, "$req", b), R(c, "SID", "null"), e.$ = !0, ic(e, c, null)) : ic(e, c, b), this.G = 2;
+                            b = Pd(this, e, b), R(c = N(this.F), "RID", a), R(c, "CVER", 22), this.D && R(c, "X-HTTP-Session-Id", this.D), Kd(this, c), this.o && f && Gd(c, this.o, f), Dc(this.i, e), this.Ra && R(c, "TYPE", "init"), this.ja ? (R(c, "$req", b), R(c, "SID", "null"), e.$ = !0, ic(e, c, null)) : ic(e, c, b), this.G = 2;
                         }
                     } else 3 == this.G && (a ? Qd(this, a) : 0 == this.l.length || id(this.i) || Qd(this));
                 }
@@ -1733,9 +1723,14 @@
                 }();
             }
             exports.default = function(_param) {
-                var sizerSvg, src = _param.src, sizes = _param.sizes, _unoptimized = _param.unoptimized, unoptimized = void 0 !== _unoptimized && _unoptimized, _priority = _param.priority, priority = void 0 !== _priority && _priority, loading = _param.loading, _lazyBoundary = _param.lazyBoundary, lazyBoundary = void 0 === _lazyBoundary ? "200px" : _lazyBoundary, className = _param.className, quality = _param.quality, width = _param.width, height = _param.height, objectFit = _param.objectFit, objectPosition = _param.objectPosition, onLoadingComplete = _param.onLoadingComplete, _loader = _param.loader, loader = void 0 === _loader ? defaultImageLoader : _loader, _placeholder = _param.placeholder, placeholder = void 0 === _placeholder ? "empty" : _placeholder, blurDataURL = _param.blurDataURL, all = function(source, excluded) {
+                var sizerSvg, src = _param.src, sizes = _param.sizes, _unoptimized = _param.unoptimized, unoptimized = void 0 !== _unoptimized && _unoptimized, _priority = _param.priority, priority = void 0 !== _priority && _priority, loading = _param.loading, _lazyBoundary = _param.lazyBoundary, className = _param.className, quality = _param.quality, width = _param.width, height = _param.height, objectFit = _param.objectFit, objectPosition = _param.objectPosition, onLoadingComplete = _param.onLoadingComplete, _loader = _param.loader, loader = void 0 === _loader ? defaultImageLoader : _loader, _placeholder = _param.placeholder, placeholder = void 0 === _placeholder ? "empty" : _placeholder, blurDataURL = _param.blurDataURL, rest = function(source, excluded) {
                     if (null == source) return {};
-                    var key, i, target = _objectWithoutPropertiesLoose(source, excluded);
+                    var key, i, target = function(source, excluded) {
+                        if (null == source) return {};
+                        var key, i, target = {}, sourceKeys = Object.keys(source);
+                        for(i = 0; i < sourceKeys.length; i++)key = sourceKeys[i], excluded.indexOf(key) >= 0 || (target[key] = source[key]);
+                        return target;
+                    }(source, excluded);
                     if (Object.getOwnPropertySymbols) {
                         var sourceSymbolKeys = Object.getOwnPropertySymbols(source);
                         for(i = 0; i < sourceSymbolKeys.length; i++)key = sourceSymbolKeys[i], !(excluded.indexOf(key) >= 0) && Object.prototype.propertyIsEnumerable.call(source, key) && (target[key] = source[key]);
@@ -1758,7 +1753,7 @@
                     "loader",
                     "placeholder",
                     "blurDataURL", 
-                ]), rest = all, layout = sizes ? "responsive" : "intrinsic";
+                ]), layout = sizes ? "responsive" : "intrinsic";
                 "layout" in rest && (rest.layout && (layout = rest.layout), delete rest.layout);
                 var src1, staticSrc = "";
                 if ("object" == typeof (src1 = src) && (isStaticRequire(src1) || void 0 !== src1.src)) {
@@ -1772,7 +1767,7 @@
                 var arr, ref2 = function(arr) {
                     if (Array.isArray(arr)) return arr;
                 }(arr = _useIntersection.useIntersection({
-                    rootMargin: lazyBoundary,
+                    rootMargin: void 0 === _lazyBoundary ? "200px" : _lazyBoundary,
                     disabled: !isLazy
                 })) || function(arr, i) {
                     var _arr = [], _n = !0, _d = !1, _e = void 0;
@@ -1884,13 +1879,10 @@
                             if (img) {
                                 var handleLoad = function() {
                                     img.src !== emptyDataURL && ("decode" in img ? img.decode() : Promise.resolve()).catch(function() {}).then(function() {
-                                        if ("blur" === placeholder && (img.style.filter = "none", img.style.backgroundSize = "none", img.style.backgroundImage = "none"), loadedImageURLs.add(src), onLoadingComplete) {
-                                            var naturalWidth = img.naturalWidth, naturalHeight = img.naturalHeight;
-                                            onLoadingComplete({
-                                                naturalWidth: naturalWidth,
-                                                naturalHeight: naturalHeight
-                                            });
-                                        }
+                                        "blur" === placeholder && (img.style.filter = "none", img.style.backgroundSize = "none", img.style.backgroundImage = "none"), loadedImageURLs.add(src), onLoadingComplete && onLoadingComplete({
+                                            naturalWidth: img.naturalWidth,
+                                            naturalHeight: img.naturalHeight
+                                        });
                                     });
                                 };
                                 img.complete ? handleLoad() : img.onload = handleLoad;
@@ -1944,12 +1936,6 @@
                 }(i);
                 return target;
             }
-            function _objectWithoutPropertiesLoose(source, excluded) {
-                if (null == source) return {};
-                var key, i, target = {}, sourceKeys = Object.keys(source);
-                for(i = 0; i < sourceKeys.length; i++)key = sourceKeys[i], excluded.indexOf(key) >= 0 || (target[key] = source[key]);
-                return target;
-            }
             var loadedImageURLs = new Set(), emptyDataURL = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7", loaders = new Map([
                 [
                     "default",
@@ -1968,11 +1954,11 @@
                 [
                     "cloudinary",
                     function(param) {
-                        var root = param.root, src = param.src, width = param.width, quality = param.quality, paramsString = [
+                        var root = param.root, src = param.src, paramsString = [
                             "f_auto",
                             "c_limit",
-                            "w_" + width,
-                            "q_" + (quality || "auto"), 
+                            "w_" + param.width,
+                            "q_" + (param.quality || "auto"), 
                         ].join(",") + "/";
                         return "".concat(root).concat(paramsString).concat(normalizeSrc(src));
                     }
@@ -2119,7 +2105,26 @@
                 }(arr, 2) || function() {
                     throw TypeError("Invalid attempt to destructure non-iterable instance");
                 }(), visible = ref[0], setVisible = ref[1], setRef = _react.useCallback(function(el) {
-                    unobserve.current && (unobserve.current(), unobserve.current = void 0), !isDisabled && !visible && el && el.tagName && (unobserve.current = observe(el, function(isVisible) {
+                    unobserve.current && (unobserve.current(), unobserve.current = void 0), !isDisabled && !visible && el && el.tagName && (unobserve.current = function(element, callback, options) {
+                        var ref = function(options) {
+                            var id = options.rootMargin || "", instance = observers.get(id);
+                            if (instance) return instance;
+                            var elements = new Map(), observer = new IntersectionObserver(function(entries) {
+                                entries.forEach(function(entry) {
+                                    var callback = elements.get(entry.target), isVisible = entry.isIntersecting || entry.intersectionRatio > 0;
+                                    callback && isVisible && callback(isVisible);
+                                });
+                            }, options);
+                            return observers.set(id, instance = {
+                                id: id,
+                                observer: observer,
+                                elements: elements
+                            }), instance;
+                        }(options), id = ref.id, observer = ref.observer, elements = ref.elements;
+                        return elements.set(element, callback), observer.observe(element), function() {
+                            elements.delete(element), observer.unobserve(element), 0 === elements.size && (observer.disconnect(), observers.delete(id));
+                        };
+                    }(el, function(isVisible) {
                         return isVisible && setVisible(isVisible);
                     }, {
                         rootMargin: rootMargin
@@ -2145,29 +2150,7 @@
                     visible
                 ];
             };
-            var _react = __webpack_require__(7294), _requestIdleCallback = __webpack_require__(9311), hasIntersectionObserver = "undefined" != typeof IntersectionObserver;
-            function observe(element, callback, options) {
-                var ref = createObserver(options), id = ref.id, observer = ref.observer, elements = ref.elements;
-                return elements.set(element, callback), observer.observe(element), function() {
-                    elements.delete(element), observer.unobserve(element), 0 === elements.size && (observer.disconnect(), observers.delete(id));
-                };
-            }
-            var observers = new Map();
-            function createObserver(options) {
-                var id = options.rootMargin || "", instance = observers.get(id);
-                if (instance) return instance;
-                var elements = new Map(), observer = new IntersectionObserver(function(entries) {
-                    entries.forEach(function(entry) {
-                        var callback = elements.get(entry.target), isVisible = entry.isIntersecting || entry.intersectionRatio > 0;
-                        callback && isVisible && callback(isVisible);
-                    });
-                }, options);
-                return observers.set(id, instance = {
-                    id: id,
-                    observer: observer,
-                    elements: elements
-                }), instance;
-            }
+            var _react = __webpack_require__(7294), _requestIdleCallback = __webpack_require__(9311), hasIntersectionObserver = "undefined" != typeof IntersectionObserver, observers = new Map();
         },
         6978: function(__unused_webpack_module, exports) {
             "use strict";
@@ -2245,17 +2228,16 @@
                 getPlatformInfoString() {
                     const providers = this.container.getProviders();
                     return providers.map((provider)=>{
-                        if (!isVersionServiceProvider(provider)) return null;
+                        if (!function(provider) {
+                            const component = provider.getComponent();
+                            return (null == component ? void 0 : component.type) === "VERSION";
+                        }(provider)) return null;
                         {
                             const service = provider.getImmediate();
                             return `${service.library}/${service.version}`;
                         }
                     }).filter((logString)=>logString).join(" ");
                 }
-            }
-            function isVersionServiceProvider(provider) {
-                const component = provider.getComponent();
-                return (null == component ? void 0 : component.type) === "VERSION";
             }
             const name$o = "@firebase/app", version$1 = "0.7.8", logger = new _firebase_logger__WEBPACK_IMPORTED_MODULE_1__.Yd("@firebase/app"), PLATFORM_LOG_STRING = {
                 [name$o]: "fire-core",

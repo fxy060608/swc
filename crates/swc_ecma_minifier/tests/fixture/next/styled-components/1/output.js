@@ -3458,19 +3458,9 @@
         9996: function(module) {
             "use strict";
             var isMergeableObject = function(value) {
-                return isNonNullObject(value) && !isSpecial(value);
-            };
-            function isNonNullObject(value) {
-                return !!value && "object" == typeof value;
-            }
-            function isSpecial(value) {
-                var stringValue = Object.prototype.toString.call(value);
-                return "[object RegExp]" === stringValue || "[object Date]" === stringValue || isReactElement(value);
-            }
-            var REACT_ELEMENT_TYPE = "function" == typeof Symbol && Symbol.for ? Symbol.for("react.element") : 0xeac7;
-            function isReactElement(value) {
-                return value.$$typeof === REACT_ELEMENT_TYPE;
-            }
+                var value1, value2, stringValue;
+                return !!(value1 = value) && "object" == typeof value1 && (value2 = value, "[object RegExp]" !== (stringValue = Object.prototype.toString.call(value2)) && "[object Date]" !== stringValue && value2.$$typeof !== REACT_ELEMENT_TYPE);
+            }, REACT_ELEMENT_TYPE = "function" == typeof Symbol && Symbol.for ? Symbol.for("react.element") : 0xeac7;
             function cloneUnlessOtherwiseSpecified(value, options) {
                 return !1 !== options.clone && options.isMergeableObject(value) ? deepmerge(Array.isArray(value) ? [] : {}, value, options) : value;
             }
@@ -3494,8 +3484,8 @@
             }
             function deepmerge(target, source, options) {
                 (options = options || {}).arrayMerge = options.arrayMerge || defaultArrayMerge, options.isMergeableObject = options.isMergeableObject || isMergeableObject, options.cloneUnlessOtherwiseSpecified = cloneUnlessOtherwiseSpecified;
-                var target1, source1, options1, destination, sourceIsArray = Array.isArray(source), targetIsArray = Array.isArray(target);
-                return sourceIsArray !== targetIsArray ? cloneUnlessOtherwiseSpecified(source, options) : sourceIsArray ? options.arrayMerge(target, source, options) : (target1 = target, source1 = source, destination = {}, (options1 = options).isMergeableObject(target1) && getKeys(target1).forEach(function(key) {
+                var target1, source1, options1, destination, sourceIsArray = Array.isArray(source);
+                return sourceIsArray !== Array.isArray(target) ? cloneUnlessOtherwiseSpecified(source, options) : sourceIsArray ? options.arrayMerge(target, source, options) : (target1 = target, source1 = source, destination = {}, (options1 = options).isMergeableObject(target1) && getKeys(target1).forEach(function(key) {
                     destination[key] = cloneUnlessOtherwiseSpecified(target1[key], options1);
                 }), getKeys(source1).forEach(function(key) {
                     var target, key1;
@@ -3555,7 +3545,7 @@
                         "hidden" === document.visibilityState && (hadFocusVisibleRecently && (hadKeyboardEvent = !0), addInitialPointerMoveListeners());
                     }, !0), addInitialPointerMoveListeners(), scope.addEventListener("focus", function(e) {
                         var el, type, tagName;
-                        isValidFocusTarget(e.target) && (hadKeyboardEvent || (type = (el = e.target).type, tagName = el.tagName, "INPUT" === tagName && inputTypesAllowlist[type] && !el.readOnly || "TEXTAREA" === tagName && !el.readOnly || el.isContentEditable)) && addFocusVisibleClass(e.target);
+                        isValidFocusTarget(e.target) && (hadKeyboardEvent || (type = (el = e.target).type, "INPUT" === (tagName = el.tagName) && inputTypesAllowlist[type] && !el.readOnly || "TEXTAREA" === tagName && !el.readOnly || el.isContentEditable)) && addFocusVisibleClass(e.target);
                     }, !0), scope.addEventListener("blur", function(e) {
                         if (isValidFocusTarget(e.target)) {
                             var el;
@@ -4090,7 +4080,7 @@
                         case 1017:
                             if (-1 === a.indexOf("sticky", 9)) break;
                         case 975:
-                            switch(c = (a = d).length - 10, b = (33 === a.charCodeAt(c) ? a.substring(0, c) : a).substring(d.indexOf(":", 7) + 1).trim(), m = b.charCodeAt(0) + (0 | b.charCodeAt(7))){
+                            switch(c = (a = d).length - 10, m = (b = (33 === a.charCodeAt(c) ? a.substring(0, c) : a).substring(d.indexOf(":", 7) + 1).trim()).charCodeAt(0) + (0 | b.charCodeAt(7))){
                                 case 203:
                                     if (111 > b.charCodeAt(8)) break;
                                 case 115:
@@ -4149,7 +4139,7 @@
                 function B(d, c) {
                     var e = d;
                     if (33 > e.charCodeAt(0) && (e = e.trim()), e = [
-                        V = e
+                        e
                     ], 0 < A) {
                         var h = H(-1, c, e, e, D, z, 0, 0, 0, 0);
                         void 0 !== h && "string" == typeof h && (c = h);
@@ -4364,9 +4354,9 @@
                         }
                         return G + p + F;
                     }(O, e, c, 0, 0);
-                    return 0 < A && void 0 !== (h = H(-2, a, e, e, D, z, a.length, 0, 0, 0)) && (a = h), V = "", E = 0, z = D = 1, a;
+                    return 0 < A && void 0 !== (h = H(-2, a, e, e, D, z, a.length, 0, 0, 0)) && (a = h), E = 0, z = D = 1, a;
                 }
-                var ca = /^\0+/g, N = /[\0\r\f]/g, aa = /: */g, ka = /zoo|gra/, ma = /([,: ])(transform)/g, ia = /,\r+?/g, F = /([\t\r\n ])*\f?&/g, fa = /@(k\w+)\s*(\S*)\s*/, Q = /::(place)/g, ha = /:(read-only)/g, G = /[svh]\w+-[tblr]{2}/, da = /\(\s*(.*)\s*\)/g, oa = /([\s\S]*?);/g, ba = /-self|flex-/g, na = /[^]*?(:[rp][el]a[\w-]+)[^]*/, la = /stretch|:\s*\w+\-(?:conte|avail)/, ja = /([^-])(image-set\()/, z = 1, D = 1, E = 0, w = 1, O = [], S = [], A = 0, R = null, Y = 0, V = "";
+                var ca = /^\0+/g, N = /[\0\r\f]/g, aa = /: */g, ka = /zoo|gra/, ma = /([,: ])(transform)/g, ia = /,\r+?/g, F = /([\t\r\n ])*\f?&/g, fa = /@(k\w+)\s*(\S*)\s*/, Q = /::(place)/g, ha = /:(read-only)/g, G = /[svh]\w+-[tblr]{2}/, da = /\(\s*(.*)\s*\)/g, oa = /([\s\S]*?);/g, ba = /-self|flex-/g, na = /[^]*?(:[rp][el]a[\w-]+)[^]*/, la = /stretch|:\s*\w+\-(?:conte|avail)/, ja = /([^-])(image-set\()/, z = 1, D = 1, E = 0, w = 1, O = [], S = [], A = 0, R = null, Y = 0;
                 return B.use = function T(d) {
                     switch(d){
                         case void 0:
@@ -4891,7 +4881,7 @@
                         }));
                     }, s;
                 }(function qe(e, t, n) {
-                    var e1, t1, n1, r, e2, o = N(e), i = !ke(e), a = t.attrs, c = void 0 === a ? w : a, d = t.componentId, h = void 0 === d ? (e1 = t.displayName, t1 = t.parentComponentId, n1 = "string" != typeof e1 ? "sc" : Te(e1), Ye[n1] = (Ye[n1] || 0) + 1, r = n1 + "-" + xe("5.3.5" + n1 + Ye[n1]), t1 ? t1 + "-" + r : r) : d, p = t.displayName, f = void 0 === p ? ke(e2 = e) ? "styled." + e2 : "Styled(" + _(e2) + ")" : p, g = t.displayName && t.componentId ? Te(t.displayName) + "-" + t.componentId : t.componentId || h, S = o && e.attrs ? Array.prototype.concat(e.attrs, c).filter(Boolean) : c, A = t.shouldForwardProp;
+                    var e1, t1, n1, r, e2, o = N(e), i = !ke(e), a = t.attrs, c = void 0 === a ? w : a, d = t.componentId, h = void 0 === d ? (e1 = t.displayName, t1 = t.parentComponentId, Ye[n1 = "string" != typeof e1 ? "sc" : Te(e1)] = (Ye[n1] || 0) + 1, r = n1 + "-" + xe("5.3.5" + n1 + Ye[n1]), t1 ? t1 + "-" + r : r) : d, p = t.displayName, f = void 0 === p ? (e2 = e, ke(e2) ? "styled." + e2 : "Styled(" + _(e2) + ")") : p, g = t.displayName && t.componentId ? Te(t.displayName) + "-" + t.componentId : t.componentId || h, S = o && e.attrs ? Array.prototype.concat(e.attrs, c).filter(Boolean) : c, A = t.shouldForwardProp;
                     o && e.shouldForwardProp && (A = t.shouldForwardProp ? function(n, r, o) {
                         return e.shouldForwardProp(n, r, o) && t.shouldForwardProp(n, r, o);
                     } : e.shouldForwardProp);
@@ -5084,7 +5074,7 @@
             ].forEach(function(e) {
                 He[e] = He(e);
             });
-            var t, $e = function() {
+            var $e = function() {
                 function e(e, t) {
                     this.rules = e, this.componentId = t, this.isStatic = re(e), Z.registerId(this.componentId + 1);
                 }
@@ -5098,41 +5088,45 @@
                     e > 2 && Z.registerId(this.componentId + e), this.removeStyles(e, n), this.createStyles(e, t, n, r);
                 }, e;
             }();
-            (t = (function() {
-                var e = this;
-                this._emitSheetCSS = function() {
-                    var t = e.instance.toString();
-                    if (!t) return "";
-                    var n = q();
-                    return "<style " + [
-                        n && 'nonce="' + n + '"',
-                        A + '="true"',
-                        'data-styled-version="5.3.5"', 
-                    ].filter(Boolean).join(" ") + ">" + t + "</style>";
-                }, this.getStyleTags = function() {
-                    return e.sealed ? j(2) : e._emitSheetCSS();
-                }, this.getStyleElement = function() {
-                    if (e.sealed) return j(2);
-                    var t, n = ((t = {})[A] = "", t["data-styled-version"] = "5.3.5", t.dangerouslySetInnerHTML = {
-                        __html: e.instance.toString()
-                    }, t), o = q();
-                    return o && (n.nonce = o), [
-                        react.createElement("style", v({}, n, {
-                            key: "sc-0-0"
-                        })), 
-                    ];
-                }, this.seal = function() {
-                    e.sealed = !0;
-                }, this.instance = new Z({
-                    isServer: !0
-                }), this.sealed = !1;
-            }).prototype).collectStyles = function(e) {
-                return this.sealed ? j(2) : react.createElement(ye, {
-                    sheet: this.instance
-                }, e);
-            }, t.interleaveWithNodeStream = function(e) {
-                return j(3);
-            };
+            !function() {
+                function e() {
+                    var e = this;
+                    this._emitSheetCSS = function() {
+                        var t = e.instance.toString();
+                        if (!t) return "";
+                        var n = q();
+                        return "<style " + [
+                            n && 'nonce="' + n + '"',
+                            A + '="true"',
+                            'data-styled-version="5.3.5"', 
+                        ].filter(Boolean).join(" ") + ">" + t + "</style>";
+                    }, this.getStyleTags = function() {
+                        return e.sealed ? j(2) : e._emitSheetCSS();
+                    }, this.getStyleElement = function() {
+                        if (e.sealed) return j(2);
+                        var t, n = ((t = {})[A] = "", t["data-styled-version"] = "5.3.5", t.dangerouslySetInnerHTML = {
+                            __html: e.instance.toString()
+                        }, t), o = q();
+                        return o && (n.nonce = o), [
+                            react.createElement("style", v({}, n, {
+                                key: "sc-0-0"
+                            })), 
+                        ];
+                    }, this.seal = function() {
+                        e.sealed = !0;
+                    }, this.instance = new Z({
+                        isServer: !0
+                    }), this.sealed = !1;
+                }
+                var t = e.prototype;
+                return t.collectStyles = function(e) {
+                    return this.sealed ? j(2) : react.createElement(ye, {
+                        sheet: this.instance
+                    }, e);
+                }, t.interleaveWithNodeStream = function(e) {
+                    return j(3);
+                }, e;
+            }();
             var styled_components_browser_esm = He, object_assign = __webpack_require__(6086), object_assign_default = __webpack_require__.n(object_assign), merge = function(a, b) {
                 var _assign, result = object_assign_default()({}, a, b);
                 for(var key in a)a[key] && "object" == typeof b[key] && object_assign_default()(result, ((_assign = {})[key] = object_assign_default()(a[key], b[key]), _assign));
@@ -5242,14 +5236,14 @@
                 return parsers.forEach(function(parser) {
                     parser && parser.config && object_assign_default()(config, parser.config);
                 }), createParser(config);
-            }, getWidth = function(n, scale) {
-                var n1;
-                return get(scale, n, "number" != typeof (n1 = n) || isNaN(n1) || n > 1 ? n : 100 * n + "%");
             }, layout = system({
                 width: {
                     property: "width",
                     scale: "sizes",
-                    transform: getWidth
+                    transform: function(n, scale) {
+                        var n1;
+                        return get(scale, n, "number" != typeof (n1 = n) || isNaN(n1) || n > 1 ? n : 100 * n + "%");
+                    }
                 },
                 height: {
                     property: "height",
@@ -5873,7 +5867,7 @@
                             result[key] = css(val)(theme);
                             continue;
                         }
-                        var prop = index_esm_get(aliases, key, key), scaleName = index_esm_get(scales, prop), scale = index_esm_get(theme, scaleName, index_esm_get(theme, prop, {})), transform = index_esm_get(transforms, prop, index_esm_get), value = transform(scale, val, val);
+                        var prop = index_esm_get(aliases, key, key), scaleName = index_esm_get(scales, prop), scale = index_esm_get(theme, scaleName, index_esm_get(theme, prop, {})), value = index_esm_get(transforms, prop, index_esm_get)(scale, val, val);
                         if (multiples[prop]) for(var dirs = multiples[prop], i = 0; i < dirs.length; i++)result[dirs[i]] = value;
                         else result[prop] = value;
                     }
@@ -5881,13 +5875,11 @@
                 };
             }, variant = function(_ref) {
                 var _config, sx, scale = _ref.scale, _ref$prop = _ref.prop, prop = void 0 === _ref$prop ? "variant" : _ref$prop, _ref$variants = _ref.variants, variants = void 0 === _ref$variants ? {} : _ref$variants, key = _ref.key;
-                (sx = Object.keys(variants).length ? function(value, scale, props) {
+                return (sx = Object.keys(variants).length ? function(value, scale, props) {
                     return css_dist_index_esm(get(scale, value, null))(props.theme);
                 } : function(value, scale) {
                     return get(scale, value, null);
-                }).scale = scale || key, sx.defaults = variants;
-                var config = ((_config = {})[prop] = sx, _config), parser = createParser(config);
-                return parser;
+                }).scale = scale || key, sx.defaults = variants, createParser(((_config = {})[prop] = sx, _config));
             }, buttonStyle = variant({
                 key: "buttons"
             }), textStyle = variant({
@@ -5898,15 +5890,13 @@
                 prop: "colors"
             }), width = index_esm.width, height = index_esm.height, minWidth = index_esm.minWidth, minHeight = index_esm.minHeight, maxWidth = index_esm.maxWidth, maxHeight = index_esm.maxHeight, size = index_esm.size, verticalAlign = index_esm.verticalAlign, display = index_esm.display, overflow = index_esm.overflow, overflowX = index_esm.overflowX, overflowY = index_esm.overflowY, opacity = color.opacity, fontSize = typography_dist_index_esm.fontSize, fontFamily = typography_dist_index_esm.fontFamily, fontWeight = typography_dist_index_esm.fontWeight, lineHeight = typography_dist_index_esm.lineHeight, textAlign = typography_dist_index_esm.textAlign, fontStyle = typography_dist_index_esm.fontStyle, letterSpacing = typography_dist_index_esm.letterSpacing, alignItems = flexbox_dist_index_esm.alignItems, alignContent = flexbox_dist_index_esm.alignContent, justifyItems = flexbox_dist_index_esm.justifyItems, justifyContent = flexbox_dist_index_esm.justifyContent, flexWrap = flexbox_dist_index_esm.flexWrap, flexDirection = flexbox_dist_index_esm.flexDirection, flex = flexbox_dist_index_esm.flex, flexGrow = flexbox_dist_index_esm.flexGrow, flexShrink = flexbox_dist_index_esm.flexShrink, flexBasis = flexbox_dist_index_esm.flexBasis, justifySelf = flexbox_dist_index_esm.justifySelf, alignSelf = flexbox_dist_index_esm.alignSelf, order = flexbox_dist_index_esm.order, gridGap = grid_dist_index_esm.gridGap, gridColumnGap = grid_dist_index_esm.gridColumnGap, gridRowGap = grid_dist_index_esm.gridRowGap, gridColumn = grid_dist_index_esm.gridColumn, gridRow = grid_dist_index_esm.gridRow, gridAutoFlow = grid_dist_index_esm.gridAutoFlow, gridAutoColumns = grid_dist_index_esm.gridAutoColumns, gridAutoRows = grid_dist_index_esm.gridAutoRows, gridTemplateColumns = grid_dist_index_esm.gridTemplateColumns, gridTemplateRows = grid_dist_index_esm.gridTemplateRows, gridTemplateAreas = grid_dist_index_esm.gridTemplateAreas, gridArea = grid_dist_index_esm.gridArea, borderWidth = border_dist_index_esm.borderWidth, borderStyle = border_dist_index_esm.borderStyle, borderColor = border_dist_index_esm.borderColor, borderTop = border_dist_index_esm.borderTop, borderRight = border_dist_index_esm.borderRight, borderBottom = border_dist_index_esm.borderBottom, borderLeft = border_dist_index_esm.borderLeft, borderRadius = border_dist_index_esm.borderRadius, backgroundImage = background_dist_index_esm.backgroundImage, backgroundSize = background_dist_index_esm.backgroundSize, backgroundPosition = background_dist_index_esm.backgroundPosition, backgroundRepeat = background_dist_index_esm.backgroundRepeat, zIndex = position_dist_index_esm.zIndex, index_esm_top = position_dist_index_esm.top, right = position_dist_index_esm.right, bottom = position_dist_index_esm.bottom, left = position_dist_index_esm.left, style = function(_ref) {
                 var prop = _ref.prop, cssProperty = _ref.cssProperty, alias = _ref.alias, key = _ref.key, transformValue = _ref.transformValue, scale = _ref.scale, properties = _ref.properties, config = {};
-                config[prop] = createStyleFunction({
+                return config[prop] = createStyleFunction({
                     properties: properties,
                     property: cssProperty || prop,
                     scale: key,
                     defaultScale: scale,
                     transform: transformValue
-                }), alias && (config[alias] = config[prop]);
-                var parse = createParser(config);
-                return parse;
+                }), alias && (config[alias] = config[prop]), createParser(config);
             }, cjs = __webpack_require__(9996), cjs_default = __webpack_require__.n(cjs);
             const sx = (props)=>css_dist_index_esm(props.sx);
             var lib_esm_sx = sx;
@@ -5928,7 +5918,49 @@
                 return {};
             }, ThemeProvider = ({ children , ...props })=>{
                 var _ref, _props$theme, _ref2, _props$colorMode, _ref3, _props$dayScheme, _ref4, _props$nightScheme;
-                const { theme: fallbackTheme , colorMode: fallbackColorMode , dayScheme: fallbackDayScheme , nightScheme: fallbackNightScheme ,  } = useTheme(), theme = null !== (_ref = null !== (_props$theme = props.theme) && void 0 !== _props$theme ? _props$theme : fallbackTheme) && void 0 !== _ref ? _ref : lib_esm_theme, { resolvedServerColorMode  } = getServerHandoff(), resolvedColorModePassthrough = react.useRef(resolvedServerColorMode), [colorMode, setColorMode] = react.useState(null !== (_ref2 = null !== (_props$colorMode = props.colorMode) && void 0 !== _props$colorMode ? _props$colorMode : fallbackColorMode) && void 0 !== _ref2 ? _ref2 : "day"), [dayScheme, setDayScheme] = react.useState(null !== (_ref3 = null !== (_props$dayScheme = props.dayScheme) && void 0 !== _props$dayScheme ? _props$dayScheme : fallbackDayScheme) && void 0 !== _ref3 ? _ref3 : defaultDayScheme), [nightScheme, setNightScheme] = react.useState(null !== (_ref4 = null !== (_props$nightScheme = props.nightScheme) && void 0 !== _props$nightScheme ? _props$nightScheme : fallbackNightScheme) && void 0 !== _ref4 ? _ref4 : defaultNightScheme), systemColorMode = useSystemColorMode(), resolvedColorMode = resolvedColorModePassthrough.current || resolveColorMode(colorMode, systemColorMode), colorScheme = chooseColorScheme(resolvedColorMode, dayScheme, nightScheme), { resolvedTheme , resolvedColorScheme  } = react.useMemo(()=>applyColorScheme(theme, colorScheme), [
+                const { theme: fallbackTheme , colorMode: fallbackColorMode , dayScheme: fallbackDayScheme , nightScheme: fallbackNightScheme ,  } = useTheme(), theme = null !== (_ref = null !== (_props$theme = props.theme) && void 0 !== _props$theme ? _props$theme : fallbackTheme) && void 0 !== _ref ? _ref : lib_esm_theme, { resolvedServerColorMode  } = getServerHandoff(), resolvedColorModePassthrough = react.useRef(resolvedServerColorMode), [colorMode, setColorMode] = react.useState(null !== (_ref2 = null !== (_props$colorMode = props.colorMode) && void 0 !== _props$colorMode ? _props$colorMode : fallbackColorMode) && void 0 !== _ref2 ? _ref2 : "day"), [dayScheme, setDayScheme] = react.useState(null !== (_ref3 = null !== (_props$dayScheme = props.dayScheme) && void 0 !== _props$dayScheme ? _props$dayScheme : fallbackDayScheme) && void 0 !== _ref3 ? _ref3 : defaultDayScheme), [nightScheme, setNightScheme] = react.useState(null !== (_ref4 = null !== (_props$nightScheme = props.nightScheme) && void 0 !== _props$nightScheme ? _props$nightScheme : fallbackNightScheme) && void 0 !== _ref4 ? _ref4 : defaultNightScheme), systemColorMode = function() {
+                    const [systemColorMode, setSystemColorMode] = react.useState(getSystemColorMode);
+                    return react.useEffect(()=>{
+                        var _window, _window$matchMedia;
+                        const media = null === (_window = window) || void 0 === _window ? void 0 : null === (_window$matchMedia = _window.matchMedia) || void 0 === _window$matchMedia ? void 0 : _window$matchMedia.call(_window, "(prefers-color-scheme: dark)");
+                        function handleChange(event) {
+                            const isNight = event.matches;
+                            setSystemColorMode(isNight ? "night" : "day");
+                        }
+                        if (media) {
+                            if (void 0 !== media.addEventListener) return media.addEventListener("change", handleChange), function() {
+                                media.removeEventListener("change", handleChange);
+                            };
+                            if (void 0 !== media.addListener) return media.addListener(handleChange), function() {
+                                media.removeListener(handleChange);
+                            };
+                        }
+                    }, []), systemColorMode;
+                }(), resolvedColorMode = resolvedColorModePassthrough.current || resolveColorMode(colorMode, systemColorMode), colorScheme = function(colorMode, dayScheme, nightScheme) {
+                    switch(colorMode){
+                        case "day":
+                            return dayScheme;
+                        case "night":
+                            return nightScheme;
+                    }
+                }(resolvedColorMode, dayScheme, nightScheme), { resolvedTheme , resolvedColorScheme  } = react.useMemo(()=>(function(theme, colorScheme) {
+                        if (!theme.colorSchemes) return {
+                            resolvedTheme: theme,
+                            resolvedColorScheme: void 0
+                        };
+                        if (!theme.colorSchemes[colorScheme]) {
+                            console.error(`\`${colorScheme}\` scheme not defined in \`theme.colorSchemes\``);
+                            const defaultColorScheme = Object.keys(theme.colorSchemes)[0];
+                            return {
+                                resolvedTheme: cjs_default()(theme, theme.colorSchemes[defaultColorScheme]),
+                                resolvedColorScheme: defaultColorScheme
+                            };
+                        }
+                        return {
+                            resolvedTheme: cjs_default()(theme, theme.colorSchemes[colorScheme]),
+                            resolvedColorScheme: colorScheme
+                        };
+                    })(theme, colorScheme), [
                     theme,
                     colorScheme
                 ]);
@@ -5990,57 +6022,12 @@
             function useTheme() {
                 return react.useContext(ThemeContext);
             }
-            function useSystemColorMode() {
-                const [systemColorMode, setSystemColorMode] = react.useState(getSystemColorMode);
-                return react.useEffect(()=>{
-                    var _window, _window$matchMedia;
-                    const media = null === (_window = window) || void 0 === _window ? void 0 : null === (_window$matchMedia = _window.matchMedia) || void 0 === _window$matchMedia ? void 0 : _window$matchMedia.call(_window, "(prefers-color-scheme: dark)");
-                    function handleChange(event) {
-                        const isNight = event.matches;
-                        setSystemColorMode(isNight ? "night" : "day");
-                    }
-                    if (media) {
-                        if (void 0 !== media.addEventListener) return media.addEventListener("change", handleChange), function() {
-                            media.removeEventListener("change", handleChange);
-                        };
-                        if (void 0 !== media.addListener) return media.addListener(handleChange), function() {
-                            media.removeListener(handleChange);
-                        };
-                    }
-                }, []), systemColorMode;
-            }
             function getSystemColorMode() {
                 var _window$matchMedia2, _window2, _window$matchMedia2$c;
                 return "undefined" != typeof window && null !== (_window$matchMedia2 = (_window2 = window).matchMedia) && void 0 !== _window$matchMedia2 && null !== (_window$matchMedia2$c = _window$matchMedia2.call(_window2, "(prefers-color-scheme: dark)")) && void 0 !== _window$matchMedia2$c && _window$matchMedia2$c.matches ? "night" : "day";
             }
             function resolveColorMode(colorMode, systemColorMode) {
                 return "auto" === colorMode ? systemColorMode : colorMode;
-            }
-            function chooseColorScheme(colorMode, dayScheme, nightScheme) {
-                switch(colorMode){
-                    case "day":
-                        return dayScheme;
-                    case "night":
-                        return nightScheme;
-                }
-            }
-            function applyColorScheme(theme, colorScheme) {
-                if (!theme.colorSchemes) return {
-                    resolvedTheme: theme,
-                    resolvedColorScheme: void 0
-                };
-                if (!theme.colorSchemes[colorScheme]) {
-                    console.error(`\`${colorScheme}\` scheme not defined in \`theme.colorSchemes\``);
-                    const defaultColorScheme = Object.keys(theme.colorSchemes)[0];
-                    return {
-                        resolvedTheme: cjs_default()(theme, theme.colorSchemes[defaultColorScheme]),
-                        resolvedColorScheme: defaultColorScheme
-                    };
-                }
-                return {
-                    resolvedTheme: cjs_default()(theme, theme.colorSchemes[colorScheme]),
-                    resolvedColorScheme: colorScheme
-                };
             }
             ThemeProvider.displayName = "ThemeProvider";
             var lib_esm_ThemeProvider = ThemeProvider;
@@ -6357,7 +6344,7 @@
             ButtonComponent.displayName = "Button";
             const { get: getKey , compose: constants_compose , system: constants_system ,  } = styled_system_dist_index_esm_namespaceObject, constants_get = (key)=>{
                 var path, fallback;
-                return path = key, fallback = getKey(lib_esm_theme, key), void 0 === fallback && (fallback = null), function(props) {
+                return path = key, void 0 === (fallback = getKey(lib_esm_theme, key)) && (fallback = null), function(props) {
                     return get(props.theme, path, fallback);
                 };
             }, COMMON = constants_compose(space, color, display), whiteSpace = constants_system({

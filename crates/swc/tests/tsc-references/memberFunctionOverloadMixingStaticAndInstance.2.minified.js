@@ -1,0 +1,1 @@
+//// [memberFunctionOverloadMixingStaticAndInstance.ts]

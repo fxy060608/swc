@@ -1,0 +1,1 @@
+//// [tupleElementTypes4.ts]

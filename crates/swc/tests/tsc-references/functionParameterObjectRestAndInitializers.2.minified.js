@@ -1,0 +1,1 @@
+//// [functionParameterObjectRestAndInitializers.ts]

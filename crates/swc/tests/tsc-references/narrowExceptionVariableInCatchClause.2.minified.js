@@ -1,0 +1,1 @@
+//// [narrowExceptionVariableInCatchClause.ts]

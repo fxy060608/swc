@@ -1,0 +1,1 @@
+//// [typeGuardOfFormTypeOfString.ts]

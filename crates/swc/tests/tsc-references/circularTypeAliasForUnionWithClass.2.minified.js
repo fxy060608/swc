@@ -1,0 +1,1 @@
+//// [circularTypeAliasForUnionWithClass.ts]

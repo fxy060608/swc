@@ -1,0 +1,1 @@
+//// [classExtendsValidConstructorFunction.ts]

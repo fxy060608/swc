@@ -1,0 +1,1 @@
+//// [numericStringNamedPropertyEquivalence.ts]

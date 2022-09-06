@@ -1,0 +1,1 @@
+//// [typeGuardOfFormTypeOfNumber.ts]

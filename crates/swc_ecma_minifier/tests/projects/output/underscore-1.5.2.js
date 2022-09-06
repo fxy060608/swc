@@ -147,8 +147,7 @@
         return function(obj, value, context) {
             var result = {}, iterator = null == value ? _.identity : lookupIterator(value);
             return each(obj, function(value, index) {
-                var key = iterator.call(context, value, index, obj);
-                behavior(result, key, value);
+                behavior(result, iterator.call(context, value, index, obj), value);
             }), result;
         };
     };
@@ -219,7 +218,7 @@
         if (null == array) return -1;
         var i = 0, length = array.length;
         if (isSorted) {
-            if ("number" != typeof isSorted) return i = _.sortedIndex(array, item), array[i] === item ? i : -1;
+            if ("number" != typeof isSorted) return array[i = _.sortedIndex(array, item)] === item ? i : -1;
             i = isSorted < 0 ? Math.max(0, length + isSorted) : isSorted;
         }
         if (nativeIndexOf && array.indexOf === nativeIndexOf) return array.indexOf(item, isSorted);
@@ -507,9 +506,8 @@
         "\u2029": "u2029"
     }, escaper = /\\|'|\r|\n|\t|\u2028|\u2029/g;
     _.template = function(text, data, settings) {
-        settings = _.defaults({}, settings, _.templateSettings);
         var render, matcher = RegExp([
-            (settings.escape || noMatch).source,
+            ((settings = _.defaults({}, settings, _.templateSettings)).escape || noMatch).source,
             (settings.interpolate || noMatch).source,
             (settings.evaluate || noMatch).source, 
         ].join("|") + "|$", "g"), index = 0, source = "__p+='";

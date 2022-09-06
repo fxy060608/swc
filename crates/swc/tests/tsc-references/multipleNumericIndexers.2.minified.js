@@ -1,0 +1,1 @@
+//// [multipleNumericIndexers.ts]

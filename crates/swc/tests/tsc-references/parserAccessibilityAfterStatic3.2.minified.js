@@ -1,0 +1,1 @@
+//// [parserAccessibilityAfterStatic3.ts]

@@ -1,0 +1,1 @@
+//// [thisAndSuperInStaticMembers2.ts]
