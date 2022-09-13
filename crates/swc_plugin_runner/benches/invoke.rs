@@ -1,3 +1,5 @@
+#![cfg_attr(not(feature = "__rkyv"), allow(warnings))]
+
 extern crate swc_node_base;
 
 use std::{
@@ -8,10 +10,11 @@ use std::{
 };
 
 use criterion::{black_box, criterion_group, criterion_main, Bencher, Criterion};
+#[cfg(feature = "__rkyv")]
+use swc_common::plugin::serialized::PluginSerializedBytes;
 use swc_common::{
-    collections::AHashMap,
-    plugin::{metadata::TransformPluginMetadataContext, serialized::PluginSerializedBytes},
-    FileName, FilePathMapping, Mark, SourceMap,
+    collections::AHashMap, plugin::metadata::TransformPluginMetadataContext, FileName,
+    FilePathMapping, Mark, SourceMap,
 };
 use swc_ecma_ast::EsVersion;
 use swc_ecma_parser::parse_file_as_program;
@@ -42,6 +45,7 @@ fn plugin_group(c: &mut Criterion) {
 }
 
 fn bench_transform(b: &mut Bencher, plugin_dir: &Path) {
+    #[cfg(feature = "__rkyv")]
     b.iter(|| {
         let cm = Arc::new(SourceMap::new(FilePathMapping::empty()));
 

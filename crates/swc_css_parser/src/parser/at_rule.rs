@@ -16,14 +16,14 @@ where
         // Consume the next input token. Create a new at-rule with its name set to the
         // value of the current input token, its prelude initially set to an empty list,
         // and its value initially set to nothing.
-        let at_rule_span = self.input.cur_span()?;
+        let at_rule_span = self.input.cur_span();
         let at_keyword_name = match bump!(self) {
             Token::AtKeyword { value, raw } => (value, raw),
             _ => {
                 unreachable!()
             }
         };
-        let lowercased_name = &*at_keyword_name.0.to_lowercase();
+        let lowercased_name = &*at_keyword_name.0.to_ascii_lowercase();
         let at_rule_name = if at_keyword_name.0.starts_with("--") {
             AtRuleName::DashedIdent(DashedIdent {
                 span: Span::new(
@@ -51,13 +51,13 @@ where
             prelude: None,
             block: None,
         };
-        let parse_prelude = |parser: &mut Parser<I>| -> PResult<Option<AtRulePrelude>> {
+        let parse_prelude = |parser: &mut Parser<I>| -> PResult<Option<Box<AtRulePrelude>>> {
             match lowercased_name {
                 "viewport" | "-ms-viewport" | "-o-viewport" | "font-face" => {
-                    parser.input.skip_ws()?;
+                    parser.input.skip_ws();
 
                     if !is!(parser, "{") {
-                        let span = parser.input.cur_span()?;
+                        let span = parser.input.cur_span();
 
                         return Err(Error::new(span, ErrorKind::Expected("'{' token")));
                     }
@@ -65,9 +65,9 @@ where
                     Ok(None)
                 }
                 "charset" => {
-                    parser.input.skip_ws()?;
+                    parser.input.skip_ws();
 
-                    let span = parser.input.cur_span()?;
+                    let span = parser.input.cur_span();
                     let charset = match cur!(parser) {
                         tok!("string") => parser.parse()?,
                         _ => {
@@ -77,71 +77,71 @@ where
 
                     let prelude = AtRulePrelude::CharsetPrelude(charset);
 
-                    parser.input.skip_ws()?;
+                    parser.input.skip_ws();
 
                     if !is!(parser, ";") {
-                        let span = parser.input.cur_span()?;
+                        let span = parser.input.cur_span();
 
                         return Err(Error::new(span, ErrorKind::Expected("';' token")));
                     }
 
-                    Ok(Some(prelude))
+                    Ok(Some(Box::new(prelude)))
                 }
                 "counter-style" => {
-                    parser.input.skip_ws()?;
+                    parser.input.skip_ws();
 
                     let prelude = AtRulePrelude::CounterStylePrelude(parser.parse()?);
 
-                    parser.input.skip_ws()?;
+                    parser.input.skip_ws();
 
                     if !is!(parser, "{") {
-                        let span = parser.input.cur_span()?;
+                        let span = parser.input.cur_span();
 
                         return Err(Error::new(span, ErrorKind::Expected("'{' token")));
                     }
 
-                    Ok(Some(prelude))
+                    Ok(Some(Box::new(prelude)))
                 }
                 "font-palette-values" => {
-                    parser.input.skip_ws()?;
+                    parser.input.skip_ws();
 
                     let prelude = AtRulePrelude::FontPaletteValuesPrelude(parser.parse()?);
 
-                    parser.input.skip_ws()?;
+                    parser.input.skip_ws();
 
                     if !is!(parser, "{") {
-                        let span = parser.input.cur_span()?;
+                        let span = parser.input.cur_span();
 
                         return Err(Error::new(span, ErrorKind::Expected("'{' token")));
                     }
 
-                    Ok(Some(prelude))
+                    Ok(Some(Box::new(prelude)))
                 }
                 "font-feature-values" => {
-                    parser.input.skip_ws()?;
+                    parser.input.skip_ws();
 
                     let prelude = AtRulePrelude::FontFeatureValuesPrelude(parser.parse()?);
 
-                    parser.input.skip_ws()?;
+                    parser.input.skip_ws();
 
                     if !is!(parser, "{") {
-                        let span = parser.input.cur_span()?;
+                        let span = parser.input.cur_span();
 
                         return Err(Error::new(span, ErrorKind::Expected("'{' token")));
                     }
 
-                    Ok(Some(prelude))
+                    Ok(Some(Box::new(prelude)))
                 }
                 "stylistic" | "historical-forms" | "styleset" | "character-variant" | "swash"
                 | "ornaments" | "annotation"
                     if parser.ctx.in_font_feature_values_at_rule =>
                 {
-                    parser.input.skip_ws()?;
+                    parser.input.skip_ws();
 
                     Ok(None)
                 }
                 "layer" => {
-                    parser.input.skip_ws()?;
+                    parser.input.skip_ws();
 
                     let prelude = if is!(parser, Ident) {
                         let mut name_list = vec![];
@@ -149,12 +149,12 @@ where
                         while is!(parser, Ident) {
                             name_list.push(parser.parse()?);
 
-                            parser.input.skip_ws()?;
+                            parser.input.skip_ws();
 
                             if is!(parser, ",") {
                                 eat!(parser, ",");
 
-                                parser.input.skip_ws()?;
+                                parser.input.skip_ws();
                             }
                         }
 
@@ -180,19 +180,19 @@ where
                         None
                     };
 
-                    parser.input.skip_ws()?;
+                    parser.input.skip_ws();
 
                     match prelude {
                         Some(AtRulePrelude::LayerPrelude(LayerPrelude::Name(_))) | None => {
                             if !is!(parser, "{") {
-                                let span = parser.input.cur_span()?;
+                                let span = parser.input.cur_span();
 
                                 return Err(Error::new(span, ErrorKind::Expected("'{' token")));
                             }
                         }
                         Some(AtRulePrelude::LayerPrelude(LayerPrelude::NameList(_))) => {
                             if !is!(parser, ";") {
-                                let span = parser.input.cur_span()?;
+                                let span = parser.input.cur_span();
 
                                 return Err(Error::new(span, ErrorKind::Expected("';' token")));
                             }
@@ -202,23 +202,23 @@ where
                         }
                     }
 
-                    Ok(prelude)
+                    Ok(prelude.map(Box::new))
                 }
                 "document" | "-moz-document" => {
-                    parser.input.skip_ws()?;
+                    parser.input.skip_ws();
 
-                    let span = parser.input.cur_span()?;
+                    let span = parser.input.cur_span();
                     let url_match_fn = parser.parse()?;
                     let mut matching_functions = vec![url_match_fn];
 
                     loop {
-                        parser.input.skip_ws()?;
+                        parser.input.skip_ws();
 
                         if !eat!(parser, ",") {
                             break;
                         }
 
-                        parser.input.skip_ws()?;
+                        parser.input.skip_ws();
 
                         matching_functions.push(parser.parse()?);
                     }
@@ -228,18 +228,18 @@ where
                         matching_functions,
                     });
 
-                    parser.input.skip_ws()?;
+                    parser.input.skip_ws();
 
                     if !is!(parser, "{") {
-                        let span = parser.input.cur_span()?;
+                        let span = parser.input.cur_span();
 
                         return Err(Error::new(span, ErrorKind::Expected("'{' token")));
                     }
 
-                    Ok(Some(prelude))
+                    Ok(Some(Box::new(prelude)))
                 }
                 "page" => {
-                    parser.input.skip_ws()?;
+                    parser.input.skip_ws();
 
                     let prelude = if !is!(parser, "{") {
                         Some(AtRulePrelude::PagePrelude(parser.parse()?))
@@ -247,9 +247,9 @@ where
                         None
                     };
 
-                    parser.input.skip_ws()?;
+                    parser.input.skip_ws();
 
-                    Ok(prelude)
+                    Ok(prelude.map(Box::new))
                 }
                 "top-left-corner"
                 | "top-left"
@@ -269,29 +269,29 @@ where
                 | "right-bottom"
                     if parser.ctx.in_page_at_rule =>
                 {
-                    parser.input.skip_ws()?;
+                    parser.input.skip_ws();
 
                     Ok(None)
                 }
                 "property" => {
-                    parser.input.skip_ws()?;
+                    parser.input.skip_ws();
 
                     let prelude = AtRulePrelude::PropertyPrelude(parser.parse()?);
 
-                    parser.input.skip_ws()?;
+                    parser.input.skip_ws();
 
                     if !is!(parser, "{") {
-                        let span = parser.input.cur_span()?;
+                        let span = parser.input.cur_span();
 
                         return Err(Error::new(span, ErrorKind::Expected("'{' token")));
                     }
 
-                    Ok(Some(prelude))
+                    Ok(Some(Box::new(prelude)))
                 }
                 "namespace" => {
-                    parser.input.skip_ws()?;
+                    parser.input.skip_ws();
 
-                    let span = parser.input.cur_span()?;
+                    let span = parser.input.cur_span();
                     let mut prefix = None;
 
                     if is!(parser, Ident) {
@@ -302,7 +302,7 @@ where
                             }
                         };
 
-                        parser.input.skip_ws()?;
+                        parser.input.skip_ws();
                     }
 
                     let uri = match cur!(parser) {
@@ -310,7 +310,7 @@ where
                         tok!("url") => NamespacePreludeUri::Url(parser.parse()?),
                         tok!("function") => NamespacePreludeUri::Url(parser.parse()?),
                         _ => {
-                            let span = parser.input.cur_span()?;
+                            let span = parser.input.cur_span();
 
                             return Err(Error::new(
                                 span,
@@ -322,19 +322,19 @@ where
                     let prelude = AtRulePrelude::NamespacePrelude(NamespacePrelude {
                         span: span!(parser, span.lo),
                         prefix,
-                        uri,
+                        uri: Box::new(uri),
                     });
 
                     if !is!(parser, ";") {
-                        let span = parser.input.cur_span()?;
+                        let span = parser.input.cur_span();
 
                         return Err(Error::new(span, ErrorKind::Expected("';' token")));
                     }
 
-                    Ok(Some(prelude))
+                    Ok(Some(Box::new(prelude)))
                 }
                 "color-profile" => {
-                    parser.input.skip_ws()?;
+                    parser.input.skip_ws();
 
                     let name = match cur!(parser) {
                         Token::Ident { value, .. } => {
@@ -345,18 +345,18 @@ where
                             }
                         }
                         _ => {
-                            let span = parser.input.cur_span()?;
+                            let span = parser.input.cur_span();
 
                             return Err(Error::new(span, ErrorKind::Expected("ident")));
                         }
                     };
 
-                    let prelude = AtRulePrelude::ColorProfilePrelude(name);
+                    let prelude = Box::new(AtRulePrelude::ColorProfilePrelude(name));
 
-                    parser.input.skip_ws()?;
+                    parser.input.skip_ws();
 
                     if !is!(parser, "{") {
-                        let span = parser.input.cur_span()?;
+                        let span = parser.input.cur_span();
 
                         return Err(Error::new(span, ErrorKind::Expected("'{' token")));
                     }
@@ -364,14 +364,14 @@ where
                     Ok(Some(prelude))
                 }
                 "nest" => {
-                    parser.input.skip_ws()?;
+                    parser.input.skip_ws();
 
-                    let prelude = AtRulePrelude::NestPrelude(parser.parse()?);
+                    let prelude = Box::new(AtRulePrelude::NestPrelude(parser.parse()?));
 
-                    parser.input.skip_ws()?;
+                    parser.input.skip_ws();
 
                     if !is!(parser, "{") {
-                        let span = parser.input.cur_span()?;
+                        let span = parser.input.cur_span();
 
                         return Err(Error::new(span, ErrorKind::Expected("'{' token")));
                     }
@@ -379,34 +379,34 @@ where
                     Ok(Some(prelude))
                 }
                 "media" => {
-                    parser.input.skip_ws()?;
+                    parser.input.skip_ws();
 
                     let media = if !is!(parser, "{") {
                         let media_query_list = parser.parse()?;
 
-                        Some(AtRulePrelude::MediaPrelude(media_query_list))
+                        Some(Box::new(AtRulePrelude::MediaPrelude(media_query_list)))
                     } else {
                         None
                     };
 
-                    parser.input.skip_ws()?;
+                    parser.input.skip_ws();
 
                     Ok(media)
                 }
                 "supports" => {
-                    parser.input.skip_ws()?;
+                    parser.input.skip_ws();
 
-                    let prelude = AtRulePrelude::SupportsPrelude(parser.parse()?);
+                    let prelude = Box::new(AtRulePrelude::SupportsPrelude(parser.parse()?));
 
-                    parser.input.skip_ws()?;
+                    parser.input.skip_ws();
 
                     Ok(Some(prelude))
                 }
                 "import" => {
-                    parser.input.skip_ws()?;
+                    parser.input.skip_ws();
 
-                    let span = parser.input.cur_span()?;
-                    let href = match cur!(parser) {
+                    let span = parser.input.cur_span();
+                    let href = Box::new(match cur!(parser) {
                         tok!("string") => ImportPreludeHref::Str(parser.parse()?),
                         tok!("url") => ImportPreludeHref::Url(parser.parse()?),
                         tok!("function") => ImportPreludeHref::Url(parser.parse()?),
@@ -416,17 +416,17 @@ where
                                 ErrorKind::Expected("string, url or function token"),
                             ))
                         }
-                    };
+                    });
 
-                    parser.input.skip_ws()?;
+                    parser.input.skip_ws();
 
                     let layer_name = match cur!(parser) {
                         Token::Ident { value, .. } if *value.to_ascii_lowercase() == *"layer" => {
                             let name = ImportPreludeLayerName::Ident(parser.parse()?);
 
-                            parser.input.skip_ws()?;
+                            parser.input.skip_ws();
 
-                            Some(name)
+                            Some(Box::new(name))
                         }
                         Token::Function { value, .. }
                             if *value.to_ascii_lowercase() == *"layer" =>
@@ -441,9 +441,9 @@ where
                                 parser.with_ctx(ctx).parse_as::<Function>()?,
                             );
 
-                            parser.input.skip_ws()?;
+                            parser.input.skip_ws();
 
-                            Some(name)
+                            Some(Box::new(name))
                         }
                         _ => None,
                     };
@@ -454,7 +454,7 @@ where
                         {
                             bump!(parser);
 
-                            parser.input.skip_ws()?;
+                            parser.input.skip_ws();
 
                             let supports =
                                 if is_case_insensitive_ident!(parser, "not") || is!(parser, "(") {
@@ -465,7 +465,7 @@ where
 
                             expect!(parser, ")");
 
-                            Some(supports)
+                            Some(Box::new(supports))
                         }
                         _ => None,
                     };
@@ -476,18 +476,18 @@ where
                         None
                     };
 
-                    parser.input.skip_ws()?;
+                    parser.input.skip_ws();
 
-                    let prelude = AtRulePrelude::ImportPrelude(ImportPrelude {
+                    let prelude = Box::new(AtRulePrelude::ImportPrelude(ImportPrelude {
                         span: span!(parser, span.lo),
                         href,
                         layer_name,
                         supports,
                         media,
-                    });
+                    }));
 
                     if !is!(parser, ";") {
-                        let span = parser.input.cur_span()?;
+                        let span = parser.input.cur_span();
 
                         return Err(Error::new(span, ErrorKind::Expected("';' token")));
                     }
@@ -496,14 +496,14 @@ where
                 }
                 "keyframes" | "-webkit-keyframes" | "-moz-keyframes" | "-o-keyframes"
                 | "-ms-keyframes" => {
-                    parser.input.skip_ws()?;
+                    parser.input.skip_ws();
 
-                    let prelude = AtRulePrelude::KeyframesPrelude(parser.parse()?);
+                    let prelude = Box::new(AtRulePrelude::KeyframesPrelude(parser.parse()?));
 
-                    parser.input.skip_ws()?;
+                    parser.input.skip_ws();
 
                     if !is!(parser, "{") {
-                        let span = parser.input.cur_span()?;
+                        let span = parser.input.cur_span();
 
                         return Err(Error::new(span, ErrorKind::Expected("'{' token")));
                     }
@@ -511,7 +511,7 @@ where
                     Ok(Some(prelude))
                 }
                 _ => {
-                    let span = parser.input.cur_span()?;
+                    let span = parser.input.cur_span();
 
                     return Err(Error::new(span, ErrorKind::Ignore));
                 }
@@ -591,7 +591,7 @@ where
             let block = match lowercased_name {
                 "keyframes" | "-moz-keyframes" | "-o-keyframes" | "-webkit-keyframes"
                 | "-ms-keyframes" => {
-                    let span_block = parser.input.cur_span()?;
+                    let span_block = parser.input.cur_span();
                     let mut block = SimpleBlock {
                         span: Default::default(),
                         name: '{',
@@ -600,14 +600,14 @@ where
 
                     expect!(parser, "{");
 
-                    parser.input.skip_ws()?;
+                    parser.input.skip_ws();
 
                     loop {
                         if is!(parser, "}") {
                             break;
                         }
 
-                        parser.input.skip_ws()?;
+                        parser.input.skip_ws();
 
                         let keyframe_block: KeyframeBlock = parser.parse()?;
 
@@ -615,7 +615,7 @@ where
                             .value
                             .push(ComponentValue::KeyframeBlock(keyframe_block));
 
-                        parser.input.skip_ws()?;
+                        parser.input.skip_ws();
                     }
 
                     expect!(parser, "}");
@@ -643,7 +643,7 @@ where
                 // <semicolon-token>
                 // Return the at-rule.
                 tok!(";") => {
-                    self.input.bump()?;
+                    self.input.bump();
 
                     at_rule.span = span!(self, at_rule_span.lo);
 
@@ -695,21 +695,22 @@ where
 
                             self.input.reset(&state);
 
-                            let span = self.input.cur_span()?;
+                            let span = self.input.cur_span();
 
-                            let mut list_of_component_value = match at_rule.prelude {
+                            let mut list_of_component_value = match at_rule.prelude.as_deref_mut() {
                                 Some(AtRulePrelude::ListOfComponentValues(
                                     ref mut list_of_component_value,
                                 )) => list_of_component_value,
                                 _ => {
-                                    at_rule.prelude = Some(AtRulePrelude::ListOfComponentValues(
-                                        ListOfComponentValues {
-                                            span: span!(self, span.lo),
-                                            children: vec![],
-                                        },
-                                    ));
+                                    at_rule.prelude =
+                                        Some(Box::new(AtRulePrelude::ListOfComponentValues(
+                                            ListOfComponentValues {
+                                                span: span!(self, span.lo),
+                                                children: vec![],
+                                            },
+                                        )));
 
-                                    match at_rule.prelude {
+                                    match at_rule.prelude.as_deref_mut() {
                                         Some(AtRulePrelude::ListOfComponentValues(
                                             ref mut list_of_component_value,
                                         )) => list_of_component_value,
@@ -761,7 +762,7 @@ where
             }
             tok!("string") => Ok(KeyframesName::Str(self.parse()?)),
             _ => {
-                let span = self.input.cur_span()?;
+                let span = self.input.cur_span();
 
                 Err(Error::new(span, ErrorKind::Expected("ident or string")))
             }
@@ -774,18 +775,18 @@ where
     I: ParserInput,
 {
     fn parse(&mut self) -> PResult<FontFeatureValuesPrelude> {
-        let span = self.input.cur_span()?;
+        let span = self.input.cur_span();
 
         let mut font_family = vec![self.parse()?];
 
         loop {
-            self.input.skip_ws()?;
+            self.input.skip_ws();
 
             if !eat!(self, ",") {
                 break;
             }
 
-            self.input.skip_ws()?;
+            self.input.skip_ws();
 
             font_family.push(self.parse()?);
         }
@@ -802,19 +803,19 @@ where
     I: ParserInput,
 {
     fn parse(&mut self) -> PResult<KeyframeBlock> {
-        let span = self.input.cur_span()?;
+        let span = self.input.cur_span();
 
         let child = self.parse()?;
         let mut prelude = vec![child];
 
         loop {
-            self.input.skip_ws()?;
+            self.input.skip_ws();
 
             if !eat!(self, ",") {
                 break;
             }
 
-            self.input.skip_ws()?;
+            self.input.skip_ws();
 
             let child = self.parse()?;
 
@@ -856,7 +857,7 @@ where
             }
             tok!("percentage") => Ok(KeyframeSelector::Percentage(self.parse()?)),
             _ => {
-                let span = self.input.cur_span()?;
+                let span = self.input.cur_span();
 
                 return Err(Error::new(
                     span,
@@ -872,46 +873,46 @@ where
     I: ParserInput,
 {
     fn parse(&mut self) -> PResult<SupportsCondition> {
-        self.input.skip_ws()?;
+        self.input.skip_ws();
 
-        let start_pos = self.input.cur_span()?.lo;
+        let start_pos = self.input.cur_span().lo;
         let mut last_pos;
         let mut conditions = vec![];
 
         if is_case_insensitive_ident!(self, "not") {
             let not = self.parse()?;
 
-            last_pos = self.input.last_pos()?;
+            last_pos = self.input.last_pos();
 
             conditions.push(SupportsConditionType::Not(not));
         } else {
             let supports_in_parens = self.parse()?;
 
-            last_pos = self.input.last_pos()?;
+            last_pos = self.input.last_pos();
 
             conditions.push(SupportsConditionType::SupportsInParens(supports_in_parens));
 
-            self.input.skip_ws()?;
+            self.input.skip_ws();
 
             if is_case_insensitive_ident!(self, "and") {
                 while is_case_insensitive_ident!(self, "and") {
                     let and = self.parse()?;
 
-                    last_pos = self.input.last_pos()?;
+                    last_pos = self.input.last_pos();
 
                     conditions.push(SupportsConditionType::And(and));
 
-                    self.input.skip_ws()?;
+                    self.input.skip_ws();
                 }
             } else if is_case_insensitive_ident!(self, "or") {
                 while is_case_insensitive_ident!(self, "or") {
                     let or = self.parse()?;
 
-                    last_pos = self.input.last_pos()?;
+                    last_pos = self.input.last_pos();
 
                     conditions.push(SupportsConditionType::Or(or));
 
-                    self.input.skip_ws()?;
+                    self.input.skip_ws();
                 }
             }
         };
@@ -928,7 +929,7 @@ where
     I: ParserInput,
 {
     fn parse(&mut self) -> PResult<SupportsNot> {
-        let span = self.input.cur_span()?;
+        let span = self.input.cur_span();
         let keyword = match cur!(self) {
             Token::Ident { value, .. } if value.as_ref().eq_ignore_ascii_case("not") => {
                 Some(self.parse()?)
@@ -941,7 +942,7 @@ where
             }
         };
 
-        self.input.skip_ws()?;
+        self.input.skip_ws();
 
         let supports_in_parens = self.parse()?;
 
@@ -958,7 +959,7 @@ where
     I: ParserInput,
 {
     fn parse(&mut self) -> PResult<SupportsAnd> {
-        let span = self.input.cur_span()?;
+        let span = self.input.cur_span();
         let keyword = match cur!(self) {
             Token::Ident { value, .. } if value.as_ref().eq_ignore_ascii_case("and") => {
                 Some(self.parse()?)
@@ -971,7 +972,7 @@ where
             }
         };
 
-        self.input.skip_ws()?;
+        self.input.skip_ws();
 
         let supports_in_parens = self.parse()?;
 
@@ -988,7 +989,7 @@ where
     I: ParserInput,
 {
     fn parse(&mut self) -> PResult<SupportsOr> {
-        let span = self.input.cur_span()?;
+        let span = self.input.cur_span();
         let keyword = match cur!(self) {
             Token::Ident { value, .. } if value.as_ref().eq_ignore_ascii_case("or") => {
                 Some(self.parse()?)
@@ -1001,7 +1002,7 @@ where
             }
         };
 
-        self.input.skip_ws()?;
+        self.input.skip_ws();
 
         let supports_in_parens = self.parse()?;
 
@@ -1062,17 +1063,17 @@ where
             tok!("(") => {
                 bump!(self);
 
-                self.input.skip_ws()?;
+                self.input.skip_ws();
 
                 let declaration = self.parse()?;
 
-                self.input.skip_ws()?;
+                self.input.skip_ws();
 
                 expect!(self, ")");
 
                 Ok(SupportsFeature::Declaration(declaration))
             }
-            Token::Function { value, .. } if &*value.to_lowercase() == "selector" => {
+            Token::Function { value, .. } if &*value.to_ascii_lowercase() == "selector" => {
                 // TODO improve me
                 let ctx = Ctx {
                     block_contents_grammar: BlockContentsGrammar::DeclarationValue,
@@ -1084,7 +1085,7 @@ where
                 Ok(SupportsFeature::Function(function))
             }
             _ => {
-                let span = self.input.cur_span()?;
+                let span = self.input.cur_span();
 
                 Err(Error::new(
                     span,
@@ -1113,7 +1114,7 @@ where
                 Ok(GeneralEnclosed::SimpleBlock(block))
             }
             _ => {
-                let span = self.input.cur_span()?;
+                let span = self.input.cur_span();
 
                 Err(Error::new(
                     span,
@@ -1152,7 +1153,7 @@ where
                 }
             }
             _ => {
-                let span = self.input.cur_span()?;
+                let span = self.input.cur_span();
 
                 Err(Error::new(span, ErrorKind::Expected("url or function")))
             }
@@ -1165,7 +1166,7 @@ where
     I: ParserInput,
 {
     fn parse(&mut self) -> PResult<MediaQueryList> {
-        self.input.skip_ws()?;
+        self.input.skip_ws();
 
         let query = self.parse()?;
         let mut queries = vec![query];
@@ -1175,13 +1176,13 @@ where
         // component values, then parse each entry in the returned list as a
         // <media-query>. Its value is the list of <media-query>s so produced.
         loop {
-            self.input.skip_ws()?;
+            self.input.skip_ws();
 
             if !eat!(self, ",") {
                 break;
             }
 
-            self.input.skip_ws()?;
+            self.input.skip_ws();
 
             let query = self.parse()?;
 
@@ -1213,14 +1214,14 @@ where
     I: ParserInput,
 {
     fn parse(&mut self) -> PResult<MediaQuery> {
-        let start_pos = self.input.cur_span()?.lo;
+        let start_pos = self.input.cur_span().lo;
         let state = self.input.state();
 
         let is_not = is_one_of_case_insensitive_ident!(self, "not");
         let modifier = if is_one_of_case_insensitive_ident!(self, "not", "only") {
             let modifier = Some(self.parse()?);
 
-            self.input.skip_ws()?;
+            self.input.skip_ws();
 
             modifier
         } else {
@@ -1239,12 +1240,12 @@ where
                 modifier: None,
                 media_type: None,
                 keyword: None,
-                condition: Some(MediaConditionType::All(condition)),
+                condition: Some(Box::new(MediaConditionType::All(condition))),
             })
         } else {
             let media_type = Some(self.parse()?);
 
-            self.input.skip_ws()?;
+            self.input.skip_ws();
 
             let mut keyword = None;
             let mut condition_without_or = None;
@@ -1252,13 +1253,13 @@ where
             if is_one_of_case_insensitive_ident!(self, "and") {
                 keyword = Some(self.parse()?);
 
-                self.input.skip_ws()?;
+                self.input.skip_ws();
 
-                condition_without_or = Some(MediaConditionType::WithoutOr(self.parse()?));
+                condition_without_or = Some(Box::new(MediaConditionType::WithoutOr(self.parse()?)));
             }
 
             let end_pos = if let Some(MediaConditionType::WithoutOr(condition_without_or)) =
-                &condition_without_or
+                condition_without_or.as_deref()
             {
                 condition_without_or.span.hi
             } else if let Some(MediaType::Ident(ident)) = &media_type {
@@ -1288,7 +1289,7 @@ where
                 Ok(MediaType::Ident(self.parse()?))
             }
             _ => {
-                let span = self.input.cur_span()?;
+                let span = self.input.cur_span();
 
                 Err(Error::new(
                     span,
@@ -1306,46 +1307,46 @@ where
     I: ParserInput,
 {
     fn parse(&mut self) -> PResult<MediaCondition> {
-        self.input.skip_ws()?;
+        self.input.skip_ws();
 
-        let start_pos = self.input.cur_span()?.lo;
+        let start_pos = self.input.cur_span().lo;
         let mut last_pos;
         let mut conditions = vec![];
 
         if is_case_insensitive_ident!(self, "not") {
             let not = self.parse()?;
 
-            last_pos = self.input.last_pos()?;
+            last_pos = self.input.last_pos();
 
             conditions.push(MediaConditionAllType::Not(not));
         } else {
             let media_in_parens = self.parse()?;
 
-            last_pos = self.input.last_pos()?;
+            last_pos = self.input.last_pos();
 
             conditions.push(MediaConditionAllType::MediaInParens(media_in_parens));
 
-            self.input.skip_ws()?;
+            self.input.skip_ws();
 
             if is_case_insensitive_ident!(self, "and") {
                 while is_case_insensitive_ident!(self, "and") {
                     let and = self.parse()?;
 
-                    last_pos = self.input.last_pos()?;
+                    last_pos = self.input.last_pos();
 
                     conditions.push(MediaConditionAllType::And(and));
 
-                    self.input.skip_ws()?;
+                    self.input.skip_ws();
                 }
             } else if is_case_insensitive_ident!(self, "or") {
                 while is_case_insensitive_ident!(self, "or") {
                     let or = self.parse()?;
 
-                    last_pos = self.input.last_pos()?;
+                    last_pos = self.input.last_pos();
 
                     conditions.push(MediaConditionAllType::Or(or));
 
-                    self.input.skip_ws()?;
+                    self.input.skip_ws();
                 }
             }
         };
@@ -1362,36 +1363,36 @@ where
     I: ParserInput,
 {
     fn parse(&mut self) -> PResult<MediaConditionWithoutOr> {
-        self.input.skip_ws()?;
+        self.input.skip_ws();
 
-        let start_pos = self.input.cur_span()?.lo;
+        let start_pos = self.input.cur_span().lo;
         let mut last_pos;
         let mut conditions = vec![];
 
         if is_case_insensitive_ident!(self, "not") {
             let not = self.parse()?;
 
-            last_pos = self.input.last_pos()?;
+            last_pos = self.input.last_pos();
 
             conditions.push(MediaConditionWithoutOrType::Not(not));
         } else {
             let media_in_parens = self.parse()?;
 
-            last_pos = self.input.last_pos()?;
+            last_pos = self.input.last_pos();
 
             conditions.push(MediaConditionWithoutOrType::MediaInParens(media_in_parens));
 
-            self.input.skip_ws()?;
+            self.input.skip_ws();
 
             if is_case_insensitive_ident!(self, "and") {
                 while is_case_insensitive_ident!(self, "and") {
                     let and = self.parse()?;
 
-                    last_pos = self.input.last_pos()?;
+                    last_pos = self.input.last_pos();
 
                     conditions.push(MediaConditionWithoutOrType::And(and));
 
-                    self.input.skip_ws()?;
+                    self.input.skip_ws();
                 }
             }
         };
@@ -1408,7 +1409,7 @@ where
     I: ParserInput,
 {
     fn parse(&mut self) -> PResult<MediaNot> {
-        let span = self.input.cur_span()?;
+        let span = self.input.cur_span();
         let keyword = match cur!(self) {
             Token::Ident { value, .. } if value.as_ref().eq_ignore_ascii_case("not") => {
                 Some(self.parse()?)
@@ -1421,7 +1422,7 @@ where
             }
         };
 
-        self.input.skip_ws()?;
+        self.input.skip_ws();
 
         let media_in_parens = self.parse()?;
 
@@ -1438,7 +1439,7 @@ where
     I: ParserInput,
 {
     fn parse(&mut self) -> PResult<MediaAnd> {
-        let span = self.input.cur_span()?;
+        let span = self.input.cur_span();
         let keyword = match cur!(self) {
             Token::Ident { value, .. } if value.as_ref().eq_ignore_ascii_case("and") => {
                 Some(self.parse()?)
@@ -1451,7 +1452,7 @@ where
             }
         };
 
-        self.input.skip_ws()?;
+        self.input.skip_ws();
 
         let media_in_parens = self.parse()?;
 
@@ -1468,7 +1469,7 @@ where
     I: ParserInput,
 {
     fn parse(&mut self) -> PResult<MediaOr> {
-        let span = self.input.cur_span()?;
+        let span = self.input.cur_span();
         let keyword = match cur!(self) {
             Token::Ident { value, .. } if value.as_ref().eq_ignore_ascii_case("or") => {
                 Some(self.parse()?)
@@ -1481,7 +1482,7 @@ where
             }
         };
 
-        self.input.skip_ws()?;
+        self.input.skip_ws();
 
         let media_in_parens = self.parse()?;
 
@@ -1502,7 +1503,7 @@ where
 
         expect!(self, "(");
 
-        self.input.skip_ws()?;
+        self.input.skip_ws();
 
         if !is!(self, "(") && !is_case_insensitive_ident!(self, "not") {
             self.input.reset(&state);
@@ -1523,15 +1524,15 @@ where
     I: ParserInput,
 {
     fn parse(&mut self) -> PResult<MediaFeature> {
-        let span = self.input.cur_span()?;
+        let span = self.input.cur_span();
 
         expect!(self, "(");
 
-        self.input.skip_ws()?;
+        self.input.skip_ws();
 
         let left = self.parse()?;
 
-        self.input.skip_ws()?;
+        self.input.skip_ws();
 
         match cur!(self) {
             tok!(")") => {
@@ -1552,7 +1553,7 @@ where
             tok!(":") => {
                 bump!(self);
 
-                self.input.skip_ws()?;
+                self.input.skip_ws();
 
                 let name = match left {
                     MediaFeatureValue::Ident(ident) => MediaFeatureName::Ident(ident),
@@ -1562,7 +1563,7 @@ where
                 };
                 let value = self.parse()?;
 
-                self.input.skip_ws()?;
+                self.input.skip_ws();
 
                 expect!(self, ")");
 
@@ -1594,18 +1595,18 @@ where
                     }
                 };
 
-                self.input.skip_ws()?;
+                self.input.skip_ws();
 
                 let center = self.parse()?;
 
-                self.input.skip_ws()?;
+                self.input.skip_ws();
 
                 if eat!(self, ")") {
                     return Ok(MediaFeature::Range(MediaFeatureRange {
                         span: span!(self, span.lo),
-                        left,
+                        left: Box::new(left),
                         comparison: left_comparison,
-                        right: center,
+                        right: Box::new(center),
                     }));
                 }
 
@@ -1632,11 +1633,11 @@ where
                     }
                 };
 
-                self.input.skip_ws()?;
+                self.input.skip_ws();
 
                 let right = self.parse()?;
 
-                self.input.skip_ws()?;
+                self.input.skip_ws();
 
                 expect!(self, ")");
 
@@ -1674,7 +1675,7 @@ where
 
                 Ok(MediaFeature::RangeInterval(MediaFeatureRangeInterval {
                     span: span!(self, span.lo),
-                    left,
+                    left: Box::new(left),
                     left_comparison,
                     name,
                     right_comparison,
@@ -1691,16 +1692,16 @@ where
     I: ParserInput,
 {
     fn parse(&mut self) -> PResult<MediaFeatureValue> {
-        let span = self.input.cur_span()?;
+        let span = self.input.cur_span();
 
         match cur!(self) {
             tok!("number") => {
                 let left = self.parse()?;
 
-                self.input.skip_ws()?;
+                self.input.skip_ws();
 
                 if eat!(self, "/") {
-                    self.input.skip_ws()?;
+                    self.input.skip_ws();
 
                     let right = Some(self.parse()?);
 
@@ -1732,13 +1733,13 @@ where
         let mut selectors = vec![selector];
 
         loop {
-            self.input.skip_ws()?;
+            self.input.skip_ws();
 
             if !eat!(self, ",") {
                 break;
             }
 
-            self.input.skip_ws()?;
+            self.input.skip_ws();
 
             let selector = self.parse()?;
 
@@ -1770,9 +1771,9 @@ where
     I: ParserInput,
 {
     fn parse(&mut self) -> PResult<PageSelector> {
-        self.input.skip_ws()?;
+        self.input.skip_ws();
 
-        let span = self.input.cur_span()?;
+        let span = self.input.cur_span();
 
         let page_type = if is!(self, Ident) {
             Some(self.parse()?)
@@ -1811,7 +1812,7 @@ where
     I: ParserInput,
 {
     fn parse(&mut self) -> PResult<PageSelectorType> {
-        let span = self.input.cur_span()?;
+        let span = self.input.cur_span();
         let value = self.parse()?;
 
         Ok(PageSelectorType {
@@ -1826,7 +1827,7 @@ where
     I: ParserInput,
 {
     fn parse(&mut self) -> PResult<PageSelectorPseudo> {
-        let span = self.input.cur_span()?;
+        let span = self.input.cur_span();
 
         expect!(self, ":");
 
@@ -1840,7 +1841,7 @@ where
                 self.parse()?
             }
             _ => {
-                let span = self.input.cur_span()?;
+                let span = self.input.cur_span();
 
                 return Err(Error::new(
                     span,
@@ -1861,11 +1862,11 @@ where
     I: ParserInput,
 {
     fn parse(&mut self) -> PResult<LayerName> {
-        let start = self.input.cur_span()?.lo;
+        let start = self.input.cur_span().lo;
         let mut name = vec![];
 
         while is!(self, Ident) {
-            let span = self.input.cur_span()?;
+            let span = self.input.cur_span();
             let token = bump!(self);
             let ident = match token {
                 Token::Ident { value, raw } => Ident {

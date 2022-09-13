@@ -5,7 +5,99 @@
 
 
 
+- **(cli)** Update the plugin template (#5824) ([969ecde](https://github.com/swc-project/swc/commit/969ecdee3d63b2f4b9ffc7f854d25ceb5bff32f4))
+
+
+- **(css/minifier)** Compress alpha (#5825) ([b531410](https://github.com/swc-project/swc/commit/b531410ea90f38da7e491862097cf7a2dea51fe9))
+
+
+- **(css/minifier)** Fix minification of universal selectors (#5826) ([1803874](https://github.com/swc-project/swc/commit/1803874f1484ab2a3c7b23b5e027e72f99740fba))
+
+
+- **(es/modules)** Improve compatibility with `cjs-module-lexer` (#5835) ([bf75981](https://github.com/swc-project/swc/commit/bf759819e4ad577e89c2605e80e80c928017029d))
+
+
+- **(es/parser)** Keep comments of the RHS of a binary expression (#5812) ([8adbe16](https://github.com/swc-project/swc/commit/8adbe1675e6e86b0d1eb2f67ecdba3eb4ed5ee96))
+
+
+- **(es/parser)** Handle more `TS1185` (#5834) ([10637b0](https://github.com/swc-project/swc/commit/10637b006fb5c66b9bf7b9fef417ee04924f2845))
+
+### Features
+
+
+
+- **(css/minifier)** Compress `@media` and `@supports` (#5828) ([211b0a9](https://github.com/swc-project/swc/commit/211b0a93fd994084e20dca47aad42d2e9e66e63f))
+
+
+- **(es/minifier)** Extend inlining of identifiers to multi-usage (#5832) ([8567a38](https://github.com/swc-project/swc/commit/8567a38c4a9363c41d0cab1c8adec02ee2e9b202))
+
+
+- **(es/parser)** Improve jsx lexer (#5805) ([97729e5](https://github.com/swc-project/swc/commit/97729e5d2bc74841ac2907902ddbd413d5645f9a))
+
+
+- **(swc_core)** Export `swc_common/sourcemap` (#5818) ([2819be5](https://github.com/swc-project/swc/commit/2819be5aac9d341bfb57335b5c9f96c267f9883d))
+
+
+- **(swc_core)** Export testing utilities (#5839) ([856d741](https://github.com/swc-project/swc/commit/856d741ec77f46eb04be8489a3a18340269dbe4d))
+
+### Performance
+
+
+
+- **(atoms)** Reduce size of `Atom` (#5831) ([2400427](https://github.com/swc-project/swc/commit/24004270d949f0e8fb87151b1fce342fe39360ef))
+
+
+- **(css)** Optimize memory layout of ast types (#5823) ([4f119b2](https://github.com/swc-project/swc/commit/4f119b26935aeb06fb16a116c4f96783f6edfdae))
+
+
+- **(css/minifier)** Merge passes (#5820) ([f523502](https://github.com/swc-project/swc/commit/f523502f4cf03b238bd7b859930f344169302907))
+
+
+- **(css/minifier)** Merge more passes into the compressor (#5821) ([4fa5a27](https://github.com/swc-project/swc/commit/4fa5a2778b3fd8627f52f3040041bdcb9b86467c))
+
+
+- **(css/minifier)** Merge passes and reduce clone (#5822) ([9e81c26](https://github.com/swc-project/swc/commit/9e81c2639b4182ebbc5ec87b77b4b6ba052cab72))
+
+
+- **(es/minifier)** Optimize usage of `IndexSet` (#5814) ([704ea3d](https://github.com/swc-project/swc/commit/704ea3d48d8c98b7a3f7400621ef93d041c27860))
+
+
+- **(es/minifier)** Make expression simplifier stateless and parallel (#5819) ([cfe575e](https://github.com/swc-project/swc/commit/cfe575e35a47c8a0d0550df9fc8dd0db932b6c41))
+
+
+- **(es/minifier)** Make the expression simplifier more parallel (#5841) ([b6cf975](https://github.com/swc-project/swc/commit/b6cf9750ecda6d4a7b1f1c9c7c26a801dc40c213))
+
+
+- **(es/minifier)** Reduce type sizes (#5843) ([fe3072b](https://github.com/swc-project/swc/commit/fe3072b12a32cbae3b4f9e904add8ad2ab6cc7f3))
+
+
+- **(es/parser)** Optimize memory layout (#5833) ([10484ed](https://github.com/swc-project/swc/commit/10484edbf768dcf96a99960a53cfb5968750b0c2))
+
+
+- **(html/minifier)** Improve performance (#5840) ([b691fec](https://github.com/swc-project/swc/commit/b691fec7b7949c4fff016e53b32b7f001403773a))
+
+
+- **(html/minifier)** Improve performance (#5838) ([ccd618c](https://github.com/swc-project/swc/commit/ccd618ce54cc21dbdeecd766f91816b395629678))
+
+### Build
+
+
+
+- **(bindings)** Use new llvm pass manager (#5816) ([bb427c4](https://github.com/swc-project/swc/commit/bb427c4267d005f77e3aca4bd6c8c65b2c508ee8))
+
+## [1.3.0] - 2022-09-10
+
+### Bug Fixes
+
+
+
 - **(es)** Use `paren_remover` pass (#5753) ([9c998d4](https://github.com/swc-project/swc/commit/9c998d4406fe641198092074d3ee3a859fc7b97e))
+
+
+- **(es/compat)** Fix `generator` (#5796) ([aa8672e](https://github.com/swc-project/swc/commit/aa8672e73918e06ab2f7e7430ce35027ecc65cb3))
+
+
+- **(node-swc)** Fix the type definition of `jsc.paths` (#5811) ([9d16293](https://github.com/swc-project/swc/commit/9d1629369b6bae5fc1d61f64c6b5fb75dea0eddf))
 
 ### Features
 
@@ -13,11 +105,41 @@
 
 - **(es/minifier)** Inline lazily initialized variables (#5737) ([ee26337](https://github.com/swc-project/swc/commit/ee26337a251ecb1fa4f369e6de614d3dc931ab5c))
 
+### Performance
+
+
+
+- **(css/codegen)** Skip useless operations if not required (#5802) ([b96eb1e](https://github.com/swc-project/swc/commit/b96eb1ead8eedfeb8c3f392bf89ca5c037f1efcb))
+
+
+- **(css/minifier)** Setup benchmark (#5800) ([88e59ff](https://github.com/swc-project/swc/commit/88e59ffcda6b0f00fabe80515c80cf4e0563f2bf))
+
+
+- **(css/minifier)** Use `JsWord` instead of `&str` (#5806) ([7391cc9](https://github.com/swc-project/swc/commit/7391cc99b1ccfa19b56b67b4c582e9266ec9dab6))
+
+
+- **(css/parser)** Use ascii operations (#5808) ([96cc888](https://github.com/swc-project/swc/commit/96cc888ef21299f6bcfdd21d576879857c3062a5))
+
+
+- **(css/parser)** Remove needless branching (#5809) ([91ed13e](https://github.com/swc-project/swc/commit/91ed13e098bc53551332902e43f4d539829fb00f))
+
+
+- **(css/parser)** Skip whiltespace from lexer (#5810) ([72a8b60](https://github.com/swc-project/swc/commit/72a8b608d649307c33eb9166d175fdce32750230))
+
+
+- **(es/codegen)** Skip useless operations if not required (#5803) ([49942ca](https://github.com/swc-project/swc/commit/49942ca773d6fe6f44efa92625e274d01f9cdce0))
+
 ### Refactor
 
 
 
+- **(es/plugin)** Fix lints (#5801) ([2bbc9bd](https://github.com/swc-project/swc/commit/2bbc9bd73b6a1437b4a31d865c3eb83e44fa88c3))
+
+
 - **(es/renamer)** Rename `PARALLEL` to `MANGLE` (#5790) ([21fbcb9](https://github.com/swc-project/swc/commit/21fbcb9621d88310ac297504235bd607d64b701a))
+
+
+- **(swc_core)** Enable bytechecked flag (#5792) ([6f19f89](https://github.com/swc-project/swc/commit/6f19f8902f772ecc282d231dfd12c7b8d4c180fc))
 
 ### Testing
 

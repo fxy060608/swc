@@ -390,7 +390,7 @@ TestSnapshot {
         ),
         (
             (
-                Atom('i' type=inline),
+                Atom('i' type=static),
                 #2,
             ),
             VarUsageInfo {
@@ -978,7 +978,7 @@ TestSnapshot {
         ),
         (
             (
-                Atom('table' type=inline),
+                Atom('table' type=static),
                 #2,
             ),
             VarUsageInfo {
