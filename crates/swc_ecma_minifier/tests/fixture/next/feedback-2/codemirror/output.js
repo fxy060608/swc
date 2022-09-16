@@ -1204,7 +1204,7 @@
     }
     function prepareMeasureForLine(cm, line) {
         var cm1, line1, lineN, view, built, lineN1 = lineNo(line), view1 = findViewForLine(cm, lineN1);
-        view1 && !view1.text ? view1 = null : view1 && view1.changes && (updateLineForChanges(cm, view1, lineN1, getDimensions(cm)), cm.curOp.forceUpdate = !0), view1 || (view1 = (cm1 = cm, line1 = line, line1 = visualLine(line1), lineN = lineNo(line1), (view = cm1.display.externalMeasured = new LineView(cm1.doc, line1, lineN)).lineN = lineN, built = view.built = buildLineContent(cm1, view), view.text = built.pre, removeChildrenAndAdd(cm1.display.lineMeasure, built.pre), view));
+        view1 && !view1.text ? view1 = null : view1 && view1.changes && (updateLineForChanges(cm, view1, lineN1, getDimensions(cm)), cm.curOp.forceUpdate = !0), view1 || (cm1 = cm, line1 = line, line1 = visualLine(line1), lineN = lineNo(line1), (view = cm1.display.externalMeasured = new LineView(cm1.doc, line1, lineN)).lineN = lineN, built = view.built = buildLineContent(cm1, view), view.text = built.pre, removeChildrenAndAdd(cm1.display.lineMeasure, built.pre), view1 = view);
         var info = mapFromLineView(view1, line, lineN1);
         return {
             line: line,
@@ -2395,7 +2395,7 @@
         !function propagate(doc, skip, sharedHist) {
             if (doc.linked) for(var i = 0; i < doc.linked.length; ++i){
                 var rel = doc.linked[i];
-                if (null != rel.doc) {
+                if (rel.doc != skip) {
                     var shared = sharedHist && rel.sharedHist;
                     (!sharedHistOnly || shared) && (f(rel.doc, shared), propagate(rel.doc, doc, shared));
                 }
@@ -2535,14 +2535,14 @@
     function setSelectionNoUndo(doc, sel, options) {
         if (hasHandler(doc, "beforeSelectionChange") || doc.cm && hasHandler(doc.cm, "beforeSelectionChange")) {
             var sel1, obj;
-            sel = (obj = {
+            obj = {
                 ranges: (sel1 = sel).ranges,
                 update: function(ranges) {
                     this.ranges = [];
                     for(var i = 0; i < ranges.length; i++)this.ranges[i] = new Range(clipPos(doc, ranges[i].anchor), clipPos(doc, ranges[i].head));
                 },
                 origin: options && options.origin
-            }, (signal(doc, "beforeSelectionChange", doc, obj), doc.cm && signal(doc.cm, "beforeSelectionChange", doc.cm, obj), obj.ranges != sel1.ranges) ? normalizeSelection(doc.cm, obj.ranges, obj.ranges.length - 1) : sel1);
+            }, signal(doc, "beforeSelectionChange", doc, obj), doc.cm && signal(doc.cm, "beforeSelectionChange", doc.cm, obj), sel = obj.ranges != sel1.ranges ? normalizeSelection(doc.cm, obj.ranges, obj.ranges.length - 1) : sel1;
         }
         var bias = options && options.bias || (0 > cmp(sel.primary().head, doc.sel.primary().head) ? -1 : 1);
         setSelectionInner(doc, skipAtomicInSelection(doc, sel, bias, !0)), !(options && !1 === options.scroll) && doc.cm && "nocursor" != doc.cm.getOption("readOnly") && ensureCursorVisible(doc.cm);
@@ -3435,7 +3435,7 @@
                     doc: this,
                     isParent: !0,
                     sharedHist: options.sharedHist
-                }, 
+                }
             ], function(doc, markers) {
                 for(var i = 0; i < markers.length; i++){
                     var marker = markers[i], pos = marker.find(), mFrom = doc.clipPos(pos.from), mTo = doc.clipPos(pos.to);

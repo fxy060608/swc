@@ -5,7 +5,7 @@ export class Reflect {
 export var Baz;
 Baz || (Baz = {});
 export default class {
-};
+}
 //// [locals.ts]
 import _get from "@swc/helpers/src/_get.mjs";
 import _get_prototype_of from "@swc/helpers/src/_get_prototype_of.mjs";
@@ -38,7 +38,7 @@ C._ = [
     void _get(_get_prototype_of(C), "w", C).call(C),
     void _get(_get_prototype_of(C), "w", C).call(C),
     void _get(_get_prototype_of(C), "w", C).call(C),
-    void _get(_get_prototype_of(C), "w", C).call(C), 
+    void _get(_get_prototype_of(C), "w", C).call(C)
 ], (()=>{
     var { Reflect  } = {
         Reflect: null

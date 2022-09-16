@@ -5,6 +5,71 @@
 
 
 
+- **(es/codegen)** Drop the last comma in an array literal (#5877) ([7d6d04b](https://github.com/swc-project/swc/commit/7d6d04b4215c5c1ec368a8ccdabdda187cfa647e))
+
+
+- **(es/compat)** Fix handling of objects in generator (#5861) ([006c7fb](https://github.com/swc-project/swc/commit/006c7fb56e0b8d4955f848c6af8c83bcd87515ab))
+
+
+- **(es/minifier)** Remove `fake_block` while calculating next scope (#5869) ([991a34e](https://github.com/swc-project/swc/commit/991a34e0c2b50f81dfdf44ae892ebc118a808c58))
+
+
+- **(es/minifier)** Fix handling of `.toFixed` call without an argument (#5868) ([90d311c](https://github.com/swc-project/swc/commit/90d311c042952c8b0d6381791c9f504fc54551ae))
+
+
+- **(es/minifier)** Fix unicode handling (#5875) ([c3fa96b](https://github.com/swc-project/swc/commit/c3fa96b21b1545be62fdfd359ca5762a1bd4a473))
+
+
+- **(html/parser)** Reflect the fix for a bug in spec (#5779) ([57e9f9c](https://github.com/swc-project/swc/commit/57e9f9c88ed4c8f29a26e500fd1f00cb1befab9f))
+
+### Features
+
+
+
+- **(es/minifier)** Move assign with seq init into seq (#5847) ([63fb0c4](https://github.com/swc-project/swc/commit/63fb0c4ad34698d4d3f0c49ff5a78f6e446e64f9))
+
+
+- **(preset-env/base)** Implement more traits for `BrowserData` and `Version` (#5879) ([73c48a8](https://github.com/swc-project/swc/commit/73c48a8e6eb3d002ca0c575d253f32ae1aa6e5ea))
+
+
+- **(swc_core)** Enable `bytecheck` for plugin (#5878) ([1ba151f](https://github.com/swc-project/swc/commit/1ba151fe9540a8595f9ac9f286917fdec9db5264))
+
+### Miscellaneous Tasks
+
+
+
+- **(ci)** Reduce CI time (#5870) ([9ca3966](https://github.com/swc-project/swc/commit/9ca3966686ea2e62dc7225352cdc2ae66b970b8b))- **general**: Update MSRV (#5856) ([f3e0267](https://github.com/swc-project/swc/commit/f3e02675ad74013b82ef911bfcf75e39bc7b4967))- **general**: Fix publish script ([720b3e0](https://github.com/swc-project/swc/commit/720b3e05c1e5fa9ab5bdae5f6d1268d6f6bce885))
+
+### Performance
+
+
+
+- **(html)** Reduce memory usage (#5867) ([7f62fa6](https://github.com/swc-project/swc/commit/7f62fa62277621bc0787eca1e5e0df9dd575b5cd))
+
+### Refactor
+
+
+
+- **(es/ast)** Apply rkyv-bytecheck flag (#5866) ([092b728](https://github.com/swc-project/swc/commit/092b7281d0929a77ddfa3d09018445b94b0dc1cf))- **general**: Refactor code using clippy (#5863) ([dfb01bd](https://github.com/swc-project/swc/commit/dfb01bde71c73ea398b7e3d8428a3c3015366d4e))
+
+### Testing
+
+
+
+- **(es/modules)** Add tests for `jsc.paths` (#5876) ([0d492bf](https://github.com/swc-project/swc/commit/0d492bfce1681dbbdbe8701f6e928002cc6ce6cd))
+
+### Build
+
+
+
+- **(bindings)** Remove cargo patch (#5874) ([355bb41](https://github.com/swc-project/swc/commit/355bb41a1f0c9920c16d620f3b8099e910cedbad))
+
+## [1.3.1] - 2022-09-14
+
+### Bug Fixes
+
+
+
 - **(cli)** Update the plugin template (#5824) ([969ecde](https://github.com/swc-project/swc/commit/969ecdee3d63b2f4b9ffc7f854d25ceb5bff32f4))
 
 
@@ -14,6 +79,18 @@
 - **(css/minifier)** Fix minification of universal selectors (#5826) ([1803874](https://github.com/swc-project/swc/commit/1803874f1484ab2a3c7b23b5e027e72f99740fba))
 
 
+- **(es/ast)** Revert #5798 (#5798) (#5855) ([4cde553](https://github.com/swc-project/swc/commit/4cde5538119ccafee8e4d324c4fa4ffdf1ca4f12))
+
+
+- **(es/codegen)** Remove redundant `;` after export default decl (#5851) ([2b24642](https://github.com/swc-project/swc/commit/2b2464271aa938968986287fa03e2ef06dcd3fd7))
+
+
+- **(es/minifier)** Don't replace parameters of IIFE if it's recursive (#5852) ([a5f7b69](https://github.com/swc-project/swc/commit/a5f7b6946fcf020b4669ac301b944ba5c0adbbba))
+
+
+- **(es/minifier)** Preserve more side effects (#5853) ([32f1806](https://github.com/swc-project/swc/commit/32f18068ad90ba2bfc7cf34b82245f9db2473077))
+
+
 - **(es/modules)** Improve compatibility with `cjs-module-lexer` (#5835) ([bf75981](https://github.com/swc-project/swc/commit/bf759819e4ad577e89c2605e80e80c928017029d))
 
 
@@ -21,6 +98,9 @@
 
 
 - **(es/parser)** Handle more `TS1185` (#5834) ([10637b0](https://github.com/swc-project/swc/commit/10637b006fb5c66b9bf7b9fef417ee04924f2845))
+
+
+- **(swc_core)** Fix reexport of `testing` (#5848) ([c0da2e9](https://github.com/swc-project/swc/commit/c0da2e998ada947563de83ba19feed789f1a1aea))
 
 ### Features
 
@@ -39,6 +119,12 @@
 
 
 - **(swc_core)** Export testing utilities (#5839) ([856d741](https://github.com/swc-project/swc/commit/856d741ec77f46eb04be8489a3a18340269dbe4d))
+
+### Miscellaneous Tasks
+
+
+
+- **(ci)** FIx publish action (#5857) ([c2f25c9](https://github.com/swc-project/swc/commit/c2f25c9998776366a5df8da77d94b0a85e4869fe))
 
 ### Performance
 
@@ -78,6 +164,18 @@
 
 
 - **(html/minifier)** Improve performance (#5838) ([ccd618c](https://github.com/swc-project/swc/commit/ccd618ce54cc21dbdeecd766f91816b395629678))
+
+### Refactor
+
+
+
+- **(es/ast)** Apply rkyv-bytecheck flag (#5798) ([37f42df](https://github.com/swc-project/swc/commit/37f42df877b63479c3c6ed0f2d7fb24791da6589))
+
+### Testing
+
+
+
+- **(es/transforms)** Enable tests for fixed issues (#5845) ([0284c1b](https://github.com/swc-project/swc/commit/0284c1bf40de7d199733ee8f93c189d9658fe6b0))
 
 ### Build
 

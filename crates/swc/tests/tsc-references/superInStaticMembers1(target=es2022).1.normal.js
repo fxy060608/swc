@@ -5,7 +5,7 @@ export class Reflect {
 export var Baz;
 (function(Baz) {})(Baz || (Baz = {}));
 export default class {
-};
+}
 //// [locals.ts]
 class C extends B {
     static _ = [
@@ -60,7 +60,7 @@ class C extends B {
         (()=>{
             (function Reflect() {}); // no collision
             super.w();
-        })(), 
+        })()
     ];
     static{
         var { Reflect  } = {

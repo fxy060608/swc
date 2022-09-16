@@ -89,11 +89,11 @@
     var deprecatedAPIs = {
         isMounted: [
             "isMounted",
-            "Instead, make sure to clean up subscriptions and pending requests in componentWillUnmount to prevent memory leaks.", 
+            "Instead, make sure to clean up subscriptions and pending requests in componentWillUnmount to prevent memory leaks."
         ],
         replaceState: [
             "replaceState",
-            "Refactor your code to use setState instead (see https://github.com/facebook/react/issues/3236).", 
+            "Refactor your code to use setState instead (see https://github.com/facebook/react/issues/3236)."
         ]
     }, defineDeprecationWarning = function(methodName, info) {
         Object.defineProperty(Component.prototype, methodName, {
@@ -290,7 +290,7 @@
                     null != childKey && (escapedChildKey = escapeUserProvidedKey(childKey) + "/"), mapIntoArray(mappedChild, array, escapedChildKey, "", function(c) {
                         return c;
                     });
-                } else null != mappedChild && (isValidElement(mappedChild) && (mappedChild = (oldElement = mappedChild, newKey = escapedPrefix + (mappedChild.key && (!_child || _child.key !== mappedChild.key) ? escapeUserProvidedKey("" + mappedChild.key) + "/" : "") + childKey, ReactElement(oldElement.type, newKey, oldElement.ref, oldElement._self, oldElement._source, oldElement._owner, oldElement.props))), array.push(mappedChild));
+                } else null != mappedChild && (isValidElement(mappedChild) && (oldElement = mappedChild, newKey = escapedPrefix + (mappedChild.key && (!_child || _child.key !== mappedChild.key) ? escapeUserProvidedKey("" + mappedChild.key) + "/" : "") + childKey, mappedChild = ReactElement(oldElement.type, newKey, oldElement.ref, oldElement._self, oldElement._source, oldElement._owner, oldElement.props)), array.push(mappedChild));
                 return 1;
             }
             var subtreeCount = 0, nextNamePrefix = "" === nameSoFar ? "." : nameSoFar + ":";
