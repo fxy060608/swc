@@ -29,6 +29,12 @@
 - **(es/minifier)** Move assign with seq init into seq (#5847) ([63fb0c4](https://github.com/swc-project/swc/commit/63fb0c4ad34698d4d3f0c49ff5a78f6e446e64f9))
 
 
+- **(es/minifier)** Drop variable from the sequential inliner (#5896) ([4e656af](https://github.com/swc-project/swc/commit/4e656af1ecddadc4fa96e79aaf7338b7f22a672c))
+
+
+- **(es/plugin)** Enable plugin for bytecheck flags (#5885) ([2d4d04d](https://github.com/swc-project/swc/commit/2d4d04d06beec5c88e8515c95298a0bf5d961d8c))
+
+
 - **(preset-env/base)** Implement more traits for `BrowserData` and `Version` (#5879) ([73c48a8](https://github.com/swc-project/swc/commit/73c48a8e6eb3d002ca0c575d253f32ae1aa6e5ea))
 
 
@@ -38,13 +44,16 @@
 
 
 
-- **(ci)** Reduce CI time (#5870) ([9ca3966](https://github.com/swc-project/swc/commit/9ca3966686ea2e62dc7225352cdc2ae66b970b8b))- **general**: Update MSRV (#5856) ([f3e0267](https://github.com/swc-project/swc/commit/f3e02675ad74013b82ef911bfcf75e39bc7b4967))- **general**: Fix publish script ([720b3e0](https://github.com/swc-project/swc/commit/720b3e05c1e5fa9ab5bdae5f6d1268d6f6bce885))
+- **(ci)** Reduce CI time (#5870) ([9ca3966](https://github.com/swc-project/swc/commit/9ca3966686ea2e62dc7225352cdc2ae66b970b8b))- **general**: Update MSRV (#5856) ([f3e0267](https://github.com/swc-project/swc/commit/f3e02675ad74013b82ef911bfcf75e39bc7b4967))- **general**: Fix publish script ([720b3e0](https://github.com/swc-project/swc/commit/720b3e05c1e5fa9ab5bdae5f6d1268d6f6bce885))- **general**: Remove `.prettierrc.json` (#5895) ([89f0a4c](https://github.com/swc-project/swc/commit/89f0a4c5ac66d30ac2b9bf51db488a9946acea65))
 
 ### Performance
 
 
 
 - **(html)** Reduce memory usage (#5867) ([7f62fa6](https://github.com/swc-project/swc/commit/7f62fa62277621bc0787eca1e5e0df9dd575b5cd))
+
+
+- **(html/parser)** Improve performance (#5884) ([5645e81](https://github.com/swc-project/swc/commit/5645e810df36e7954dc1249634e1a92e34f8172c))
 
 ### Refactor
 
@@ -57,6 +66,9 @@
 
 
 - **(es/modules)** Add tests for `jsc.paths` (#5876) ([0d492bf](https://github.com/swc-project/swc/commit/0d492bfce1681dbbdbe8701f6e928002cc6ce6cd))
+
+
+- **(es/plugin)** Add a noop plugin (#5892) ([20d071b](https://github.com/swc-project/swc/commit/20d071bdc771e9b863a9f8d38a11485539eda0d0))
 
 ### Build
 
