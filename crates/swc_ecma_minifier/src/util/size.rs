@@ -78,6 +78,7 @@ impl Size for f64 {
     }
 }
 
+#[allow(clippy::bool_to_int_with_if)]
 impl Size for BigIntValue {
     fn size(&self) -> usize {
         let sign = if let Sign::Minus = self.sign() { 1 } else { 0 };
@@ -197,6 +198,7 @@ impl SizeWithCtxt for Expr {
             Expr::TsNonNull(_) => TODO,
             Expr::TsAs(_) => TODO,
             Expr::TsInstantiation(_) => TODO,
+            Expr::TsSatisfaction(_) => TODO,
         }
     }
 }

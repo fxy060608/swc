@@ -5,10 +5,72 @@
 
 
 
+- **(es/codegen)** Align sourcemap with terser (#5657) ([2ba8815](https://github.com/swc-project/swc/commit/2ba88154fced01cb6ad0428207cf88ad7ddee75c))
+
+
+- **(es/compat)** Fix the order of initialization for decorators on computed keys (#5964) ([e410102](https://github.com/swc-project/swc/commit/e41010263379fc9a7676925f089aa9913c8f0f04))
+
+
+- **(es/compat)** Fix unrolling of arrays in `generator` (#5965) ([1f892cd](https://github.com/swc-project/swc/commit/1f892cd9798cadcbf7cbfa182e164a358410ee2e))
+
+
+- **(es/minifier)** Fix skipping logic of sequential inliner (#5956) ([9d19742](https://github.com/swc-project/swc/commit/9d1974248dc5424ee20f7c315efadde4c696f720))
+
+
+- **(es/minifier)** Fix analysis of parameters (#5954) ([33a15c8](https://github.com/swc-project/swc/commit/33a15c8d8275ea6c9d4101d7bc77ecba9f420924))
+
+
+- **(es/minifier)** Fix analysis of nested function-like properties (#5963) ([0fb2c1d](https://github.com/swc-project/swc/commit/0fb2c1d5a539d656f337d0ef4c9392f01817986d))
+
+
+- **(es/parser)** Allow `as` in destructuring assignment (#5948) ([cdd69d0](https://github.com/swc-project/swc/commit/cdd69d0145d22008448f394e8b39ba98291d87fe))
+
+
+- **(es/resolver)** Use a separate mark for the name of `FnExpr` (#5959) ([573418f](https://github.com/swc-project/swc/commit/573418fc96edbf3f2c5e1a0c4e83a68b4c80b4e1))
+
+
+- **(es/testing)** Remove cycle ([d0e2e3c](https://github.com/swc-project/swc/commit/d0e2e3c43b01c3e18b2b854213ebc8217f36c73b))
+
+### Features
+
+
+
+- **(css/minifier)** Remove duplicate `@counter-style` at-rules (#5970) ([dfdad69](https://github.com/swc-project/swc/commit/dfdad69c03d13d8950e89358f6587f2bc66d5912))
+
+
+- **(dbg-swc)** Add a size debugger for next.js (#5945) ([b219fa2](https://github.com/swc-project/swc/commit/b219fa2f015f39e1f3da17ade777a4bc92b6eabe))
+
+
+- **(es/minifier)** Ignore more expressions in sequential inliner (#5961) ([dcd516d](https://github.com/swc-project/swc/commit/dcd516d2bd5e9fcdc11a96c014671958ddede1de))
+
+### Testing
+
+
+
+- **(es/minifier)** Categorize terser tests (#5960) ([48cddc1](https://github.com/swc-project/swc/commit/48cddc16f67ed5ac904a1e67a6ec096da5747cd2))
+
+
+- **(es/plugin)** Reenable compat test (#5969) ([ca38a70](https://github.com/swc-project/swc/commit/ca38a7027ead28ecb9723d7e99e9123af3c6af14))
+
+### Build
+
+
+
+- **(rustc)** Update rustc (#5943) ([3c3529c](https://github.com/swc-project/swc/commit/3c3529cb84052dcde7976fed4d74d17d33317242))
+
+## [1.3.3] - 2022-09-23
+
+### Bug Fixes
+
+
+
 - **(cli)** Add missing comma (#5902) ([ccca6d0](https://github.com/swc-project/swc/commit/ccca6d0a8866b9e34e1778e176ed47d19e30be78))
 
 
 - **(css/parser)** Fix infinite loop about `@import` and `layer`  (#5919) ([10cdbed](https://github.com/swc-project/swc/commit/10cdbed05e3d0f2430a21a7f3c6a185f56ea0861))
+
+
+- **(css/parser)** Report an error for invalid `layer` in `@import` (#5928) ([64694dc](https://github.com/swc-project/swc/commit/64694dc7d5d92880f17c0669c118df666620a50a))
 
 
 - **(es/minifier)** Remove more pure calls (#5900) ([83c7887](https://github.com/swc-project/swc/commit/83c7887600bcb391203911f3c82b62e16a217120))
@@ -16,14 +78,47 @@
 
 - **(es/minifier)** Fix analysis of assignments (#5924) ([e303f7e](https://github.com/swc-project/swc/commit/e303f7e8530a2c16f908d4132b077540eb1ecc58))
 
+
+- **(es/minifier)** Prepend vars when dropping vars in a for loop initializer (#5930) ([f222413](https://github.com/swc-project/swc/commit/f2224132c1f000c560b97675b54cb7914bd444fa))
+
+
+- **(es/minifier)** Track aliasing via assignments (#5940) ([9764786](https://github.com/swc-project/swc/commit/97647861bfcbf111f07b2748ba755b19a7e16844))
+
 ### Features
 
+
+
+- **(css/minifier)** Minify the name of `@keyframes` (#5894) ([1dc5307](https://github.com/swc-project/swc/commit/1dc530706915aab6c00564e8c10cc01e1f203204))
 
 
 - **(css/parser)** Parse more math functions in `@media` (#5904) ([2bf2419](https://github.com/swc-project/swc/commit/2bf24195f2e9803f24f335b637ff9e7ea394402b))
 
 
 - **(es/minifier)** Drop function identifier in a single pass (#5901) ([aacf7aa](https://github.com/swc-project/swc/commit/aacf7aaf80034509cf20e4b54d87c2e95ae9b3df))
+
+
+- **(es/minifier)** Collapse `let` without init (#5909) ([19ce273](https://github.com/swc-project/swc/commit/19ce2737b16f2f6daf5f2eb53dc7a70ceefb107d))
+
+
+- **(es/minifier)** Evaluate more expressions (#5926) ([565bf31](https://github.com/swc-project/swc/commit/565bf317f6a16025f9b026209daafa5983ed7608))
+
+
+- **(es/minifier)** Inline rest parameters of IIFE (#5929) ([ac7b066](https://github.com/swc-project/swc/commit/ac7b066d9aec13c99a2df87fc47021973c1fed5d))
+
+
+- **(es/minifier)** Improve analysis of reassignments (#5931) ([e9c7041](https://github.com/swc-project/swc/commit/e9c704182b2f6fb4d9771b358d2919c447723059))
+
+
+- **(es/minifier)** Use char frequency data for property manglers (#5932) ([5314ac5](https://github.com/swc-project/swc/commit/5314ac5d025737471a9595fa72d4189992b8454e))
+
+
+- **(es/minifier)** Drop cycles in nested functions (#5933) ([e16827c](https://github.com/swc-project/swc/commit/e16827cc9d4ff7dcbc53fb38f56ba9b15dc9c3c8))
+
+
+- **(es/minifier)** Mangle labels (#5934) ([7bcaaef](https://github.com/swc-project/swc/commit/7bcaaef4f7219d52e7dd2199d4696d628e4d6de9))
+
+
+- **(es/typescript)** Support TS 4.9 (#5938) ([5cddb4c](https://github.com/swc-project/swc/commit/5cddb4c7345eba7c3ac87288b5130ecd1a94bbf5))
 
 
 - **(swc_core)** Expose tty feature of `swc_common` as `common_tty` (#5920) ([72429d8](https://github.com/swc-project/swc/commit/72429d88018bd325af2e552c5d2bc7b255ea600d))
@@ -54,6 +149,9 @@
 
 
 - **(es/minifier)** Add an execution test for a fixed issue (#5925) ([31711e7](https://github.com/swc-project/swc/commit/31711e76af84aa52766a511af7b772390144f1ee))
+
+
+- **(es/minifier)** Remove analysis snapshot (#5939) ([93964a8](https://github.com/swc-project/swc/commit/93964a82eacb1bfe41de270900895b92f61e3670))
 
 ## [1.3.2] - 2022-09-19
 

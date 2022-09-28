@@ -119,7 +119,14 @@ impl Pure<'_> {
             stmts.visit_with(&mut AssertValid);
         }
 
-        self.collapse_vars_without_init(stmts);
+        self.collapse_vars_without_init(stmts, VarDeclKind::Let);
+
+        #[cfg(debug_assertions)]
+        {
+            stmts.visit_with(&mut AssertValid);
+        }
+
+        self.collapse_vars_without_init(stmts, VarDeclKind::Var);
 
         #[cfg(debug_assertions)]
         {
@@ -372,6 +379,8 @@ impl VisitMut for Pure<'_> {
         self.eval_opt_chain(e);
 
         self.eval_number_call(e);
+
+        self.eval_arguments_member_access(e);
 
         self.eval_number_method_call(e);
 

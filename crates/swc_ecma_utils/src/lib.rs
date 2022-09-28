@@ -2,6 +2,7 @@
 #![allow(clippy::boxed_local)]
 #![allow(clippy::match_like_matches_macro)]
 #![allow(clippy::vec_box)]
+#![cfg_attr(not(feature = "concurrent"), allow(unused))]
 
 #[doc(hidden)]
 pub extern crate swc_ecma_ast;
@@ -1454,7 +1455,8 @@ pub trait ExprExt {
             Expr::TsAs(TsAsExpr { ref expr, .. })
             | Expr::TsNonNull(TsNonNullExpr { ref expr, .. })
             | Expr::TsTypeAssertion(TsTypeAssertion { ref expr, .. })
-            | Expr::TsInstantiation(TsInstantiation { ref expr, .. }) => {
+            | Expr::TsInstantiation(TsInstantiation { ref expr, .. })
+            | Expr::TsSatisfaction(TsSatisfactionExpr { ref expr, .. }) => {
                 expr.may_have_side_effects(ctx)
             }
 
@@ -2422,7 +2424,8 @@ impl ExprCtx {
             | Expr::TsNonNull(TsNonNullExpr { expr, .. })
             | Expr::TsAs(TsAsExpr { expr, .. })
             | Expr::TsConstAssertion(TsConstAssertion { expr, .. })
-            | Expr::TsInstantiation(TsInstantiation { expr, .. }) => {
+            | Expr::TsInstantiation(TsInstantiation { expr, .. })
+            | Expr::TsSatisfaction(TsSatisfactionExpr { expr, .. }) => {
                 self.extract_side_effects_to(to, *expr)
             }
             Expr::OptChain(OptChainExpr { base: child, .. }) => {

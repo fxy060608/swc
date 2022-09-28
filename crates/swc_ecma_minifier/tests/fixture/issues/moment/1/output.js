@@ -239,7 +239,7 @@
     }
     function daysInMonth(year, month) {
         if (isNaN(year) || isNaN(month)) return NaN;
-        var x, modMonth = (month % (x = 12) + x) % x;
+        var modMonth = (month % 12 + 12) % 12;
         return year += (month - modMonth) / 12, 1 === modMonth ? isLeapYear(year) ? 29 : 28 : 31 - modMonth % 7 % 2;
     }
     indexOf = Array.prototype.indexOf ? Array.prototype.indexOf : function(o) {
@@ -285,7 +285,7 @@
         if (!mom.isValid()) return mom;
         if ("string" == typeof value) {
             if (/^\d+$/.test(value)) value = toInt(value);
-            else if (!isNumber(value = mom.localeData().monthsParse(value))) return mom;
+            else if (value = mom.localeData().monthsParse(value), !isNumber(value)) return mom;
         }
         return dayOfMonth = Math.min(mom.date(), daysInMonth(mom.year(), value)), mom._d["set" + (mom._isUTC ? "UTC" : "") + "Month"](value, dayOfMonth), mom;
     }
@@ -341,11 +341,11 @@
     var getSetYear = makeGetSet("FullYear", !0);
     function createDate(y, m, d, h, M, s, ms) {
         var date;
-        return y < 100 && y >= 0 ? isFinite((date = new Date(y + 400, m, d, h, M, s, ms)).getFullYear()) && date.setFullYear(y) : date = new Date(y, m, d, h, M, s, ms), date;
+        return y < 100 && y >= 0 ? (date = new Date(y + 400, m, d, h, M, s, ms), isFinite(date.getFullYear()) && date.setFullYear(y)) : date = new Date(y, m, d, h, M, s, ms), date;
     }
     function createUTCDate(y) {
         var date, args;
-        return y < 100 && y >= 0 ? (args = Array.prototype.slice.call(arguments), args[0] = y + 400, isFinite((date = new Date(Date.UTC.apply(null, args))).getUTCFullYear()) && date.setUTCFullYear(y)) : date = new Date(Date.UTC.apply(null, arguments)), date;
+        return y < 100 && y >= 0 ? (args = Array.prototype.slice.call(arguments), args[0] = y + 400, date = new Date(Date.UTC.apply(null, args)), isFinite(date.getUTCFullYear()) && date.setUTCFullYear(y)) : date = new Date(Date.UTC.apply(null, arguments)), date;
     }
     function firstWeekOffset(year, dow, doy) {
         var fwd = 7 + dow - doy;
@@ -749,15 +749,21 @@
         } else config._isValid = !1;
     }
     function configFromRFC2822(config) {
-        var year, weekdayStr, parsedInput, config1, yearStr, monthStr, dayStr, hourStr, minuteStr, secondStr, result, parsedArray, match = rfc2822.exec((0, config._i).replace(/\([^)]*\)|[\n\t]/g, " ").replace(/(\s\s+)/g, " ").replace(/^\s\s*/, "").replace(/\s\s*$/, ""));
+        var yearStr, year, yearStr1, monthStr, dayStr, hourStr, minuteStr, secondStr, result, parsedArray, match = rfc2822.exec((0, config._i).replace(/\([^)]*\)|[\n\t]/g, " ").replace(/(\s\s+)/g, " ").replace(/^\s\s*/, "").replace(/\s\s*$/, ""));
         if (match) {
-            if (yearStr = match[4], monthStr = match[3], dayStr = match[2], hourStr = match[5], minuteStr = match[6], secondStr = match[7], result = [
-                (year = parseInt(yearStr, 10)) <= 49 ? 2000 + year : year <= 999 ? 1900 + year : year,
+            if (yearStr1 = match[4], monthStr = match[3], dayStr = match[2], hourStr = match[5], minuteStr = match[6], secondStr = match[7], result = [
+                (yearStr = yearStr1, (year = parseInt(yearStr, 10)) <= 49 ? 2000 + year : year <= 999 ? 1900 + year : year),
                 defaultLocaleMonthsShort.indexOf(monthStr),
                 parseInt(dayStr, 10),
                 parseInt(hourStr, 10),
                 parseInt(minuteStr, 10)
-            ], secondStr && result.push(parseInt(secondStr, 10)), parsedArray = result, weekdayStr = match[1], parsedInput = parsedArray, config1 = config, weekdayStr && defaultLocaleWeekdaysShort.indexOf(weekdayStr) !== new Date(parsedInput[0], parsedInput[1], parsedInput[2]).getDay() && (getParsingFlags(config1).weekdayMismatch = !0, config1._isValid = !1, 1)) return;
+            ], secondStr && result.push(parseInt(secondStr, 10)), parsedArray = result, !function(weekdayStr, parsedInput, config) {
+                if (weekdayStr) {
+                    var weekdayProvided = defaultLocaleWeekdaysShort.indexOf(weekdayStr), weekdayActual = new Date(parsedInput[0], parsedInput[1], parsedInput[2]).getDay();
+                    if (weekdayProvided !== weekdayActual) return getParsingFlags(config).weekdayMismatch = !0, config._isValid = !1, !1;
+                }
+                return !0;
+            }(match[1], parsedArray, config)) return;
             config._a = parsedArray, config._tzm = function(obsOffset, militaryOffset, numOffset) {
                 if (obsOffset) return obsOffsets[obsOffset];
                 if (militaryOffset) return 0;
@@ -811,7 +817,7 @@
             }
             for(i = 0; i < config._f.length; i++)currentScore = 0, validFormatFound = !1, tempConfig = copyConfig({}, config), null != config._useUTC && (tempConfig._useUTC = config._useUTC), tempConfig._f = config._f[i], configFromStringAndFormat(tempConfig), isValid(tempConfig) && (validFormatFound = !0), currentScore += getParsingFlags(tempConfig).charsLeftOver, currentScore += 10 * getParsingFlags(tempConfig).unusedTokens.length, getParsingFlags(tempConfig).score = currentScore, bestFormatIsValid ? currentScore < scoreToBeat && (scoreToBeat = currentScore, bestMoment = tempConfig) : (null == scoreToBeat || currentScore < scoreToBeat || validFormatFound) && (scoreToBeat = currentScore, bestMoment = tempConfig, validFormatFound && (bestFormatIsValid = !0));
             extend(config, bestMoment || tempConfig);
-        }(config) : format ? configFromStringAndFormat(config) : isUndefined(input = (config1 = config)._i) ? config1._d = new Date(hooks.now()) : isDate(input) ? config1._d = new Date(input.valueOf()) : "string" == typeof input ? function(config) {
+        }(config) : format ? configFromStringAndFormat(config) : (input = (config1 = config)._i, isUndefined(input) ? config1._d = new Date(hooks.now()) : isDate(input) ? config1._d = new Date(input.valueOf()) : "string" == typeof input ? function(config) {
             var matched = aspNetJsonRegex.exec(config._i);
             if (null !== matched) {
                 config._d = new Date(+matched[1]);
@@ -835,11 +841,11 @@
                     return obj && parseInt(obj, 10);
                 }), configFromArray(config);
             }
-        }(config1) : isNumber(input) ? config1._d = new Date(input) : hooks.createFromInputFallback(config1), isValid(config) || (config._d = null), config);
+        }(config1) : isNumber(input) ? config1._d = new Date(input) : hooks.createFromInputFallback(config1)), isValid(config) || (config._d = null), config);
     }
     function createLocalOrUTC(input, format, locale, strict, isUTC) {
-        var config, res, c = {};
-        return (!0 === format || !1 === format) && (strict = format, format = void 0), (!0 === locale || !1 === locale) && (strict = locale, locale = void 0), (isObject(input) && isObjectEmpty(input) || isArray(input) && 0 === input.length) && (input = void 0), c._isAMomentObject = !0, c._useUTC = c._isUTC = isUTC, c._l = locale, c._i = input, c._f = format, c._strict = strict, config = c, (res = new Moment(checkOverflow(prepareConfig(config))))._nextDay && (res.add(1, "d"), res._nextDay = void 0), res;
+        var res, c = {};
+        return (!0 === format || !1 === format) && (strict = format, format = void 0), (!0 === locale || !1 === locale) && (strict = locale, locale = void 0), (isObject(input) && isObjectEmpty(input) || isArray(input) && 0 === input.length) && (input = void 0), c._isAMomentObject = !0, c._useUTC = c._isUTC = isUTC, c._l = locale, c._i = input, c._f = format, c._strict = strict, (res = new Moment(checkOverflow(prepareConfig(c))))._nextDay && (res.add(1, "d"), res._nextDay = void 0), res;
     }
     function createLocal(input, format, locale, strict) {
         return createLocalOrUTC(input, format, locale, strict, !1);
@@ -1172,9 +1178,9 @@
     proto.add = add, proto.calendar = function(time, formats) {
         if (1 === arguments.length) {
             if (arguments[0]) {
-                var input, input1, arrayTest, dataTypeTest;
-                (input = arguments[0], isMoment(input) || isDate(input) || isString(input) || isNumber(input) || (arrayTest = isArray(input1 = input), dataTypeTest = !1, arrayTest && (dataTypeTest = 0 === input1.filter(function(item) {
-                    return !isNumber(item) && isString(input1);
+                var input, arrayTest, dataTypeTest;
+                (input = arguments[0], isMoment(input) || isDate(input) || isString(input) || isNumber(input) || (arrayTest = isArray(input), dataTypeTest = !1, arrayTest && (dataTypeTest = 0 === input.filter(function(item) {
+                    return !isNumber(item) && isString(input);
                 }).length), arrayTest && dataTypeTest) || function(input) {
                     var i, property, objectTest = isObject(input) && !isObjectEmpty(input), propertyTest = !1, properties = [
                         "years",
@@ -1306,7 +1312,7 @@
     }, proto.toNow = function(withoutSuffix) {
         return this.to(createLocal(), withoutSuffix);
     }, proto.get = function(units) {
-        return isFunction(this[units = normalizeUnits(units)]) ? this[units]() : this;
+        return (units = normalizeUnits(units), isFunction(this[units])) ? this[units]() : this;
     }, proto.invalidAt = function() {
         return getParsingFlags(this).overflow;
     }, proto.isAfter = function(input, units) {
@@ -1342,7 +1348,7 @@
                 }), units;
             }(units = normalizeObjectUnits(units));
             for(i = 0; i < prioritized.length; i++)this[prioritized[i].unit](units[prioritized[i].unit]);
-        } else if (isFunction(this[units = normalizeUnits(units)])) return this[units](value);
+        } else if (units = normalizeUnits(units), isFunction(this[units])) return this[units](value);
         return this;
     }, proto.startOf = function(units) {
         var time, startOfDate;
@@ -1405,8 +1411,8 @@
         return 0 > m.year() || m.year() > 9999 ? formatMoment(m, utc ? "YYYYYY-MM-DD[T]HH:mm:ss.SSS[Z]" : "YYYYYY-MM-DD[T]HH:mm:ss.SSSZ") : isFunction(Date.prototype.toISOString) ? utc ? this.toDate().toISOString() : new Date(this.valueOf() + 60000 * this.utcOffset()).toISOString().replace("Z", formatMoment(m, "Z")) : formatMoment(m, utc ? "YYYY-MM-DD[T]HH:mm:ss.SSS[Z]" : "YYYY-MM-DD[T]HH:mm:ss.SSSZ");
     }, proto.inspect = function() {
         if (!this.isValid()) return "moment.invalid(/* " + this._i + " */)";
-        var prefix, year, datetime, suffix, func = "moment", zone = "";
-        return this.isLocal() || (func = 0 === this.utcOffset() ? "moment.utc" : "moment.parseZone", zone = "Z"), prefix = "[" + func + '("]', year = 0 <= this.year() && 9999 >= this.year() ? "YYYY" : "YYYYYY", datetime = "-MM-DD[T]HH:mm:ss.SSS", suffix = zone + '[")]', this.format(prefix + year + datetime + suffix);
+        var prefix, year, suffix, func = "moment", zone = "";
+        return this.isLocal() || (func = 0 === this.utcOffset() ? "moment.utc" : "moment.parseZone", zone = "Z"), prefix = "[" + func + '("]', year = 0 <= this.year() && 9999 >= this.year() ? "YYYY" : "YYYYYY", suffix = zone + '[")]', this.format(prefix + year + "-MM-DD[T]HH:mm:ss.SSS" + suffix);
     }, "undefined" != typeof Symbol && null != Symbol.for && (proto[Symbol.for("nodejs.util.inspect.custom")] = function() {
         return "Moment<" + this.format() + ">";
     }), proto.toJSON = function() {
@@ -1478,7 +1484,7 @@
     }, proto.isoWeekday = function(input) {
         if (!this.isValid()) return null != input ? this : NaN;
         if (null == input) return this.day() || 7;
-        var input1, locale, weekday = (input1 = input, locale = this.localeData(), "string" == typeof input1 ? locale.weekdaysParse(input1) % 7 || 7 : isNaN(input1) ? null : input1);
+        var locale, weekday = (locale = this.localeData(), "string" == typeof input ? locale.weekdaysParse(input) % 7 || 7 : isNaN(input) ? null : input);
         return this.day(this.day() % 7 ? weekday : weekday - 7);
     }, proto.dayOfYear = function(input) {
         var dayOfYear = Math.round((this.clone().startOf("day") - this.clone().startOf("year")) / 864e5) + 1;
@@ -1760,7 +1766,7 @@
         return this.isValid() ? this._milliseconds + 864e5 * this._days + this._months % 12 * 2592e6 + 31536e6 * toInt(this._months / 12) : NaN;
     }, proto$2._bubble = function() {
         var seconds, minutes, hours, years, monthsFromDays, milliseconds = this._milliseconds, days = this._days, months = this._months, data = this._data;
-        return milliseconds >= 0 && days >= 0 && months >= 0 || milliseconds <= 0 && days <= 0 && months <= 0 || (milliseconds += 864e5 * absCeil(monthsToDays(months) + days), days = 0, months = 0), data.milliseconds = milliseconds % 1000, seconds = absFloor(milliseconds / 1000), data.seconds = seconds % 60, minutes = absFloor(seconds / 60), data.minutes = minutes % 60, hours = absFloor(minutes / 60), data.hours = hours % 24, days += absFloor(hours / 24), months += monthsFromDays = absFloor(daysToMonths(days)), days -= absCeil(monthsToDays(monthsFromDays)), years = absFloor(months / 12), months %= 12, data.days = days, data.months = months, data.years = years, this;
+        return milliseconds >= 0 && days >= 0 && months >= 0 || milliseconds <= 0 && days <= 0 && months <= 0 || (milliseconds += 864e5 * absCeil(monthsToDays(months) + days), days = 0, months = 0), data.milliseconds = milliseconds % 1000, seconds = absFloor(milliseconds / 1000), data.seconds = seconds % 60, minutes = absFloor(seconds / 60), data.minutes = minutes % 60, hours = absFloor(minutes / 60), data.hours = hours % 24, days += absFloor(hours / 24), monthsFromDays = absFloor(daysToMonths(days)), months += monthsFromDays, days -= absCeil(monthsToDays(monthsFromDays)), years = absFloor(months / 12), months %= 12, data.days = days, data.months = months, data.years = years, this;
     }, proto$2.clone = function() {
         return createDuration(this);
     }, proto$2.get = function(units) {
@@ -1769,8 +1775,8 @@
         return absFloor(this.days() / 7);
     }, proto$2.months = months, proto$2.years = years, proto$2.humanize = function(argWithSuffix, argThresholds) {
         if (!this.isValid()) return this.localeData().invalidDate();
-        var locale, output, posNegDuration, withoutSuffix, thresholds1, locale1, duration, seconds, minutes, hours, days, months, weeks, years, a, withSuffix = !1, th = thresholds;
-        return "object" == typeof argWithSuffix && (argThresholds = argWithSuffix, argWithSuffix = !1), "boolean" == typeof argWithSuffix && (withSuffix = argWithSuffix), "object" == typeof argThresholds && (th = Object.assign({}, thresholds, argThresholds), null != argThresholds.s && null == argThresholds.ss && (th.ss = argThresholds.s - 1)), locale = this.localeData(), posNegDuration = this, withoutSuffix = !withSuffix, thresholds1 = th, locale1 = locale, duration = createDuration(posNegDuration).abs(), seconds = round(duration.as("s")), minutes = round(duration.as("m")), hours = round(duration.as("h")), days = round(duration.as("d")), months = round(duration.as("M")), weeks = round(duration.as("w")), years = round(duration.as("y")), a = seconds <= thresholds1.ss && [
+        var locale, output, withoutSuffix, thresholds1, duration, seconds, minutes, hours, days, months, weeks, years, a, withSuffix = !1, th = thresholds;
+        return "object" == typeof argWithSuffix && (argThresholds = argWithSuffix, argWithSuffix = !1), "boolean" == typeof argWithSuffix && (withSuffix = argWithSuffix), "object" == typeof argThresholds && (th = Object.assign({}, thresholds, argThresholds), null != argThresholds.s && null == argThresholds.ss && (th.ss = argThresholds.s - 1)), locale = this.localeData(), withoutSuffix = !withSuffix, thresholds1 = th, duration = createDuration(this).abs(), seconds = round(duration.as("s")), minutes = round(duration.as("m")), hours = round(duration.as("h")), days = round(duration.as("d")), months = round(duration.as("M")), weeks = round(duration.as("w")), years = round(duration.as("y")), a = seconds <= thresholds1.ss && [
             "s",
             seconds
         ] || seconds < thresholds1.s && [
@@ -1806,7 +1812,7 @@
         ] || [
             "yy",
             years
-        ])[2] = withoutSuffix, a[3] = +posNegDuration > 0, a[4] = locale1, output = substituteTimeAgo.apply(null, a), withSuffix && (output = locale.pastFuture(+this, output)), locale.postformat(output);
+        ])[2] = withoutSuffix, a[3] = +this > 0, a[4] = locale, output = substituteTimeAgo.apply(null, a), withSuffix && (output = locale.pastFuture(+this, output)), locale.postformat(output);
     }, proto$2.toISOString = toISOString$1, proto$2.toString = toISOString$1, proto$2.toJSON = toISOString$1, proto$2.locale = locale, proto$2.localeData = localeData, proto$2.toIsoString = deprecate("toIsoString() is deprecated. Please use toISOString() instead (notice the capitals)", toISOString$1), proto$2.lang = lang, addFormatToken("X", 0, 0, "unix"), addFormatToken("x", 0, 0, "valueOf"), addRegexToken("x", matchSigned), addRegexToken("X", /[+-]?\d+(\.\d{1,3})?/), addParseToken("X", function(input, array, config) {
         config._d = new Date(1000 * parseFloat(input));
     }), addParseToken("x", function(input, array, config) {

@@ -25,11 +25,6 @@ use crate::{
 mod ctx;
 pub(crate) mod storage;
 
-#[derive(Debug)]
-struct TestSnapshot {
-    vars: Vec<(Id, VarUsageInfo)>,
-}
-
 #[derive(Debug, Default)]
 pub(crate) struct ModuleInfo {
     /// Imported identifiers which should be treated as a black box.
@@ -102,8 +97,8 @@ pub(crate) struct VarUsageInfo {
     pub usage_count: u32,
 
     /// The variable itself is modified.
-    pub reassigned_with_assignment: bool,
-    pub reassigned_with_var_decl: bool,
+    reassigned_with_assignment: bool,
+    reassigned_with_var_decl: bool,
     /// The variable itself or a property of it is modified.
     pub mutated: bool,
 
@@ -132,6 +127,8 @@ pub(crate) struct VarUsageInfo {
 
     pub used_as_arg: bool,
 
+    pub indexed_with_dynamic_key: bool,
+
     pub pure_fn: bool,
 
     /// `infects_to`. This should be renamed, but it will be done with another
@@ -153,7 +150,13 @@ impl VarUsageInfo {
     }
 
     pub fn reassigned(&self) -> bool {
-        self.reassigned_with_assignment || self.reassigned_with_var_decl
+        self.reassigned_with_assignment
+            || self.reassigned_with_var_decl
+            || (u32::from(self.var_initialized)
+                + u32::from(self.declared_as_catch_param)
+                + u32::from(self.declared_as_fn_param)
+                + self.assign_count)
+                > 1
     }
 }
 
@@ -436,6 +439,32 @@ where
             ..self.ctx
         };
         n.right.visit_with(&mut *self.with_ctx(ctx));
+
+        if n.op == op!("=") {
+            let left = match &n.left {
+                PatOrExpr::Expr(left) => leftmost(left),
+                PatOrExpr::Pat(left) => match &**left {
+                    Pat::Ident(p) => Some(p.to_id()),
+                    Pat::Expr(p) => leftmost(p),
+                    _ => None,
+                },
+            };
+
+            if let Some(left) = left {
+                for id in collect_infects_from(
+                    &n.right,
+                    AliasConfig {
+                        marks: self.marks,
+                        ..Default::default()
+                    },
+                ) {
+                    self.data
+                        .var_or_default(left.clone())
+                        .add_infects_to(id.clone());
+                    self.data.var_or_default(id).add_infects_to(left.clone());
+                }
+            }
+        }
     }
 
     fn visit_assign_pat(&mut self, p: &AssignPat) {
@@ -478,6 +507,7 @@ where
         {
             let ctx = Ctx {
                 inline_prevented,
+                is_callee: true,
                 ..self.ctx
             };
             n.callee.visit_with(&mut *self.with_ctx(ctx));
@@ -537,6 +567,7 @@ where
                 in_call_arg: true,
                 is_exact_arg: true,
                 is_exact_reassignment: false,
+                is_callee: false,
                 ..self.ctx
             };
             n.args.visit_with(&mut *self.with_ctx(ctx));
@@ -719,6 +750,30 @@ where
         }
     }
 
+    #[cfg_attr(feature = "debug", tracing::instrument(skip_all))]
+    fn visit_expr_or_spread(&mut self, e: &ExprOrSpread) {
+        e.visit_children_with(self);
+
+        if e.spread.is_some() {
+            if let Expr::Ident(i) = &*e.expr {
+                self.data
+                    .var_or_default(i.to_id())
+                    .mark_indexed_with_dynamic_key();
+            }
+        }
+    }
+
+    #[cfg_attr(feature = "debug", tracing::instrument(skip_all))]
+    fn visit_spread_element(&mut self, e: &SpreadElement) {
+        e.visit_children_with(self);
+
+        if let Expr::Ident(i) = &*e.expr {
+            self.data
+                .var_or_default(i.to_id())
+                .mark_indexed_with_dynamic_key();
+        }
+    }
+
     fn visit_bin_expr(&mut self, e: &BinExpr) {
         if e.op.may_short_circuit() {
             e.left.visit_with(self);
@@ -728,6 +783,22 @@ where
             };
             self.with_ctx(ctx).visit_in_cond(&e.right);
         } else {
+            if e.op == op!("in") {
+                if let Expr::Ident(obj) = &*e.right {
+                    let var = self.data.var_or_default(obj.to_id());
+
+                    match &*e.left {
+                        Expr::Lit(Lit::Str(prop)) => {
+                            var.add_accessed_property(prop.value.clone());
+                        }
+
+                        _ => {
+                            var.mark_indexed_with_dynamic_key();
+                        }
+                    }
+                }
+            }
+
             e.visit_children_with(self);
         }
     }
@@ -916,6 +987,7 @@ where
             let ctx = Ctx {
                 is_exact_arg: false,
                 is_exact_reassignment: false,
+                is_callee: false,
                 ..self.ctx
             };
             e.obj.visit_with(&mut *self.with_ctx(ctx));
@@ -925,6 +997,7 @@ where
             let ctx = Ctx {
                 is_exact_arg: false,
                 is_exact_reassignment: false,
+                is_callee: false,
                 ..self.ctx
             };
             c.visit_with(&mut *self.with_ctx(ctx));
@@ -932,6 +1005,14 @@ where
         if let Expr::Ident(obj) = &*e.obj {
             let v = self.data.var_or_default(obj.to_id());
             v.mark_has_property_access();
+
+            if self.ctx.is_callee {
+                v.mark_indexed_with_dynamic_key();
+            }
+
+            if let MemberProp::Computed(..) = e.prop {
+                v.mark_indexed_with_dynamic_key();
+            }
 
             if self.ctx.in_assign_lhs {
                 v.mark_has_property_mutation();
@@ -1063,9 +1144,76 @@ where
     }
 
     #[cfg_attr(feature = "debug", tracing::instrument(skip(self, n)))]
+    fn visit_method_prop(&mut self, n: &MethodProp) {
+        n.function.decorators.visit_with(self);
+
+        self.with_child(n.function.span.ctxt, ScopeKind::Fn, |a| {
+            n.key.visit_with(a);
+            {
+                let ctx = Ctx {
+                    in_pat_of_param: true,
+                    ..a.ctx
+                };
+                n.function.params.visit_with(&mut *a.with_ctx(ctx));
+            }
+
+            n.function.visit_with(a);
+        });
+    }
+
+    #[cfg_attr(feature = "debug", tracing::instrument(skip(self, n)))]
+    fn visit_getter_prop(&mut self, n: &GetterProp) {
+        self.with_child(n.span.ctxt, ScopeKind::Fn, |a| {
+            n.key.visit_with(a);
+
+            n.body.visit_with(a);
+        });
+    }
+
+    #[cfg_attr(feature = "debug", tracing::instrument(skip(self, n)))]
+    fn visit_class_method(&mut self, n: &ClassMethod) {
+        n.function.decorators.visit_with(self);
+
+        self.with_child(n.function.span.ctxt, ScopeKind::Fn, |a| {
+            n.key.visit_with(a);
+            {
+                let ctx = Ctx {
+                    in_pat_of_param: true,
+                    ..a.ctx
+                };
+                n.function.params.visit_with(&mut *a.with_ctx(ctx));
+            }
+
+            n.function.visit_with(a);
+        });
+    }
+
+    #[cfg_attr(feature = "debug", tracing::instrument(skip(self, n)))]
+    fn visit_private_method(&mut self, n: &PrivateMethod) {
+        n.function.decorators.visit_with(self);
+
+        self.with_child(n.function.span.ctxt, ScopeKind::Fn, |a| {
+            n.key.visit_with(a);
+            {
+                let ctx = Ctx {
+                    in_pat_of_param: true,
+                    ..a.ctx
+                };
+                n.function.params.visit_with(&mut *a.with_ctx(ctx));
+            }
+
+            n.function.visit_with(a);
+        });
+    }
+
+    #[cfg_attr(feature = "debug", tracing::instrument(skip(self, n)))]
     fn visit_stmt(&mut self, n: &Stmt) {
         let ctx = Ctx {
             in_update_arg: false,
+            is_callee: false,
+            in_call_arg: false,
+            in_assign_lhs: false,
+            in_await_arg: false,
             ..self.ctx
         };
         n.visit_children_with(&mut *self.with_ctx(ctx));
@@ -1143,6 +1291,10 @@ where
     fn visit_var_decl(&mut self, n: &VarDecl) {
         let ctx = Ctx {
             var_decl_kind_of_pat: Some(n.kind),
+            is_callee: false,
+            in_call_arg: false,
+            in_assign_lhs: false,
+            in_await_arg: false,
             ..self.ctx
         };
         n.visit_children_with(&mut *self.with_ctx(ctx));
@@ -1247,6 +1399,14 @@ where
     }
 }
 
+fn leftmost(p: &Expr) -> Option<Id> {
+    match p {
+        Expr::Ident(i) => Some(i.to_id()),
+        Expr::Member(MemberExpr { obj, .. }) => leftmost(obj),
+        _ => None,
+    }
+}
+
 // Support for pure_getters
 fn is_safe_to_access_prop(e: &Expr) -> bool {
     match e {
@@ -1254,30 +1414,4 @@ fn is_safe_to_access_prop(e: &Expr) -> bool {
         Expr::Lit(..) | Expr::Array(..) | Expr::Fn(..) | Expr::Arrow(..) | Expr::Update(..) => true,
         _ => false,
     }
-}
-
-/// This is **NOT** a public api.
-#[doc(hidden)]
-pub fn dump_snapshot(program: &Module) -> String {
-    let marks = Marks::new();
-
-    let data = analyze(program, &Default::default(), Some(marks));
-
-    // Iteration order of hashmap is not deterministic
-    let mut snapshot = TestSnapshot {
-        vars: data
-            .vars
-            .into_iter()
-            .map(|(id, mut v)| {
-                v.infects = Default::default();
-                v.accessed_props = Default::default();
-
-                (id, v)
-            })
-            .collect(),
-    };
-
-    snapshot.vars.sort_by(|a, b| a.0.cmp(&b.0));
-
-    format!("{:#?}", snapshot)
 }

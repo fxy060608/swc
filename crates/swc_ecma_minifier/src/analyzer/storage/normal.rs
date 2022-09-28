@@ -81,6 +81,7 @@ impl Storage for ProgramData {
 
                     e.get_mut().used_as_callee |= var_info.used_as_callee;
                     e.get_mut().used_as_arg |= var_info.used_as_arg;
+                    e.get_mut().indexed_with_dynamic_key |= var_info.indexed_with_dynamic_key;
 
                     e.get_mut().pure_fn |= var_info.pure_fn;
 
@@ -246,7 +247,6 @@ impl ProgramData {
         if is_modify && ctx.is_exact_reassignment {
             if is_first {
                 e.assign_count += 1;
-                e.reassigned_with_assignment = true;
             }
 
             if ctx.is_op_assign {
@@ -301,6 +301,10 @@ impl VarDataLike for VarUsageInfo {
 
     fn mark_used_as_arg(&mut self) {
         self.used_as_arg = true
+    }
+
+    fn mark_indexed_with_dynamic_key(&mut self) {
+        self.indexed_with_dynamic_key = true;
     }
 
     fn add_accessed_property(&mut self, name: swc_atoms::JsWord) {

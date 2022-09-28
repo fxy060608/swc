@@ -472,8 +472,8 @@
                 return _react.useEffect(function() {
                     if (hasIntersectionObserver) {
                         if (unobserve.current && (unobserve.current(), unobserve.current = void 0), !isDisabled && !visible) {
-                            var element1, callback, ref, id, observer, elements;
-                            return element && element.tagName && (unobserve.current = (element1 = element, callback = function(isVisible) {
+                            var callback, ref, id, observer, elements;
+                            return element && element.tagName && (unobserve.current = (callback = function(isVisible) {
                                 return isVisible && setVisible(isVisible);
                             }, id = (ref = function(options) {
                                 var instance, id = {
@@ -483,22 +483,22 @@
                                     return obj.root === id.root && obj.margin === id.margin;
                                 });
                                 if (existing && (instance = observers.get(existing))) return instance;
-                                var elements = new Map();
+                                var elements = new Map(), observer = new IntersectionObserver(function(entries) {
+                                    entries.forEach(function(entry) {
+                                        var callback = elements.get(entry.target), isVisible = entry.isIntersecting || entry.intersectionRatio > 0;
+                                        callback && isVisible && callback(isVisible);
+                                    });
+                                }, options);
                                 return instance = {
                                     id: id,
-                                    observer: new IntersectionObserver(function(entries) {
-                                        entries.forEach(function(entry) {
-                                            var callback = elements.get(entry.target), isVisible = entry.isIntersecting || entry.intersectionRatio > 0;
-                                            callback && isVisible && callback(isVisible);
-                                        });
-                                    }, options),
+                                    observer: observer,
                                     elements: elements
                                 }, idList.push(id), observers.set(id, instance), instance;
                             }({
                                 root: null == rootRef ? void 0 : rootRef.current,
                                 rootMargin: rootMargin
-                            })).id, observer = ref.observer, (elements = ref.elements).set(element1, callback), observer.observe(element1), function() {
-                                if (elements.delete(element1), observer.unobserve(element1), 0 === elements.size) {
+                            })).id, observer = ref.observer, (elements = ref.elements).set(element, callback), observer.observe(element), function() {
+                                if (elements.delete(element), observer.unobserve(element), 0 === elements.size) {
                                     observer.disconnect(), observers.delete(id);
                                     var index = idList.findIndex(function(obj) {
                                         return obj.root === id.root && obj.margin === id.margin;
