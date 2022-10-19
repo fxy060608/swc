@@ -54,7 +54,10 @@
                     if (node == targetNode && off == targetOff) return !0;
                     if (off == (dir < 0 ? 0 : nodeSize(node))) {
                         var parent = node.parentNode;
-                        if (1 != parent.nodeType || hasBlockDesc(node) || atomElements.test(node.nodeName) || "false" == node.contentEditable) return !1;
+                        if (1 != parent.nodeType || function(dom) {
+                            for(var desc, cur = dom; cur && !(desc = cur.pmViewDesc); cur = cur.parentNode);
+                            return desc && desc.node && desc.node.isBlock && (desc.dom == dom || desc.contentDOM == dom);
+                        }(node) || atomElements.test(node.nodeName) || "false" == node.contentEditable) return !1;
                         off = domIndex(node) + (dir < 0 ? 0 : 1), node = parent;
                     } else {
                         if (1 != node.nodeType || "false" == (node = node.childNodes[off + (dir < 0 ? -1 : 0)]).contentEditable) return !1;
@@ -65,10 +68,6 @@
             function nodeSize(node) {
                 return 3 == node.nodeType ? node.nodeValue.length : node.childNodes.length;
             }
-            function hasBlockDesc(dom) {
-                for(var desc, cur = dom; cur && !(desc = cur.pmViewDesc); cur = cur.parentNode);
-                return desc && desc.node && desc.node.isBlock && (desc.dom == dom || desc.contentDOM == dom);
-            }
             var selectionCollapsed = function(domSel) {
                 var collapsed = domSel.isCollapsed;
                 return collapsed && result.chrome && domSel.rangeCount && !domSel.getRangeAt(0).collapsed && (collapsed = !1), collapsed;
@@ -77,29 +76,25 @@
                 var event = document.createEvent("Event");
                 return event.initEvent("keydown", !0, !0), event.keyCode = keyCode, event.key = event.code = key, event;
             }
-            function windowRect(doc) {
-                return {
-                    left: 0,
-                    right: doc.documentElement.clientWidth,
-                    top: 0,
-                    bottom: doc.documentElement.clientHeight
-                };
-            }
             function getSide(value, side) {
                 return "number" == typeof value ? value : value[side];
             }
-            function clientRect(node) {
-                var rect = node.getBoundingClientRect(), scaleX = rect.width / node.offsetWidth || 1, scaleY = rect.height / node.offsetHeight || 1;
-                return {
-                    left: rect.left,
-                    right: rect.left + node.clientWidth * scaleX,
-                    top: rect.top,
-                    bottom: rect.top + node.clientHeight * scaleY
-                };
-            }
             function scrollRectIntoView(view, rect, startDOM) {
                 for(var scrollThreshold = view.someProp("scrollThreshold") || 0, scrollMargin = view.someProp("scrollMargin") || 5, doc = view.dom.ownerDocument, parent = startDOM || view.dom; parent; parent = parentNode(parent))if (1 == parent.nodeType) {
-                    var atTop = parent == doc.body || 1 != parent.nodeType, bounding = atTop ? windowRect(doc) : clientRect(parent), moveX = 0, moveY = 0;
+                    var atTop = parent == doc.body || 1 != parent.nodeType, bounding = atTop ? {
+                        left: 0,
+                        right: doc.documentElement.clientWidth,
+                        top: 0,
+                        bottom: doc.documentElement.clientHeight
+                    } : function(node) {
+                        var rect = node.getBoundingClientRect(), scaleX = rect.width / node.offsetWidth || 1, scaleY = rect.height / node.offsetHeight || 1;
+                        return {
+                            left: rect.left,
+                            right: rect.left + node.clientWidth * scaleX,
+                            top: rect.top,
+                            bottom: rect.top + node.clientHeight * scaleY
+                        };
+                    }(parent), moveX = 0, moveY = 0;
                     if (rect.top < bounding.top + getSide(scrollThreshold, "top") ? moveY = -(bounding.top - rect.top + getSide(scrollMargin, "top")) : rect.bottom > bounding.bottom - getSide(scrollThreshold, "bottom") && (moveY = rect.bottom - bounding.bottom + getSide(scrollMargin, "bottom")), rect.left < bounding.left + getSide(scrollThreshold, "left") ? moveX = -(bounding.left - rect.left + getSide(scrollMargin, "left")) : rect.right > bounding.right - getSide(scrollThreshold, "right") && (moveX = rect.right - bounding.right + getSide(scrollMargin, "right")), moveX || moveY) {
                         if (atTop) doc.defaultView.scrollBy(moveX, moveY);
                         else {
@@ -874,21 +869,20 @@
                         var parent = void 0;
                         prev && prev.nodeName == deco.nodeName && curDOM != outerDOM && (parent = curDOM.parentNode) && parent.tagName.toLowerCase() == deco.nodeName || ((parent = document.createElement(deco.nodeName)).pmIsDeco = !0, parent.appendChild(curDOM), prev = noDeco[0]), curDOM = parent;
                     }
-                    patchAttributes(curDOM, prev || noDeco[0], deco);
+                    !function(dom, prev, cur) {
+                        for(var name in prev)"class" == name || "style" == name || "nodeName" == name || name in cur || dom.removeAttribute(name);
+                        for(var name$1 in cur)"class" != name$1 && "style" != name$1 && "nodeName" != name$1 && cur[name$1] != prev[name$1] && dom.setAttribute(name$1, cur[name$1]);
+                        if (prev.class != cur.class) {
+                            for(var prevList = prev.class ? prev.class.split(" ").filter(Boolean) : nothing, curList = cur.class ? cur.class.split(" ").filter(Boolean) : nothing, i = 0; i < prevList.length; i++)-1 == curList.indexOf(prevList[i]) && dom.classList.remove(prevList[i]);
+                            for(var i$1 = 0; i$1 < curList.length; i$1++)-1 == prevList.indexOf(curList[i$1]) && dom.classList.add(curList[i$1]);
+                        }
+                        if (prev.style != cur.style) {
+                            if (prev.style) for(var m, prop = /\s*([\w\-\xa1-\uffff]+)\s*:(?:"(?:\\.|[^"])*"|'(?:\\.|[^'])*'|\(.*?\)|[^;])*/g; m = prop.exec(prev.style);)dom.style.removeProperty(m[1]);
+                            cur.style && (dom.style.cssText += cur.style);
+                        }
+                    }(curDOM, prev || noDeco[0], deco);
                 }
                 return curDOM;
-            }
-            function patchAttributes(dom, prev, cur) {
-                for(var name in prev)"class" == name || "style" == name || "nodeName" == name || name in cur || dom.removeAttribute(name);
-                for(var name$1 in cur)"class" != name$1 && "style" != name$1 && "nodeName" != name$1 && cur[name$1] != prev[name$1] && dom.setAttribute(name$1, cur[name$1]);
-                if (prev.class != cur.class) {
-                    for(var prevList = prev.class ? prev.class.split(" ").filter(Boolean) : nothing, curList = cur.class ? cur.class.split(" ").filter(Boolean) : nothing, i = 0; i < prevList.length; i++)-1 == curList.indexOf(prevList[i]) && dom.classList.remove(prevList[i]);
-                    for(var i$1 = 0; i$1 < curList.length; i$1++)-1 == prevList.indexOf(curList[i$1]) && dom.classList.add(curList[i$1]);
-                }
-                if (prev.style != cur.style) {
-                    if (prev.style) for(var m, prop = /\s*([\w\-\xa1-\uffff]+)\s*:(?:"(?:\\.|[^"])*"|'(?:\\.|[^'])*'|\(.*?\)|[^;])*/g; m = prop.exec(prev.style);)dom.style.removeProperty(m[1]);
-                    cur.style && (dom.style.cssText += cur.style);
-                }
             }
             function applyOuterDeco(dom, deco, node) {
                 return patchOuterDeco(dom, dom, noDeco, computeOuterDeco(deco, node, 1 != dom.nodeType));
@@ -969,7 +963,7 @@
                     }
                     if (view.domObserver.disconnectSelection(), view.cursorWrapper) domSel = (view1 = view).root.getSelection(), range = document.createRange(), (img = "IMG" == (node = view1.cursorWrapper.dom).nodeName) ? range.setEnd(node.parentNode, domIndex(node) + 1) : range.setEnd(node, 0), range.collapse(!1), domSel.removeAllRanges(), domSel.addRange(range), !img && !view1.state.selection.visible && result.ie && result.ie_version <= 11 && (node.disabled = !0, node.disabled = !1);
                     else {
-                        var view1, domSel, range, node, img, resetEditableFrom, resetEditableTo, view2, doc, domSel1, node1, offset, anchor = sel.anchor, head = sel.head;
+                        var view1, domSel, range, node, img, view2, doc, domSel1, node1, offset, resetEditableFrom, resetEditableTo, anchor = sel.anchor, head = sel.head;
                         !brokenSelectBetweenUneditable || sel instanceof prosemirror_state__WEBPACK_IMPORTED_MODULE_0__.TextSelection || (sel.$from.parent.inlineContent || (resetEditableFrom = temporarilyEditableNear(view, sel.from)), sel.empty || sel.$from.parent.inlineContent || (resetEditableTo = temporarilyEditableNear(view, sel.to))), view.docView.setSelection(anchor, head, view.root, force), brokenSelectBetweenUneditable && (resetEditableFrom && resetEditable(resetEditableFrom), resetEditableTo && resetEditable(resetEditableTo)), sel.visible ? view.dom.classList.remove("ProseMirror-hideselection") : (view.dom.classList.add("ProseMirror-hideselection"), "onselectionchange" in document && ((doc = (view2 = view).dom.ownerDocument).removeEventListener("selectionchange", view2.hideSelectionGuard), node1 = (domSel1 = view2.root.getSelection()).anchorNode, offset = domSel1.anchorOffset, doc.addEventListener("selectionchange", view2.hideSelectionGuard = function() {
                             (domSel1.anchorNode != node1 || domSel1.anchorOffset != offset) && (doc.removeEventListener("selectionchange", view2.hideSelectionGuard), setTimeout(function() {
                                 (!editorOwnsSelection(view2) || view2.state.selection.visible) && view2.dom.classList.remove("ProseMirror-hideselection");
@@ -1148,7 +1142,7 @@
                     } else if (isBlockNode(node)) break;
                     else {
                         for(var prev = node.previousSibling; prev && isIgnorable(prev);)moveNode = node.parentNode, moveOffset = domIndex(prev), prev = prev.previousSibling;
-                        if (prev) node = prev, offset = nodeLen(node);
+                        if (prev) offset = nodeLen(node = prev);
                         else {
                             if ((node = node.parentNode) == view.dom) break;
                             offset = 0;
@@ -1167,7 +1161,7 @@
                     } else if (isBlockNode(node)) break;
                     else {
                         for(var next = node.nextSibling; next && isIgnorable(next);)moveNode = next.parentNode, moveOffset = domIndex(next) + 1, next = next.nextSibling;
-                        if (next) node = next, offset = 0, len = nodeLen(node);
+                        if (next) offset = 0, len = nodeLen(node = next);
                         else {
                             if ((node = node.parentNode) == view.dom) break;
                             offset = len = 0;
@@ -1533,10 +1527,10 @@
                         var ref = mut.addedNodes[i$1], previousSibling = ref.previousSibling, nextSibling = ref.nextSibling;
                         (!previousSibling || 0 > Array.prototype.indexOf.call(mut.addedNodes, previousSibling)) && (prev = previousSibling), (!nextSibling || 0 > Array.prototype.indexOf.call(mut.addedNodes, nextSibling)) && (next = nextSibling);
                     }
-                    var fromOffset = prev && prev.parentNode == mut.target ? domIndex(prev) + 1 : 0, from = desc.localPosFromDOM(mut.target, fromOffset, -1), toOffset = next && next.parentNode == mut.target ? domIndex(next) : mut.target.childNodes.length, to = desc.localPosFromDOM(mut.target, toOffset, 1);
+                    var fromOffset = prev && prev.parentNode == mut.target ? domIndex(prev) + 1 : 0, from = desc.localPosFromDOM(mut.target, fromOffset, -1), toOffset = next && next.parentNode == mut.target ? domIndex(next) : mut.target.childNodes.length;
                     return {
                         from: from,
-                        to: to
+                        to: desc.localPosFromDOM(mut.target, toOffset, 1)
                     };
                 }
                 return "attributes" == mut.type ? {
@@ -2001,17 +1995,16 @@
                         } else mustRebuild = !0;
                     }
                     if (mustRebuild) {
-                        var decorations = function(children, oldChildren, decorations, mapping, offset, oldOffset, options) {
-                            function gather(set, oldOffset) {
+                        var built = buildTree(function(children, oldChildren, decorations, mapping, offset, oldOffset, options) {
+                            for(var i = 0; i < children.length; i += 3)-1 == children[i + 1] && function gather(set, oldOffset) {
                                 for(var i = 0; i < set.local.length; i++){
                                     var mapped = set.local[i].map(mapping, offset, oldOffset);
                                     mapped ? decorations.push(mapped) : options.onRemove && options.onRemove(set.local[i].spec);
                                 }
                                 for(var i$1 = 0; i$1 < set.children.length; i$1 += 3)gather(set.children[i$1 + 2], set.children[i$1] + oldOffset + 1);
-                            }
-                            for(var i = 0; i < children.length; i += 3)-1 == children[i + 1] && gather(children[i + 2], oldChildren[i] + oldOffset + 1);
+                            }(children[i + 2], oldChildren[i] + oldOffset + 1);
                             return decorations;
-                        }(children, oldChildren, newLocal || [], mapping, offset, oldOffset, options), built = buildTree(decorations, node, 0, options);
+                        }(children, oldChildren, newLocal || [], mapping, offset, oldOffset, options), node, 0, options);
                         newLocal = built.local;
                         for(var i$2 = 0; i$2 < children.length; i$2 += 3)children[i$2 + 1] < 0 && (children.splice(i$2, 3), i$2 -= 3);
                         for(var i$3 = 0, j = 0; i$3 < built.children.length; i$3 += 3){
@@ -2544,14 +2537,14 @@
                 return cached || document;
             }, EditorView.prototype.posAtCoords = function(coords) {
                 return function(view, coords) {
-                    var assign, assign$1, node, offset, doc = view.dom.ownerDocument;
+                    var node, offset, doc = view.dom.ownerDocument;
                     if (doc.caretPositionFromPoint) try {
                         var pos$1 = doc.caretPositionFromPoint(coords.left, coords.top);
-                        pos$1 && (node = (assign = pos$1).offsetNode, offset = assign.offset);
+                        pos$1 && (node = pos$1.offsetNode, offset = pos$1.offset);
                     } catch (_) {}
                     if (!node && doc.caretRangeFromPoint) {
                         var range = doc.caretRangeFromPoint(coords.left, coords.top);
-                        range && (node = (assign$1 = range).startContainer, offset = assign$1.startOffset);
+                        range && (node = range.startContainer, offset = range.startOffset);
                     }
                     var pos, elt = (view.root.elementFromPoint ? view.root : doc).elementFromPoint(coords.left, coords.top + 1);
                     if (!elt || !view.dom.contains(1 != elt.nodeType ? elt.parentNode : elt)) {
@@ -2570,9 +2563,9 @@
                         }(view.dom, coords, box))) return null;
                     }
                     if (result.safari) for(var p = elt; node && p; p = parentNode(p))p.draggable && (node = offset = null);
-                    if (dom = elt, coords1 = coords, elt = (parent = dom.parentNode) && /^li$/i.test(parent.nodeName) && coords1.left < dom.getBoundingClientRect().left ? parent : dom, node) {
+                    if (elt = (parent = (dom = elt).parentNode) && /^li$/i.test(parent.nodeName) && coords.left < dom.getBoundingClientRect().left ? parent : dom, node) {
                         if (result.gecko && 1 == node.nodeType && (offset = Math.min(offset, node.childNodes.length)) < node.childNodes.length) {
-                            var dom, coords1, parent, box$1, next = node.childNodes[offset];
+                            var dom, parent, box$1, next = node.childNodes[offset];
                             "IMG" == next.nodeName && (box$1 = next.getBoundingClientRect()).right <= coords.left && box$1.bottom > coords.top && offset++;
                         }
                         node == view.dom && offset == node.childNodes.length - 1 && 1 == node.lastChild.nodeType && coords.top > node.lastChild.getBoundingClientRect().bottom ? pos = view.state.doc.content.size : (0 == offset || 1 != node.nodeType || "BR" != node.childNodes[offset - 1].nodeName) && (pos = function(view, node, offset, coords) {
@@ -2659,7 +2652,7 @@
                 return pos;
             }, EditorView.prototype.endOfTextblock = function(dir, state) {
                 var view, state1, sel, $pos;
-                return view = this, state1 = state || this.state, cachedState == state1 && cachedDir == dir ? cachedResult : (cachedState = state1, cachedDir = dir, cachedResult = "up" == dir || "down" == dir ? (sel = state1.selection, $pos = "up" == dir ? sel.$from : sel.$to, withFlushedState(view, state1, function() {
+                return view = this, cachedState == (state1 = state || this.state) && cachedDir == dir ? cachedResult : (cachedState = state1, cachedDir = dir, cachedResult = "up" == dir || "down" == dir ? (sel = state1.selection, $pos = "up" == dir ? sel.$from : sel.$to, withFlushedState(view, state1, function() {
                     for(var dom = view.docView.domFromPos($pos.pos, "up" == dir ? -1 : 1).node;;){
                         var nearest = view.docView.nearestDesc(dom, !0);
                         if (!nearest) break;

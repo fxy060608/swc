@@ -61,7 +61,7 @@
     var didWarnStateUpdateForUnmountedComponent = {};
     function warnNoop(publicInstance, callerName) {
         var _constructor = publicInstance.constructor, componentName = _constructor && (_constructor.displayName || _constructor.name) || "ReactClass", warningKey = componentName + "." + callerName;
-        didWarnStateUpdateForUnmountedComponent[warningKey] || (error("Can't call %s on a component that is not yet mounted. This is a no-op, but it might indicate a bug in your application. Instead, assign to `this.state` directly or define a `state = {};` class property with the desired state in the %s component.", callerName, componentName), didWarnStateUpdateForUnmountedComponent[warningKey] = !0);
+        !didWarnStateUpdateForUnmountedComponent[warningKey] && (error("Can't call %s on a component that is not yet mounted. This is a no-op, but it might indicate a bug in your application. Instead, assign to `this.state` directly or define a `state = {};` class property with the desired state in the %s component.", callerName, componentName), didWarnStateUpdateForUnmountedComponent[warningKey] = !0);
     }
     var ReactNoopUpdateQueue = {
         isMounted: function(publicInstance) {
@@ -217,14 +217,14 @@
             for(propName in defaultProps)void 0 === props[propName] && (props[propName] = defaultProps[propName]);
         }
         if (key || ref) {
-            var props1, displayName, warnAboutAccessingKey, props2, displayName1, warnAboutAccessingRef, displayName2 = "function" == typeof type ? type.displayName || type.name || "Unknown" : type;
+            var warnAboutAccessingKey, warnAboutAccessingRef, displayName = "function" == typeof type ? type.displayName || type.name || "Unknown" : type;
             key && ((warnAboutAccessingKey = function() {
-                specialPropKeyWarningShown || (specialPropKeyWarningShown = !0, error("%s: `key` is not a prop. Trying to access it will result in `undefined` being returned. If you need to access the same value within the child component, you should pass it as a different prop. (https://reactjs.org/link/special-props)", displayName2));
+                specialPropKeyWarningShown || (specialPropKeyWarningShown = !0, error("%s: `key` is not a prop. Trying to access it will result in `undefined` being returned. If you need to access the same value within the child component, you should pass it as a different prop. (https://reactjs.org/link/special-props)", displayName));
             }).isReactWarning = !0, Object.defineProperty(props, "key", {
                 get: warnAboutAccessingKey,
                 configurable: !0
             })), ref && ((warnAboutAccessingRef = function() {
-                specialPropRefWarningShown || (specialPropRefWarningShown = !0, error("%s: `ref` is not a prop. Trying to access it will result in `undefined` being returned. If you need to access the same value within the child component, you should pass it as a different prop. (https://reactjs.org/link/special-props)", displayName2));
+                specialPropRefWarningShown || (specialPropRefWarningShown = !0, error("%s: `ref` is not a prop. Trying to access it will result in `undefined` being returned. If you need to access the same value within the child component, you should pass it as a different prop. (https://reactjs.org/link/special-props)", displayName));
             }).isReactWarning = !0, Object.defineProperty(props, "ref", {
                 get: warnAboutAccessingRef,
                 configurable: !0
@@ -480,7 +480,7 @@
             case REACT_BLOCK_TYPE:
                 return describeNativeComponentFrame(type._render, !1);
             case REACT_LAZY_TYPE:
-                var Component, prototype, fn, fn1, payload = type._payload, init = type._init;
+                var prototype, payload = type._payload, init = type._init;
                 try {
                     return describeUnknownElementTypeFrameInDEV(init(payload), source, ownerFn);
                 } catch (x) {}
@@ -497,7 +497,7 @@
     }
     function setCurrentlyValidatingElement$1(element) {
         if (element) {
-            var stack, owner = element._owner;
+            var owner = element._owner;
             currentExtraStackFrame = describeUnknownElementTypeFrameInDEV(element.type, element._source, owner ? owner.type : null);
         } else currentExtraStackFrame = null;
     }
@@ -567,20 +567,22 @@
                         !error$1 || error$1 instanceof Error || (setCurrentlyValidatingElement(element), error("%s: type specification of %s `%s` is invalid; the type checker function must return `null` or an `Error` but returned a %s. You may have forgotten to pass an argument to the type checker creator (arrayOf, instanceOf, objectOf, oneOf, oneOfType, and shape all require an argument).", componentName || "React class", location, typeSpecName, typeof error$1), setCurrentlyValidatingElement(null)), error$1 instanceof Error && !(error$1.message in loggedTypeFailures) && (loggedTypeFailures[error$1.message] = !0, setCurrentlyValidatingElement(element), error("Failed %s type: %s", location, error$1.message), setCurrentlyValidatingElement(null));
                     }
                 }(propTypes, element.props, "prop", name, element);
-            } else if (void 0 !== type.PropTypes && !propTypesMisspellWarningShown) {
-                propTypesMisspellWarningShown = !0;
-                var _name = getComponentName(type);
-                error("Component %s declared `PropTypes` instead of `propTypes`. Did you misspell the property assignment?", _name || "Unknown");
-            }
+            } else void 0 === type.PropTypes || propTypesMisspellWarningShown || (propTypesMisspellWarningShown = !0, error("Component %s declared `PropTypes` instead of `propTypes`. Did you misspell the property assignment?", getComponentName(type) || "Unknown"));
             "function" != typeof type.getDefaultProps || type.getDefaultProps.isReactClassApproved || error("getDefaultProps is only used on classic React.createClass definitions. Use a static property named `defaultProps` instead.");
         }
     }
     function createElementWithValidation(type, props, children) {
         var validType = isValidElementType(type);
         if (!validType) {
-            var typeString, source, info = "";
+            var typeString, info = "";
             (void 0 === type || "object" == typeof type && null !== type && 0 === Object.keys(type).length) && (info += " You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.");
-            var sourceInfo = null != props && void 0 !== (source = props.__source) ? "\n\nCheck your code at " + source.fileName.replace(/^.*[\\\/]/, "") + ":" + source.lineNumber + "." : "";
+            var sourceInfo = function(elementProps) {
+                if (null != elementProps) {
+                    var source;
+                    return void 0 !== (source = elementProps.__source) ? "\n\nCheck your code at " + source.fileName.replace(/^.*[\\\/]/, "") + ":" + source.lineNumber + "." : "";
+                }
+                return "";
+            }(props);
             sourceInfo ? info += sourceInfo : info += getDeclarationErrorAddendum(), null === type ? typeString = "null" : Array.isArray(type) ? typeString = "array" : void 0 !== type && type.$$typeof === REACT_ELEMENT_TYPE ? (typeString = "<" + (getComponentName(type.type) || "Unknown") + " />", info = " Did you accidentally export a JSX literal instead of a component?") : typeString = typeof type, error("React.createElement: type is invalid -- expected a string (for built-in components) or a class/function (for composite components) but got: %s.%s", typeString, info);
         }
         var element = createElement.apply(this, arguments);

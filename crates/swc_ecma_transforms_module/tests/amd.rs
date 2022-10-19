@@ -57,13 +57,17 @@ fn esm_to_amd(input: PathBuf) {
         &|t| tr(config.clone(), is_ts, t.comments.clone()),
         &input,
         &output,
+        Default::default(),
     );
 }
 
 test!(
     syntax(),
     |t| chain!(
-        for_of(for_of::Config { assume_array: true }),
+        for_of(for_of::Config {
+            assume_array: true,
+            ..Default::default()
+        }),
         tr(Default::default(), false, t.comments.clone())
     ),
     for_of_as_array_for_of_import_amd,

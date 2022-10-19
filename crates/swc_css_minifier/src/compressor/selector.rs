@@ -1,10 +1,9 @@
-use std::mem::take;
-
 use swc_atoms::js_word;
-use swc_common::{EqIgnoreSpan, DUMMY_SP};
+use swc_common::DUMMY_SP;
 use swc_css_ast::*;
 
 use super::Compressor;
+use crate::util::dedup;
 
 impl Compressor {
     pub(super) fn comrpess_selector_list(&mut self, selector_list: &mut SelectorList) {
@@ -43,7 +42,7 @@ impl Compressor {
             }) if *a == 2 && (*b == 1 || b % 2 == -1) => {
                 *an_plus_b = AnPlusB::Ident(Ident {
                     span: *span,
-                    value: "odd".into(),
+                    value: js_word!("odd"),
                     raw: None,
                 });
             }
@@ -57,7 +56,7 @@ impl Compressor {
                 *an_plus_b = AnPlusB::AnPlusBNotation(AnPlusBNotation {
                     span: *span,
                     a: Some(2),
-                    a_raw: Some("2".into()),
+                    a_raw: None,
                     b: None,
                     b_raw: None,
                 });
@@ -69,7 +68,7 @@ impl Compressor {
                 *an_plus_b = AnPlusB::AnPlusBNotation(AnPlusBNotation {
                     span: *span,
                     a: Some(2),
-                    a_raw: Some("2".into()),
+                    a_raw: None,
                     b: None,
                     b_raw: None,
                 });
@@ -78,7 +77,6 @@ impl Compressor {
             AnPlusB::AnPlusBNotation(AnPlusBNotation {
                 a: Some(a),
                 b,
-                b_raw,
                 span,
                 ..
             }) if *a == 0 => {
@@ -87,13 +85,12 @@ impl Compressor {
                     a: None,
                     a_raw: None,
                     b: *b,
-                    b_raw: b_raw.clone(),
+                    b_raw: None,
                 });
             }
             // `-5n+0` => `-5n`, etc
             AnPlusB::AnPlusBNotation(AnPlusBNotation {
                 a,
-                a_raw,
                 b: Some(b),
                 span,
                 ..
@@ -101,7 +98,7 @@ impl Compressor {
                 *an_plus_b = AnPlusB::AnPlusBNotation(AnPlusBNotation {
                     span: *span,
                     a: *a,
-                    a_raw: a_raw.clone(),
+                    a_raw: None,
                     b: None,
                     b_raw: None,
                 });
@@ -176,7 +173,7 @@ impl Compressor {
                             span: *span,
                             name: Ident {
                                 span: DUMMY_SP,
-                                value: "last-child".into(),
+                                value: js_word!("last-child"),
                                 raw: None,
                             },
                             children: None,
@@ -306,37 +303,4 @@ impl Compressor {
             }));
         }
     }
-}
-
-fn dedup<T>(v: &mut Vec<T>)
-where
-    T: EqIgnoreSpan,
-{
-    let mut remove_list = vec![];
-
-    for (i, i1) in v.iter().enumerate() {
-        for (j, j1) in v.iter().enumerate() {
-            if i < j && i1.eq_ignore_span(j1) {
-                remove_list.push(j);
-            }
-        }
-    }
-    // Fast path. We don't face real duplciate in most cases.
-    if remove_list.is_empty() {
-        return;
-    }
-
-    let new = take(v)
-        .into_iter()
-        .enumerate()
-        .filter_map(|(idx, value)| {
-            if remove_list.contains(&idx) {
-                None
-            } else {
-                Some(value)
-            }
-        })
-        .collect::<Vec<_>>();
-
-    *v = new;
 }

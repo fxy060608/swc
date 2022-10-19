@@ -10,7 +10,7 @@
                     return Global;
                 }
             });
-            var cursor, react = __webpack_require__(7294), StyleSheet = function() {
+            var fn, cache, func, cursor, react = __webpack_require__(7294), StyleSheet = function() {
                 function StyleSheet(options) {
                     var _this = this;
                     this._insertTag = function(tag) {
@@ -43,14 +43,8 @@
                     }), this.tags = [], this.ctr = 0;
                 }, StyleSheet;
             }(), abs = Math.abs, Utility_from = String.fromCharCode;
-            function trim(value) {
-                return value.trim();
-            }
             function replace(value, pattern, replacement) {
                 return value.replace(pattern, replacement);
-            }
-            function indexof(value, search) {
-                return value.indexOf(search);
             }
             function Utility_charat(value, index) {
                 return 0 | value.charCodeAt(index);
@@ -59,9 +53,6 @@
                 return value.slice(begin, end);
             }
             function Utility_strlen(value) {
-                return value.length;
-            }
-            function Utility_sizeof(value) {
                 return value.length;
             }
             function Utility_append(value, array) {
@@ -85,17 +76,11 @@
             function copy(value, root, type) {
                 return node(value, root.root, root.parent, type, root.props, root.children, 0);
             }
-            function prev() {
-                return character = position > 0 ? Utility_charat(characters, --position) : 0, column--, 10 === character && (column = 1, line--), character;
-            }
             function next() {
                 return character = position < Tokenizer_length ? Utility_charat(characters, position++) : 0, column++, 10 === character && (column = 1, line++), character;
             }
             function peek() {
                 return Utility_charat(characters, position);
-            }
-            function slice(begin, end) {
-                return Utility_substr(characters, begin, end);
             }
             function token(type) {
                 switch(type){
@@ -132,11 +117,9 @@
             function alloc(value) {
                 return line = column = 1, Tokenizer_length = Utility_strlen(characters = value), position = 0, [];
             }
-            function dealloc(value) {
-                return characters = "", value;
-            }
             function delimit(type) {
-                return trim(slice(position - 1, function delimiter(type) {
+                var begin, end;
+                return (begin = position - 1, end = function delimiter(type) {
                     for(; next();)switch(character){
                         case type:
                             return position;
@@ -150,29 +133,11 @@
                             next();
                     }
                     return position;
-                }(91 === type ? type + 2 : 40 === type ? type + 1 : type)));
-            }
-            function whitespace(type) {
-                for(; character = peek();)if (character < 33) next();
-                else break;
-                return token(type) > 2 || token(character) > 3 ? "" : " ";
-            }
-            function escaping(index, count) {
-                for(; --count && next() && !(character < 48) && !(character > 102) && (!(character > 57) || !(character < 65)) && (!(character > 70) || !(character < 97)););
-                return slice(index, position + (count < 6 && 32 == peek() && 32 == next()));
-            }
-            function commenter(type, index) {
-                for(; next();)if (type + character === 57) break;
-                else if (type + character === 84 && 47 === peek()) break;
-                return "/*" + slice(index, position - 1) + "*" + Utility_from(47 === type ? type : next());
-            }
-            function identifier(index) {
-                for(; !token(peek());)next();
-                return slice(index, position);
+                }(91 === type ? type + 2 : 40 === type ? type + 1 : type), Utility_substr(characters, begin, end)).trim();
             }
             var MS = "-ms-", MOZ = "-moz-", WEBKIT = "-webkit-", COMMENT = "comm", Enum_RULESET = "rule", DECLARATION = "decl";
             function serialize(children, callback) {
-                for(var output = "", length = Utility_sizeof(children), i = 0; i < length; i++)output += callback(children[i], i, children, callback) || "";
+                for(var output = "", length = children.length, i = 0; i < length; i++)output += callback(children[i], i, children, callback) || "";
                 return output;
             }
             function stringify(element, index, children, callback) {
@@ -190,18 +155,15 @@
             function ruleset(value, root, parent, index, offset, rules, points, type, props, children, length) {
                 for(var post = offset - 1, rule = 0 === offset ? rules : [
                     ""
-                ], size = Utility_sizeof(rule), i = 0, j = 0, k = 0; i < index; ++i)for(var x = 0, y = Utility_substr(value, post + 1, post = abs(j = points[i])), z = value; x < size; ++x)(z = trim(j > 0 ? rule[x] + " " + y : replace(y, /&\f/g, rule[x]))) && (props[k++] = z);
+                ], size = rule.length, i = 0, j = 0, k = 0; i < index; ++i)for(var x = 0, y = Utility_substr(value, post + 1, post = abs(j = points[i])), z = value; x < size; ++x)(z = (j > 0 ? rule[x] + " " + y : replace(y, /&\f/g, rule[x])).trim()) && (props[k++] = z);
                 return node(value, root, parent, 0 === offset ? Enum_RULESET : type, props, children, length);
-            }
-            function comment(value, root, parent) {
-                return node(value, root, parent, COMMENT, Utility_from(character), Utility_substr(value, 2, -2), 0);
             }
             function declaration(value, root, parent, length) {
                 return node(value, root, parent, DECLARATION, Utility_substr(value, 0, length), Utility_substr(value, length + 1, -1), length);
             }
-            var fn, cache, identifierWithPointTracking = function(begin, points, index) {
+            var identifierWithPointTracking = function(begin, points, index) {
                 for(var previous = 0, character = 0; previous = character, character = peek(), 38 === previous && 12 === character && (points[index] = 1), !token(character);)next();
-                return slice(begin, position);
+                return Utility_substr(characters, begin, position);
             }, toRules = function(parsed, points) {
                 var index = -1, character = 44;
                 do switch(token(character)){
@@ -221,12 +183,15 @@
                 }
                 while (character = next())
                 return parsed;
+            }, getRules = function(value, points) {
+                var value1;
+                return value1 = toRules(alloc(value), points), characters = "", value1;
             }, fixedElements = new WeakMap(), compat = function(element) {
                 if ("rule" === element.type && element.parent && element.length) {
                     for(var value = element.value, parent = element.parent, isImplicitRule = element.column === parent.column && element.line === parent.line; "rule" !== parent.type;)if (!(parent = parent.parent)) return;
                     if ((1 !== element.props.length || 58 === value.charCodeAt(0) || fixedElements.get(parent)) && !isImplicitRule) {
                         fixedElements.set(element, !0);
-                        for(var points = [], rules = dealloc(toRules(alloc(value), points)), parentRules = parent.props, i = 0, k = 0; i < rules.length; i++)for(var j = 0; j < parentRules.length; j++, k++)element.props[k] = points[i] ? rules[i].replace(/&\f/g, parentRules[j]) : parentRules[j] + " " + rules[i];
+                        for(var points = [], rules = getRules(value, points), parentRules = parent.props, i = 0, k = 0; i < rules.length; i++)for(var j = 0; j < parentRules.length; j++, k++)element.props[k] = points[i] ? rules[i].replace(/&\f/g, parentRules[j]) : parentRules[j] + " " + rules[i];
                     }
                 }
             }, removeLabel = function(element) {
@@ -323,13 +288,13 @@
                                             case 102:
                                                 return replace(value, /(.+:)(.+)-([^]+)/, "$1" + WEBKIT + "$2-$3$1" + MOZ + (108 == Utility_charat(value, length + 3) ? "$3" : "$2-$3")) + value;
                                             case 115:
-                                                return ~indexof(value, "stretch") ? prefix(replace(value, "stretch", "fill-available"), length) + value : value;
+                                                return ~value.indexOf("stretch") ? prefix(replace(value, "stretch", "fill-available"), length) + value : value;
                                         }
                                         break;
                                     case 4949:
                                         if (115 !== Utility_charat(value, length + 1)) break;
                                     case 6444:
-                                        switch(Utility_charat(value, Utility_strlen(value) - 3 - (~indexof(value, "!important") && 10))){
+                                        switch(Utility_charat(value, Utility_strlen(value) - 3 - (~value.indexOf("!important") && 10))){
                                             case 107:
                                                 return replace(value, ":", ":" + WEBKIT) + value;
                                             case 101:
@@ -525,7 +490,7 @@
             };
             Object.prototype.hasOwnProperty;
             var EmotionCacheContext = (0, react.createContext)("undefined" != typeof HTMLElement ? function(options) {
-                var key = options.key;
+                var collection, length, callback, container, _insert, currentSheet, key = options.key;
                 if ("css" === key) {
                     var ssrStyles = document.querySelectorAll("style[data-emotion]:not([data-s])");
                     Array.prototype.forEach.call(ssrStyles, function(node) {
@@ -537,65 +502,76 @@
                     for(var attrib = node.getAttribute("data-emotion").split(" "), i = 1; i < attrib.length; i++)inserted[attrib[i]] = !0;
                     nodesToHydrate.push(node);
                 });
-                var callback, container, _insert, currentSheet, collection, length, finalizingPlugins = [
+                var serializer = (length = (collection = [
+                    compat,
+                    removeLabel
+                ].concat(stylisPlugins, [
                     stringify,
                     (callback = function(rule) {
                         currentSheet.insert(rule);
                     }, function(element) {
                         !element.root && (element = element.return) && callback(element);
                     })
-                ], serializer = (collection = [
-                    compat,
-                    removeLabel
-                ].concat(stylisPlugins, finalizingPlugins), length = Utility_sizeof(collection), function(element, index, children, callback) {
+                ])).length, function(element, index, children, callback) {
                     for(var output = "", i = 0; i < length; i++)output += collection[i](element, index, children, callback) || "";
                     return output;
                 }), stylis = function(styles) {
-                    var value;
-                    return serialize((value = styles, dealloc(function parse(value, root, parent, rule, rules, rulesets, pseudo, points, declarations) {
-                        for(var index = 0, offset = 0, length = pseudo, atrule = 0, property = 0, previous = 0, variable = 1, scanning = 1, ampersand = 1, character = 0, type = "", props = rules, children = rulesets, reference = rule, characters = type; scanning;)switch(previous = character, character = next()){
+                    var value, value1;
+                    return serialize((value1 = function parse(value, root, parent, rule, rules, rulesets, pseudo, points, declarations) {
+                        for(var value1, index = 0, offset = 0, length = pseudo, atrule = 0, property = 0, previous = 0, variable = 1, scanning = 1, ampersand = 1, character1 = 0, type = "", props = rules, children = rulesets, reference = rule, characters1 = type; scanning;)switch(previous = character1, character1 = next()){
                             case 34:
                             case 39:
                             case 91:
                             case 40:
-                                characters += delimit(character);
+                                characters1 += delimit(character1);
                                 break;
                             case 9:
                             case 10:
                             case 13:
                             case 32:
-                                characters += whitespace(previous);
+                                characters1 += function(type) {
+                                    for(; character = peek();)if (character < 33) next();
+                                    else break;
+                                    return token(type) > 2 || token(character) > 3 ? "" : " ";
+                                }(previous);
                                 break;
                             case 92:
-                                characters += escaping(position - 1, 7);
+                                characters1 += function(index, count) {
+                                    for(var end; --count && next() && !(character < 48) && !(character > 102) && (!(character > 57) || !(character < 65)) && (!(character > 70) || !(character < 97)););
+                                    return end = position + (count < 6 && 32 == peek() && 32 == next()), Utility_substr(characters, index, end);
+                                }(position - 1, 7);
                                 continue;
                             case 47:
                                 switch(peek()){
                                     case 42:
                                     case 47:
-                                        Utility_append(comment(commenter(next(), position), root, parent), declarations);
+                                        Utility_append(node(value1 = function(type, index) {
+                                            for(; next();)if (type + character === 57) break;
+                                            else if (type + character === 84 && 47 === peek()) break;
+                                            return "/*" + Utility_substr(characters, index, position - 1) + "*" + Utility_from(47 === type ? type : next());
+                                        }(next(), position), root, parent, COMMENT, Utility_from(character), Utility_substr(value1, 2, -2), 0), declarations);
                                         break;
                                     default:
-                                        characters += "/";
+                                        characters1 += "/";
                                 }
                                 break;
                             case 123 * variable:
-                                points[index++] = Utility_strlen(characters) * ampersand;
+                                points[index++] = Utility_strlen(characters1) * ampersand;
                             case 125 * variable:
                             case 59:
                             case 0:
-                                switch(character){
+                                switch(character1){
                                     case 0:
                                     case 125:
                                         scanning = 0;
                                     case 59 + offset:
-                                        property > 0 && Utility_strlen(characters) - length && Utility_append(property > 32 ? declaration(characters + ";", rule, parent, length - 1) : declaration(replace(characters, " ", "") + ";", rule, parent, length - 2), declarations);
+                                        property > 0 && Utility_strlen(characters1) - length && Utility_append(property > 32 ? declaration(characters1 + ";", rule, parent, length - 1) : declaration(replace(characters1, " ", "") + ";", rule, parent, length - 2), declarations);
                                         break;
                                     case 59:
-                                        characters += ";";
+                                        characters1 += ";";
                                     default:
-                                        if (Utility_append(reference = ruleset(characters, root, parent, index, offset, rules, points, type, props = [], children = [], length), rulesets), 123 === character) {
-                                            if (0 === offset) parse(characters, root, reference, reference, props, rulesets, length, points, children);
+                                        if (Utility_append(reference = ruleset(characters1, root, parent, index, offset, rules, points, type, props = [], children = [], length), rulesets), 123 === character1) {
+                                            if (0 === offset) parse(characters1, root, reference, reference, props, rulesets, length, points, children);
                                             else switch(atrule){
                                                 case 100:
                                                 case 109:
@@ -603,41 +579,44 @@
                                                     parse(value, reference, reference, rule && Utility_append(ruleset(value, reference, reference, 0, 0, rules, points, type, rules, props = [], length), children), rules, children, length, points, rule ? props : children);
                                                     break;
                                                 default:
-                                                    parse(characters, reference, reference, reference, [
+                                                    parse(characters1, reference, reference, reference, [
                                                         ""
                                                     ], children, length, points, children);
                                             }
                                         }
                                 }
-                                index = offset = property = 0, variable = ampersand = 1, type = characters = "", length = pseudo;
+                                index = offset = property = 0, variable = ampersand = 1, type = characters1 = "", length = pseudo;
                                 break;
                             case 58:
-                                length = 1 + Utility_strlen(characters), property = previous;
+                                length = 1 + Utility_strlen(characters1), property = previous;
                             default:
                                 if (variable < 1) {
-                                    if (123 == character) --variable;
-                                    else if (125 == character && 0 == variable++ && 125 == prev()) continue;
+                                    if (123 == character1) --variable;
+                                    else if (125 == character1 && 0 == variable++ && 125 == (character = position > 0 ? Utility_charat(characters, --position) : 0, column--, 10 === character && (column = 1, line--), character)) continue;
                                 }
-                                switch(characters += Utility_from(character), character * variable){
+                                switch(characters1 += Utility_from(character1), character1 * variable){
                                     case 38:
-                                        ampersand = offset > 0 ? 1 : (characters += "\f", -1);
+                                        ampersand = offset > 0 ? 1 : (characters1 += "\f", -1);
                                         break;
                                     case 44:
-                                        points[index++] = (Utility_strlen(characters) - 1) * ampersand, ampersand = 1;
+                                        points[index++] = (Utility_strlen(characters1) - 1) * ampersand, ampersand = 1;
                                         break;
                                     case 64:
-                                        45 === peek() && (characters += delimit(next())), atrule = peek(), offset = Utility_strlen(type = characters += identifier(position)), character++;
+                                        45 === peek() && (characters1 += delimit(next())), atrule = peek(), offset = Utility_strlen(type = characters1 += function(index) {
+                                            for(; !token(peek());)next();
+                                            return Utility_substr(characters, index, position);
+                                        }(position)), character1++;
                                         break;
                                     case 45:
-                                        45 === previous && 2 == Utility_strlen(characters) && (variable = 0);
+                                        45 === previous && 2 == Utility_strlen(characters1) && (variable = 0);
                                 }
                         }
                         return rulesets;
                     }("", null, null, null, [
                         ""
-                    ], value = alloc(value), 0, [
+                    ], value = alloc(value = styles), 0, [
                         0
-                    ], value))), serializer);
+                    ], value), characters = "", value1), serializer);
                 };
                 _insert = function(selector, serialized, sheet, shouldCache) {
                     currentSheet = sheet, stylis(selector ? selector + "{" + serialized.styles + "}" : serialized.styles), shouldCache && (cache.inserted[serialized.name] = !0);
@@ -663,7 +642,7 @@
             EmotionCacheContext.Provider;
             var emotion_element_99289b21_browser_esm_ThemeContext = (0, react.createContext)({});
             __webpack_require__(8679);
-            var func, emotion_utils_browser_esm_insertStyles = function(cache, serialized, isStringTag) {
+            var emotion_utils_browser_esm_insertStyles = function(cache, serialized, isStringTag) {
                 var className = cache.key + "-" + serialized.name;
                 if (!1 === isStringTag && void 0 === cache.registered[className] && (cache.registered[className] = serialized.styles), void 0 === cache.inserted[serialized.name]) {
                     var current = serialized;
@@ -707,8 +686,7 @@
                     serialized.name
                 ]), null;
             }, (0, react.forwardRef)(function(props, ref) {
-                var cache = (0, react.useContext)(EmotionCacheContext);
-                return func(props, cache, ref);
+                return func(props, (0, react.useContext)(EmotionCacheContext), ref);
             }));
         },
         8679: function(module, __unused_webpack_exports, __webpack_require__) {

@@ -1067,12 +1067,30 @@ pub trait ExprExt {
     fn get_type(&self) -> Value<Type> {
         let expr = self.as_expr();
 
-        match *expr {
+        match expr {
             Expr::Assign(AssignExpr {
                 ref right,
                 op: op!("="),
                 ..
             }) => right.get_type(),
+
+            Expr::Member(MemberExpr {
+                obj,
+                prop:
+                    MemberProp::Ident(Ident {
+                        sym: js_word!("length"),
+                        ..
+                    }),
+                ..
+            }) => match &**obj {
+                Expr::Array(ArrayLit { .. })
+                | Expr::Lit(Lit::Str(..))
+                | Expr::Ident(Ident {
+                    sym: js_word!("arguments"),
+                    ..
+                }) => Known(Type::Num),
+                _ => Unknown,
+            },
 
             Expr::Seq(SeqExpr { ref exprs, .. }) => exprs
                 .last()
@@ -1309,7 +1327,7 @@ pub trait ExprExt {
             Expr::Array(ArrayLit { ref elems, .. }) => elems
                 .iter()
                 .filter_map(|e| e.as_ref())
-                .any(|e| e.expr.may_have_side_effects(ctx)),
+                .any(|e| e.spread.is_some() || e.expr.may_have_side_effects(ctx)),
             Expr::Unary(UnaryExpr { ref arg, .. }) => arg.may_have_side_effects(ctx),
             Expr::Bin(BinExpr {
                 ref left,
@@ -2136,26 +2154,22 @@ impl IdentExt for Ident {
 }
 
 /// Finds all **binding** idents of variables.
-pub struct DestructuringFinder<'a, I: IdentLike> {
-    pub found: &'a mut Vec<I>,
+pub struct DestructuringFinder<I: IdentLike> {
+    pub found: Vec<I>,
 }
 
 /// Finds all **binding** idents of `node`.
 pub fn find_pat_ids<T, I: IdentLike>(node: &T) -> Vec<I>
 where
-    T: for<'any> VisitWith<DestructuringFinder<'any, I>>,
+    T: VisitWith<DestructuringFinder<I>>,
 {
-    let mut found = vec![];
+    let mut v = DestructuringFinder { found: Vec::new() };
+    node.visit_with(&mut v);
 
-    {
-        let mut v = DestructuringFinder { found: &mut found };
-        node.visit_with(&mut v);
-    }
-
-    found
+    v.found
 }
 
-impl<'a, I: IdentLike> Visit for DestructuringFinder<'a, I> {
+impl<I: IdentLike> Visit for DestructuringFinder<I> {
     noop_visit_type!();
 
     /// No-op (we don't care about expressions)

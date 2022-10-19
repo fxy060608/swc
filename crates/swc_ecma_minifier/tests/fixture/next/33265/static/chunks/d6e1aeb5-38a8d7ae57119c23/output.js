@@ -5,7 +5,7 @@
     ],
     {
         5215: function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-            for(var browserApi, videojs$1, FakeWeakMap, _supportsPassive, EVENT_MAP, canPlayType, Vhs$1, global_window__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(8908), global_window__WEBPACK_IMPORTED_MODULE_0___default = __webpack_require__.n(global_window__WEBPACK_IMPORTED_MODULE_0__), global_document__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(9144), global_document__WEBPACK_IMPORTED_MODULE_1___default = __webpack_require__.n(global_document__WEBPACK_IMPORTED_MODULE_1__), _babel_runtime_helpers_extends__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(7462), _babel_runtime_helpers_assertThisInitialized__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(7326), _babel_runtime_helpers_inheritsLoose__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(4578), safe_json_parse_tuple__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(5974), safe_json_parse_tuple__WEBPACK_IMPORTED_MODULE_2___default = __webpack_require__.n(safe_json_parse_tuple__WEBPACK_IMPORTED_MODULE_2__), keycode__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(7537), keycode__WEBPACK_IMPORTED_MODULE_3___default = __webpack_require__.n(keycode__WEBPACK_IMPORTED_MODULE_3__), _videojs_xhr__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(9603), _videojs_xhr__WEBPACK_IMPORTED_MODULE_4___default = __webpack_require__.n(_videojs_xhr__WEBPACK_IMPORTED_MODULE_4__), videojs_vtt_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(3407), videojs_vtt_js__WEBPACK_IMPORTED_MODULE_5___default = __webpack_require__.n(videojs_vtt_js__WEBPACK_IMPORTED_MODULE_5__), _babel_runtime_helpers_construct__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(8852), _babel_runtime_helpers_inherits__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(136), _videojs_vhs_utils_es_resolve_url_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(779), m3u8_parser__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(9323), _videojs_vhs_utils_es_codecs_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(2260), _videojs_vhs_utils_es_media_types_js__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(8485), mpd_parser__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(973), mux_js_lib_tools_parse_sidx__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(4221), mux_js_lib_tools_parse_sidx__WEBPACK_IMPORTED_MODULE_10___default = __webpack_require__.n(mux_js_lib_tools_parse_sidx__WEBPACK_IMPORTED_MODULE_10__), _videojs_vhs_utils_es_id3_helpers__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(8925), _videojs_vhs_utils_es_containers__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(6185), _videojs_vhs_utils_es_byte_helpers__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(562), mux_js_lib_utils_clock__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(1489), version$5 = "7.17.0", hooks_ = {}, hooks = function(type, fn) {
+            for(var match, match1, result, version, browserApi, videojs$1, FakeWeakMap, _supportsPassive, EVENT_MAP, canPlayType, Vhs$1, global_window__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(8908), global_window__WEBPACK_IMPORTED_MODULE_0___default = __webpack_require__.n(global_window__WEBPACK_IMPORTED_MODULE_0__), global_document__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(9144), global_document__WEBPACK_IMPORTED_MODULE_1___default = __webpack_require__.n(global_document__WEBPACK_IMPORTED_MODULE_1__), _babel_runtime_helpers_extends__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(7462), _babel_runtime_helpers_assertThisInitialized__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(7326), _babel_runtime_helpers_inheritsLoose__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(4578), safe_json_parse_tuple__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(5974), safe_json_parse_tuple__WEBPACK_IMPORTED_MODULE_2___default = __webpack_require__.n(safe_json_parse_tuple__WEBPACK_IMPORTED_MODULE_2__), keycode__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(7537), keycode__WEBPACK_IMPORTED_MODULE_3___default = __webpack_require__.n(keycode__WEBPACK_IMPORTED_MODULE_3__), _videojs_xhr__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(9603), _videojs_xhr__WEBPACK_IMPORTED_MODULE_4___default = __webpack_require__.n(_videojs_xhr__WEBPACK_IMPORTED_MODULE_4__), videojs_vtt_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(3407), videojs_vtt_js__WEBPACK_IMPORTED_MODULE_5___default = __webpack_require__.n(videojs_vtt_js__WEBPACK_IMPORTED_MODULE_5__), _babel_runtime_helpers_construct__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(8852), _babel_runtime_helpers_inherits__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(136), _videojs_vhs_utils_es_resolve_url_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(779), m3u8_parser__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(9323), _videojs_vhs_utils_es_codecs_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(2260), _videojs_vhs_utils_es_media_types_js__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(8485), mpd_parser__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(973), mux_js_lib_tools_parse_sidx__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(4221), mux_js_lib_tools_parse_sidx__WEBPACK_IMPORTED_MODULE_10___default = __webpack_require__.n(mux_js_lib_tools_parse_sidx__WEBPACK_IMPORTED_MODULE_10__), _videojs_vhs_utils_es_id3_helpers__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(8925), _videojs_vhs_utils_es_containers__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(6185), _videojs_vhs_utils_es_byte_helpers__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(562), mux_js_lib_utils_clock__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(1489), version$5 = "7.17.0", hooks_ = {}, hooks = function(type, fn) {
                 return hooks_[type] = hooks_[type] || [], fn && (hooks_[type] = hooks_[type].concat(fn)), hooks_[type];
             }, hook = function(type, fn) {
                 hooks(type, fn);
@@ -156,7 +156,7 @@
                 }
                 return "";
             }
-            var match, match1, result, version, USER_AGENT = global_window__WEBPACK_IMPORTED_MODULE_0___default().navigator && global_window__WEBPACK_IMPORTED_MODULE_0___default().navigator.userAgent || "", webkitVersionMap = /AppleWebKit\/([\d.]+)/i.exec(USER_AGENT), appleWebkitVersion = webkitVersionMap ? parseFloat(webkitVersionMap.pop()) : null, IS_IPOD = /iPod/i.test(USER_AGENT), IOS_VERSION = (match = USER_AGENT.match(/OS (\d+)_/i)) && match[1] ? match[1] : null, IS_ANDROID = /Android/i.test(USER_AGENT), ANDROID_VERSION = function() {
+            var USER_AGENT = global_window__WEBPACK_IMPORTED_MODULE_0___default().navigator && global_window__WEBPACK_IMPORTED_MODULE_0___default().navigator.userAgent || "", webkitVersionMap = /AppleWebKit\/([\d.]+)/i.exec(USER_AGENT), appleWebkitVersion = webkitVersionMap ? parseFloat(webkitVersionMap.pop()) : null, IS_IPOD = /iPod/i.test(USER_AGENT), IOS_VERSION = (match = USER_AGENT.match(/OS (\d+)_/i)) && match[1] ? match[1] : null, IS_ANDROID = /Android/i.test(USER_AGENT), ANDROID_VERSION = function() {
                 var match = USER_AGENT.match(/Android (\d+)(?:\.(\d+))?(?:\.(\d+))*/i);
                 if (!match) return null;
                 var major = match[1] && parseFloat(match[1]), minor = match[2] && parseFloat(match[2]);
@@ -405,16 +405,13 @@
             }, setTextContent = function(el, content) {
                 el.styleSheet ? el.styleSheet.cssText = content : el.textContent = content;
             }, _guid = 3;
-            function newGUID() {
-                return _guid++;
-            }
             global_window__WEBPACK_IMPORTED_MODULE_0___default().WeakMap || (FakeWeakMap = function() {
                 function FakeWeakMap() {
                     this.vdata = "vdata" + Math.floor(global_window__WEBPACK_IMPORTED_MODULE_0___default().performance && global_window__WEBPACK_IMPORTED_MODULE_0___default().performance.now() || Date.now()), this.data = {};
                 }
                 var _proto = FakeWeakMap.prototype;
                 return _proto.set = function(key, value) {
-                    var access = key[this.vdata] || newGUID();
+                    var access = key[this.vdata] || _guid++;
                     return key[this.vdata] || (key[this.vdata] = access), this.data[access] = value, this;
                 }, _proto.get = function(key) {
                     var access = key[this.vdata];
@@ -485,7 +482,7 @@
                 if (Array.isArray(type)) return _handleMultipleEvents(on, elem, type, fn);
                 DomData.has(elem) || DomData.set(elem, {});
                 var data = DomData.get(elem);
-                if (data.handlers || (data.handlers = {}), data.handlers[type] || (data.handlers[type] = []), fn.guid || (fn.guid = newGUID()), data.handlers[type].push(fn), data.dispatcher || (data.disabled = !1, data.dispatcher = function(event, hash) {
+                if (data.handlers || (data.handlers = {}), data.handlers[type] || (data.handlers[type] = []), fn.guid || (fn.guid = _guid++), data.handlers[type].push(fn), data.dispatcher || (data.disabled = !1, data.dispatcher = function(event, hash) {
                     if (!data.disabled) {
                         event = fixEvent(event);
                         var handlers = data.handlers[event.type];
@@ -546,13 +543,13 @@
                 var func = function func() {
                     off(elem, type, func), fn.apply(this, arguments);
                 };
-                func.guid = fn.guid = fn.guid || newGUID(), on(elem, type, func);
+                func.guid = fn.guid = fn.guid || _guid++, on(elem, type, func);
             }
             function any(elem, type, fn) {
                 var func = function func() {
                     off(elem, type, func), fn.apply(this, arguments);
                 };
-                func.guid = fn.guid = fn.guid || newGUID(), on(elem, type, func);
+                func.guid = fn.guid = fn.guid || _guid++, on(elem, type, func);
             }
             var Events = Object.freeze({
                 __proto__: null,
@@ -563,7 +560,7 @@
                 one: one,
                 any: any
             }), bind = function(context, fn, uid) {
-                fn.guid || (fn.guid = newGUID());
+                fn.guid || (fn.guid = _guid++);
                 var bound = fn.bind(context);
                 return bound.guid = uid ? uid + "_" + fn.guid : fn.guid, bound;
             }, throttle = function(fn, wait) {
@@ -635,11 +632,11 @@
                 if ("function" != typeof listener) throw Error("Invalid listener for " + objName(obj) + "#" + fnName + "; must be a function.");
             }, normalizeListenArgs = function(self1, args, fnName) {
                 var target, type, listener, isTargetingSelf = args.length < 3 || args[0] === self1 || args[0] === self1.eventBusEl_;
-                return isTargetingSelf ? (target = self1.eventBusEl_, args.length >= 3 && args.shift(), type = args[0], listener = args[1]) : (target = args[0], type = args[1], listener = args[2]), validateTarget(target, self1, fnName), validateEventType(type, self1, fnName), validateListener(listener, self1, fnName), listener = bind(self1, listener), {
+                return isTargetingSelf ? (target = self1.eventBusEl_, args.length >= 3 && args.shift(), type = args[0], listener = args[1]) : (target = args[0], type = args[1], listener = args[2]), validateTarget(target, self1, fnName), validateEventType(type, self1, fnName), validateListener(listener, self1, fnName), {
                     isTargetingSelf: isTargetingSelf,
                     target: target,
                     type: type,
-                    listener: listener
+                    listener: listener = bind(self1, listener)
                 };
             }, listen = function(target, method, type, listener) {
                 validateTarget(target, target, method), target.nodeName ? Events[method](target, type, listener) : target[method](type, listener);
@@ -792,7 +789,7 @@
                 function Component(player, options, ready) {
                     if (!player && this.play ? this.player_ = player = this : this.player_ = player, this.isDisposed_ = !1, this.parentComponent_ = null, this.options_ = mergeOptions$3({}, this.options_), options = this.options_ = mergeOptions$3(this.options_, options), this.id_ = options.id || options.el && options.el.id, !this.id_) {
                         var id = player && player.id && player.id() || "no_player";
-                        this.id_ = id + "_component_" + newGUID();
+                        this.id_ = id + "_component_" + _guid++;
                     }
                     this.name_ = options.name || null, options.el ? this.el_ = options.el : !1 !== options.createEl && (this.el_ = this.createEl()), !1 !== options.evented && (evented(this, {
                         eventBusKey: this.el_ ? "el_" : null
@@ -956,7 +953,7 @@
                 }, _proto.currentDimension = function(widthOrHeight) {
                     var computedWidthOrHeight = 0;
                     if ("width" !== widthOrHeight && "height" !== widthOrHeight) throw Error("currentDimension only accepts width or height value");
-                    if (computedWidthOrHeight = computedStyle(this.el_, widthOrHeight), 0 === (computedWidthOrHeight = parseFloat(computedWidthOrHeight)) || isNaN(computedWidthOrHeight)) {
+                    if (0 === (computedWidthOrHeight = parseFloat(computedWidthOrHeight = computedStyle(this.el_, widthOrHeight))) || isNaN(computedWidthOrHeight)) {
                         var rule = "offset" + toTitleCase$1(widthOrHeight);
                         computedWidthOrHeight = this.el_[rule];
                     }
@@ -1502,7 +1499,7 @@
                 function Track(options) {
                     void 0 === options && (options = {}), _this = _EventTarget.call(this) || this;
                     var _this, trackProps = {
-                        id: options.id || "vjs_track_" + newGUID(),
+                        id: options.id || "vjs_track_" + _guid++,
                         kind: options.kind || "",
                         language: options.language || ""
                     }, label = options.label || "", _loop = function(key) {
@@ -2335,12 +2332,12 @@
                 (0, _babel_runtime_helpers_inheritsLoose__WEBPACK_IMPORTED_MODULE_16__.Z)(Button, _ClickableComponent);
                 var _proto = Button.prototype;
                 return _proto.createEl = function(tag, props, attributes) {
-                    void 0 === props && (props = {}), void 0 === attributes && (attributes = {}), tag = "button", props = assign({
+                    void 0 === props && (props = {}), void 0 === attributes && (attributes = {});
+                    var el = createEl("button", props = assign({
                         className: this.buildCSSClass()
                     }, props), attributes = assign({
                         type: "button"
-                    }, attributes);
-                    var el = createEl(tag, props, attributes);
+                    }, attributes));
                     return el.appendChild(createEl("span", {
                         className: "vjs-icon-placeholder"
                     }, {
@@ -2449,11 +2446,8 @@
             PlayToggle.prototype.controlText_ = "Play", Component$1.registerComponent("PlayToggle", PlayToggle);
             var defaultImplementation = function(seconds, guide) {
                 var s = Math.floor((seconds = seconds < 0 ? 0 : seconds) % 60), m = Math.floor(seconds / 60 % 60), h = Math.floor(seconds / 3600);
-                return (isNaN(seconds) || seconds === 1 / 0) && (h = m = s = "-"), m = (((h = h > 0 || Math.floor(guide / 3600) > 0 ? h + ":" : "") || Math.floor(guide / 60 % 60) >= 10) && m < 10 ? "0" + m : m) + ":", s = s < 10 ? "0" + s : s, h + m + s;
+                return (isNaN(seconds) || seconds === 1 / 0) && (h = m = s = "-"), m = (((h = h > 0 || Math.floor(guide / 3600) > 0 ? h + ":" : "") || Math.floor(guide / 60 % 60) >= 10) && m < 10 ? "0" + m : m) + ":", h + m + (s = s < 10 ? "0" + s : s);
             }, implementation = defaultImplementation;
-            function setFormatTime(customImplementation) {
-                implementation = customImplementation;
-            }
             function formatTime(seconds, guide) {
                 return void 0 === guide && (guide = seconds), implementation(seconds, guide);
             }
@@ -4753,7 +4747,7 @@
                             el.parentNode && el.parentNode.insertBefore(clone, el), Html5.disposeMediaElement(el), el = clone;
                         } else {
                             el = global_document__WEBPACK_IMPORTED_MODULE_1___default().createElement("video");
-                            var tagAttributes = this.options_.tag && getAttributes(this.options_.tag), attributes = mergeOptions$3({}, tagAttributes);
+                            var attributes = mergeOptions$3({}, this.options_.tag && getAttributes(this.options_.tag));
                             TOUCH_ENABLED && !0 === this.options_.nativeControlsForTouch || delete attributes.controls, setAttributes(el, assign(attributes, {
                                 id: this.options_.techId,
                                 class: "vjs-tech"
@@ -5160,7 +5154,7 @@
                 huge: 1 / 0
             }, Player = function(_Component) {
                 function Player(tag, options, ready) {
-                    if (tag.id = tag.id || options.id || "vjs_video_" + newGUID(), (options = assign(Player.getTagSettings(tag), options)).initChildren = !1, options.createEl = !1, options.evented = !1, options.reportTouchActivity = !1, !options.language) {
+                    if (tag.id = tag.id || options.id || "vjs_video_" + _guid++, (options = assign(Player.getTagSettings(tag), options)).initChildren = !1, options.createEl = !1, options.evented = !1, options.reportTouchActivity = !1, !options.language) {
                         if ("function" == typeof tag.closest) {
                             var _this, closest = tag.closest("[lang]");
                             closest && closest.getAttribute && (options.language = closest.getAttribute("lang"));
@@ -5567,7 +5561,7 @@
                     this.ready(function() {
                         if (method in allowedSetters) {
                             var middleware;
-                            return middleware = this.middleware_, (0, this.tech_)[method](middleware.reduce(middlewareIterator(method), arg));
+                            return middleware = this.middleware_, this.tech_[method](middleware.reduce(middlewareIterator(method), arg));
                         }
                         if (method in allowedMediators) return mediate(this.middleware_, this.tech_, method, arg);
                         try {
@@ -5666,7 +5660,7 @@
                         vol = Math.max(0, Math.min(1, parseFloat(percentAsDecimal))), this.cache_.volume = vol, this.techCall_("setVolume", vol), vol > 0 && this.lastVolume_(vol);
                         return;
                     }
-                    return vol = parseFloat(this.techGet_("volume")), isNaN(vol) ? 1 : vol;
+                    return isNaN(vol = parseFloat(this.techGet_("volume"))) ? 1 : vol;
                 }, _proto.muted = function(_muted) {
                     if (void 0 !== _muted) {
                         this.techCall_("setMuted", _muted);
@@ -6370,7 +6364,9 @@
             }, videojs.getPlugins = Plugin.getPlugins, videojs.getPlugin = Plugin.getPlugin, videojs.getPluginVersion = Plugin.getPluginVersion, videojs.addLanguage = function(code, data) {
                 var _mergeOptions;
                 return code = ("" + code).toLowerCase(), videojs.options.languages = mergeOptions$3(videojs.options.languages, ((_mergeOptions = {})[code] = data, _mergeOptions)), videojs.options.languages[code];
-            }, videojs.log = log$1, videojs.createLogger = createLogger, videojs.createTimeRange = videojs.createTimeRanges = createTimeRanges, videojs.formatTime = formatTime, videojs.setFormatTime = setFormatTime, videojs.resetFormatTime = function() {
+            }, videojs.log = log$1, videojs.createLogger = createLogger, videojs.createTimeRange = videojs.createTimeRanges = createTimeRanges, videojs.formatTime = formatTime, videojs.setFormatTime = function(customImplementation) {
+                implementation = customImplementation;
+            }, videojs.resetFormatTime = function() {
                 implementation = defaultImplementation;
             }, videojs.parseUrl = parseUrl, videojs.isCrossOrigin = isCrossOrigin, videojs.EventTarget = EventTarget$2, videojs.on = on, videojs.one = one, videojs.off = off, videojs.trigger = trigger, videojs.xhr = _videojs_xhr__WEBPACK_IMPORTED_MODULE_4___default(), videojs.TextTrack = TextTrack, videojs.AudioTrack = AudioTrack, videojs.VideoTrack = VideoTrack, [
                 "isEl",
@@ -6396,7 +6392,7 @@
                 return handleManifestRedirect && req && req.responseURL && url !== req.responseURL ? req.responseURL : url;
             }, logger = function(source) {
                 return videojs.log.debug ? videojs.log.debug.bind(videojs, "VHS:", source + " >") : function() {};
-            }, TIME_FUDGE_FACTOR = 1 / 30, SAFE_TIME_DELTA = 3 * TIME_FUDGE_FACTOR, filterRanges = function(timeRanges, predicate) {
+            }, TIME_FUDGE_FACTOR = 1 / 30, SAFE_TIME_DELTA = 3 * (1 / 30), filterRanges = function(timeRanges, predicate) {
                 var i, results = [];
                 if (timeRanges && timeRanges.length) for(i = 0; i < timeRanges.length; i++)predicate(timeRanges.start(i), timeRanges.end(i)) && results.push([
                     timeRanges.start(i),
@@ -6594,7 +6590,7 @@
                 if (null === expired) return null;
                 expired = expired || 0;
                 var lastSegmentEndTime = intervalDuration(playlist, playlist.mediaSequence + playlist.segments.length, expired);
-                return useSafeLiveEnd && (liveEdgePadding = "number" == typeof liveEdgePadding ? liveEdgePadding : liveEdgeDelay(null, playlist), lastSegmentEndTime -= liveEdgePadding), Math.max(0, lastSegmentEndTime);
+                return useSafeLiveEnd && (lastSegmentEndTime -= liveEdgePadding = "number" == typeof liveEdgePadding ? liveEdgePadding : liveEdgeDelay(null, playlist)), Math.max(0, lastSegmentEndTime);
             }, isBlacklisted = function(playlist) {
                 return playlist.excludeUntil && playlist.excludeUntil > Date.now();
             }, isIncompatible = function(playlist) {
@@ -7142,7 +7138,7 @@
             }, segmentKeyId = function(key) {
                 return key.resolvedUri;
             }, hexDump = function(data) {
-                for(var hex, ascii, bytes = Array.prototype.slice.call(data), result = "", j = 0; j < bytes.length / 16; j++)hex = bytes.slice(16 * j, 16 * j + 16).map(formatHexString).join(""), ascii = bytes.slice(16 * j, 16 * j + 16).map(formatAsciiString).join(""), result += hex + " " + ascii + "\n";
+                for(var bytes = Array.prototype.slice.call(data), result = "", j = 0; j < bytes.length / 16; j++)result += bytes.slice(16 * j, 16 * j + 16).map(formatHexString).join("") + " " + bytes.slice(16 * j, 16 * j + 16).map(formatAsciiString).join("") + "\n";
                 return result;
             }, tagDump = function(_ref) {
                 return hexDump(_ref.bytes);
@@ -7169,11 +7165,11 @@
                     return null;
                 }
                 if (!playlist || !playlist.segments || 0 === playlist.segments.length) return null;
-                var dateTimeObject, segment = playlist.segments[0];
+                var videoTimingInfo, dateTimeObject, segment = playlist.segments[0];
                 if (dateTimeObject < segment.dateTimeObject) return null;
                 for(var i = 0; i < playlist.segments.length - 1 && (segment = playlist.segments[i], !(dateTimeObject < playlist.segments[i + 1].dateTimeObject)); i++);
-                var videoTimingInfo, lastSegment = playlist.segments[playlist.segments.length - 1], lastSegmentStart = lastSegment.dateTimeObject, lastSegmentDuration = lastSegment.videoTimingInfo ? (videoTimingInfo = lastSegment.videoTimingInfo).transmuxedPresentationEnd - videoTimingInfo.transmuxedPresentationStart - videoTimingInfo.transmuxerPrependedSeconds : lastSegment.duration + 0.25 * lastSegment.duration, lastSegmentEnd = new Date(lastSegmentStart.getTime() + 1000 * lastSegmentDuration);
-                return dateTimeObject > lastSegmentEnd ? null : (dateTimeObject > lastSegmentStart && (segment = lastSegment), {
+                var lastSegment = playlist.segments[playlist.segments.length - 1], lastSegmentStart = lastSegment.dateTimeObject, lastSegmentDuration = lastSegment.videoTimingInfo ? (videoTimingInfo = lastSegment.videoTimingInfo).transmuxedPresentationEnd - videoTimingInfo.transmuxedPresentationStart - videoTimingInfo.transmuxerPrependedSeconds : lastSegment.duration + 0.25 * lastSegment.duration;
+                return dateTimeObject > new Date(lastSegmentStart.getTime() + 1000 * lastSegmentDuration) ? null : (dateTimeObject > lastSegmentStart && (segment = lastSegment), {
                     segment: segment,
                     estimatedStart: segment.videoTimingInfo ? segment.videoTimingInfo.transmuxedPresentationStart : Playlist.duration(playlist, playlist.mediaSequence + playlist.segments.indexOf(segment)),
                     type: segment.videoTimingInfo ? "accurate" : "estimate"
@@ -7585,8 +7581,8 @@
                 return "var browserWorkerPolyFill = " + browserWorkerPolyFill.toString() + ";\nbrowserWorkerPolyFill(self);\n" + code;
             }, getWorkerString = function(fn) {
                 return fn.toString().replace(/^function.+?{/, "").slice(0, -1);
-            }, workerCode$1 = transform(getWorkerString(function() {
-                var _TransportPacketStream, _TransportParseStream, _ElementaryStream, _AdtsStream, ExpGolomb, _H264Stream, _NalByteStream, PROFILES_WITH_OPTIONAL_SPS_DATA, _AacStream, _VideoSegmentStream, _AudioSegmentStream, _Transmuxer, _CoalesceStream, timescale, startTime, compositionStartTime, getVideoTrackIds, getTracks, getTimescaleFromMediaHeader, videoSample, audioSample, audioTrun, videoTrun, trunHeader, Stream = function() {
+            }, TransmuxWorker = factory(transform(getWorkerString(function() {
+                var _TransportPacketStream, _TransportParseStream, _ElementaryStream, _AdtsStream, ExpGolomb, _H264Stream, _NalByteStream, PROFILES_WITH_OPTIONAL_SPS_DATA, _AacStream, _VideoSegmentStream, _AudioSegmentStream, _Transmuxer, _CoalesceStream, timescale, startTime, compositionStartTime, getVideoTrackIds, getTracks, getTimescaleFromMediaHeader, Stream = function() {
                     this.init = function() {
                         var listeners = {};
                         this.on = function(type, listener) {
@@ -7597,7 +7593,7 @@
                         }, this.trigger = function(type) {
                             var callbacks, i, length, args;
                             if (callbacks = listeners[type]) {
-                                if (2 === arguments.length) for(i = 0, length = callbacks.length; i < length; ++i)callbacks[i].call(this, arguments[1]);
+                                if (2 == arguments.length) for(i = 0, length = callbacks.length; i < length; ++i)callbacks[i].call(this, arguments[1]);
                                 else {
                                     for(args = [], i = arguments.length, i = 1; i < arguments.length; ++i)args.push(arguments[i]);
                                     for(i = 0, length = callbacks.length; i < length; ++i)callbacks[i].apply(this, args);
@@ -7691,85 +7687,85 @@
                             0,
                             0,
                             1
-                        ]), VIDEO_HDLR = new Uint8Array([
-                            0x00,
-                            0x00,
-                            0x00,
-                            0x00,
-                            0x00,
-                            0x00,
-                            0x00,
-                            0x00,
-                            0x76,
-                            0x69,
-                            0x64,
-                            0x65,
-                            0x00,
-                            0x00,
-                            0x00,
-                            0x00,
-                            0x00,
-                            0x00,
-                            0x00,
-                            0x00,
-                            0x00,
-                            0x00,
-                            0x00,
-                            0x00,
-                            0x56,
-                            0x69,
-                            0x64,
-                            0x65,
-                            0x6f,
-                            0x48,
-                            0x61,
-                            0x6e,
-                            0x64,
-                            0x6c,
-                            0x65,
-                            0x72,
-                            0x00
-                        ]), AUDIO_HDLR = new Uint8Array([
-                            0x00,
-                            0x00,
-                            0x00,
-                            0x00,
-                            0x00,
-                            0x00,
-                            0x00,
-                            0x00,
-                            0x73,
-                            0x6f,
-                            0x75,
-                            0x6e,
-                            0x00,
-                            0x00,
-                            0x00,
-                            0x00,
-                            0x00,
-                            0x00,
-                            0x00,
-                            0x00,
-                            0x00,
-                            0x00,
-                            0x00,
-                            0x00,
-                            0x53,
-                            0x6f,
-                            0x75,
-                            0x6e,
-                            0x64,
-                            0x48,
-                            0x61,
-                            0x6e,
-                            0x64,
-                            0x6c,
-                            0x65,
-                            0x72,
-                            0x00
                         ]), HDLR_TYPES = {
-                            video: VIDEO_HDLR,
-                            audio: AUDIO_HDLR
+                            video: new Uint8Array([
+                                0x00,
+                                0x00,
+                                0x00,
+                                0x00,
+                                0x00,
+                                0x00,
+                                0x00,
+                                0x00,
+                                0x76,
+                                0x69,
+                                0x64,
+                                0x65,
+                                0x00,
+                                0x00,
+                                0x00,
+                                0x00,
+                                0x00,
+                                0x00,
+                                0x00,
+                                0x00,
+                                0x00,
+                                0x00,
+                                0x00,
+                                0x00,
+                                0x56,
+                                0x69,
+                                0x64,
+                                0x65,
+                                0x6f,
+                                0x48,
+                                0x61,
+                                0x6e,
+                                0x64,
+                                0x6c,
+                                0x65,
+                                0x72,
+                                0x00
+                            ]),
+                            audio: new Uint8Array([
+                                0x00,
+                                0x00,
+                                0x00,
+                                0x00,
+                                0x00,
+                                0x00,
+                                0x00,
+                                0x00,
+                                0x73,
+                                0x6f,
+                                0x75,
+                                0x6e,
+                                0x00,
+                                0x00,
+                                0x00,
+                                0x00,
+                                0x00,
+                                0x00,
+                                0x00,
+                                0x00,
+                                0x00,
+                                0x00,
+                                0x00,
+                                0x00,
+                                0x53,
+                                0x6f,
+                                0x75,
+                                0x6e,
+                                0x64,
+                                0x48,
+                                0x61,
+                                0x6e,
+                                0x64,
+                                0x6c,
+                                0x65,
+                                0x72,
+                                0x00
+                            ])
                         }, DREF = new Uint8Array([
                             0x00,
                             0x00,
@@ -7843,46 +7839,8 @@
                     for(i = payload.length; i--;)size += payload[i].byteLength;
                     for(result = new Uint8Array(size + 8), new DataView(result.buffer, result.byteOffset, result.byteLength).setUint32(0, result.byteLength), result.set(type, 4), i = 0, size = 8; i < payload.length; i++)result.set(payload[i], size), size += payload[i].byteLength;
                     return result;
-                }, dinf = function() {
-                    return box(types.dinf, box(types.dref, DREF));
-                }, esds = function(track) {
-                    return box(types.esds, new Uint8Array([
-                        0x00,
-                        0x00,
-                        0x00,
-                        0x00,
-                        0x03,
-                        0x19,
-                        0x00,
-                        0x00,
-                        0x00,
-                        0x04,
-                        0x11,
-                        0x40,
-                        0x15,
-                        0x00,
-                        0x06,
-                        0x00,
-                        0x00,
-                        0x00,
-                        0xda,
-                        0xc0,
-                        0x00,
-                        0x00,
-                        0xda,
-                        0xc0,
-                        0x05,
-                        0x02,
-                        track.audioobjecttype << 3 | track.samplingfrequencyindex >>> 1,
-                        track.samplingfrequencyindex << 7 | track.channelcount << 3,
-                        0x06,
-                        0x01,
-                        0x02
-                    ]));
                 }, ftyp = function() {
                     return box(types.ftyp, MAJOR_BRAND, MINOR_VERSION, MAJOR_BRAND, AVC1_BRAND);
-                }, hdlr = function(type) {
-                    return box(types.hdlr, HDLR_TYPES[type]);
                 }, mdat = function(data) {
                     return box(types.mdat, data);
                 }, mdhd = function(track) {
@@ -7914,7 +7872,8 @@
                     ]);
                     return track.samplerate && (result[12] = track.samplerate >>> 24 & 0xff, result[13] = track.samplerate >>> 16 & 0xff, result[14] = track.samplerate >>> 8 & 0xff, result[15] = 0xff & track.samplerate), box(types.mdhd, result);
                 }, mdia = function(track) {
-                    return box(types.mdia, mdhd(track), hdlr(track.type), minf(track));
+                    var type;
+                    return box(types.mdia, mdhd(track), (type = track.type, box(types.hdlr, HDLR_TYPES[type])), minf(track));
                 }, mfhd = function(sequenceNumber) {
                     return box(types.mfhd, new Uint8Array([
                         0x00,
@@ -7927,7 +7886,7 @@
                         0xff & sequenceNumber
                     ]));
                 }, minf = function(track) {
-                    return box(types.minf, "video" === track.type ? box(types.vmhd, VMHD) : box(types.smhd, SMHD), dinf(), stbl(track));
+                    return box(types.minf, "video" === track.type ? box(types.vmhd, VMHD) : box(types.smhd, SMHD), box(types.dinf, box(types.dref, DREF)), stbl(track));
                 }, moof = function(sequenceNumber, tracks) {
                     for(var trackFragments = [], i = tracks.length; i--;)trackFragments[i] = traf(tracks[i]);
                     return box.apply(null, [
@@ -8221,7 +8180,39 @@
                         0xff & track.samplerate,
                         0x00,
                         0x00
-                    ]), esds(track));
+                    ]), box(types.esds, new Uint8Array([
+                        0x00,
+                        0x00,
+                        0x00,
+                        0x00,
+                        0x03,
+                        0x19,
+                        0x00,
+                        0x00,
+                        0x00,
+                        0x04,
+                        0x11,
+                        0x40,
+                        0x15,
+                        0x00,
+                        0x06,
+                        0x00,
+                        0x00,
+                        0x00,
+                        0xda,
+                        0xc0,
+                        0x00,
+                        0x00,
+                        0xda,
+                        0xc0,
+                        0x05,
+                        0x02,
+                        track.audioobjecttype << 3 | track.samplingfrequencyindex >>> 1,
+                        track.samplingfrequencyindex << 7 | track.channelcount << 3,
+                        0x06,
+                        0x01,
+                        0x02
+                    ])));
                 }, tkhd = function(track) {
                     var result = new Uint8Array([
                         0x00,
@@ -8408,7 +8399,7 @@
                 }, trun$1 = function(track, offset) {
                     return "audio" === track.type ? audioTrun(track, offset) : videoTrun(track, offset);
                 };
-                var box, dinf, esds, ftyp, mdat, mfhd, minf, moof, moov, mvex, mvhd, trak, tkhd, mdia, mdhd, hdlr, sdtp, stbl, stsd, traf, trex, trun$1, types, MAJOR_BRAND, MINOR_VERSION, AVC1_BRAND, VIDEO_HDLR, AUDIO_HDLR, HDLR_TYPES, VMHD, SMHD, DREF, STCO, STSC, STSZ, STTS, silence, secondsToVideoTs, secondsToAudioTs, videoTsToSeconds, audioTsToSeconds, audioTsToVideoTs, videoTsToAudioTs, metadataTsToSeconds, mp4Generator = {
+                var mp4Generator = {
                     ftyp: ftyp,
                     mdat: mdat,
                     moof: moof,
@@ -8450,8 +8441,8 @@
                         return !gops[0][0].keyFrame && gops.length > 1 && (currentGop = gops.shift(), gops.byteLength -= currentGop.byteLength, gops.nalCount -= currentGop.nalCount, gops[0][0].dts = currentGop.dts, gops[0][0].pts = currentGop.pts, gops[0][0].duration += currentGop.duration), gops;
                     },
                     generateSampleTable: function(gops, baseDataOffset) {
-                        var h, i, sample, currentGop, currentFrame, dataOffset = baseDataOffset || 0, samples = [];
-                        for(h = 0; h < gops.length; h++)for(i = 0, currentGop = gops[h]; i < currentGop.length; i++)sample = sampleForFrame(currentFrame = currentGop[i], dataOffset), dataOffset += sample.size, samples.push(sample);
+                        var h, i, sample, currentGop, dataOffset = baseDataOffset || 0, samples = [];
+                        for(h = 0; h < gops.length; h++)for(i = 0, currentGop = gops[h]; i < currentGop.length; i++)sample = sampleForFrame(currentGop[i], dataOffset), dataOffset += sample.size, samples.push(sample);
                         return samples;
                     },
                     concatenateNalData: function(gops) {
@@ -9319,7 +9310,7 @@
                     };
                 };
                 TimestampRolloverStream$1.prototype = new Stream();
-                var _MetadataStream, timestampRolloverStream = {
+                var videoSample, audioSample, audioTrun, videoTrun, trunHeader, box, ftyp, mdat, mfhd, minf, moof, moov, mvex, mvhd, trak, tkhd, mdia, mdhd, sdtp, stbl, stsd, traf, trex, trun$1, types, MAJOR_BRAND, MINOR_VERSION, AVC1_BRAND, HDLR_TYPES, VMHD, SMHD, DREF, STCO, STSC, STSZ, STTS, silence, secondsToVideoTs, secondsToAudioTs, videoTsToSeconds, audioTsToSeconds, audioTsToVideoTs, videoTsToAudioTs, metadataTsToSeconds, _MetadataStream, timestampRolloverStream = {
                     TimestampRolloverStream: TimestampRolloverStream$1,
                     handleRollover: handleRollover$1
                 }, percentEncode$1 = function(bytes, start, end) {
@@ -9351,9 +9342,9 @@
                         }
                     },
                     PRIV: function(tag) {
-                        var i, bytes, end;
+                        var i;
                         for(i = 0; i < tag.data.length; i++)if (0 === tag.data[i]) {
-                            tag.owner = (bytes = tag.data, end = i, unescape(percentEncode$1(bytes, 0, end)));
+                            tag.owner = unescape(percentEncode$1(tag.data, 0, i));
                             break;
                         }
                         tag.privateData = tag.data.subarray(i + 1), tag.data = tag.privateData;
@@ -10355,14 +10346,14 @@
                             traf: matchingTraf
                         });
                     }), mdatTrafPairs.forEach(function(pair) {
-                        var samples, result, mdat = pair.mdat, traf = pair.traf, tfhd1 = findBox(traf, [
+                        var result, mdat = pair.mdat, traf = pair.traf, headerInfo = tfhd(findBox(traf, [
                             "tfhd"
-                        ]), headerInfo = tfhd(tfhd1[0]), trackId = headerInfo.trackId, tfdt1 = findBox(traf, [
+                        ])[0]), trackId = headerInfo.trackId, tfdt1 = findBox(traf, [
                             "tfdt"
                         ]), baseMediaDecodeTime = tfdt1.length > 0 ? tfdt(tfdt1[0]).baseMediaDecodeTime : 0, truns = findBox(traf, [
                             "trun"
                         ]);
-                        videoTrackId === trackId && truns.length > 0 && (samples = parseSamples(truns, baseMediaDecodeTime, headerInfo), result = findSeiNals(mdat, samples, trackId), captionNals[trackId] || (captionNals[trackId] = {
+                        videoTrackId === trackId && truns.length > 0 && (result = findSeiNals(mdat, parseSamples(truns, baseMediaDecodeTime, headerInfo), trackId), captionNals[trackId] || (captionNals[trackId] = {
                             seiNals: [],
                             logs: []
                         }), captionNals[trackId].seiNals = captionNals[trackId].seiNals.concat(result.seiNals), captionNals[trackId].logs = captionNals[trackId].logs.concat(result.logs));
@@ -10454,7 +10445,7 @@
                                 return version = tfdt[0], result = toUnsigned(tfdt[4] << 24 | tfdt[5] << 16 | tfdt[6] << 8 | tfdt[7]), 1 === version && (result *= 4294967296, result += toUnsigned(tfdt[8] << 24 | tfdt[9] << 16 | tfdt[10] << 8 | tfdt[11])), result;
                             })[0]) || isNaN(baseTime) ? 1 / 0 : baseTime) / scale;
                         });
-                    })), result = Math.min.apply(null, baseTimes), isFinite(result) ? result : 0;
+                    })), isFinite(result = Math.min.apply(null, baseTimes)) ? result : 0;
                 }, compositionStartTime = function(timescales, fragment) {
                     var trackId, trafBoxes = findBox(fragment, [
                         "moof",
@@ -10641,9 +10632,9 @@
                     videoPacketContainsKeyFrame: videoPacketContainsKeyFrame
                 }, probe.aac = utils;
                 var ONE_SECOND_IN_TS = clock.ONE_SECOND_IN_TS, parsePsi_ = function(bytes, pmt) {
-                    for(var packet, type, startIndex = 0, endIndex = 188; endIndex < bytes.byteLength;){
+                    for(var packet, startIndex = 0, endIndex = 188; endIndex < bytes.byteLength;){
                         if (0x47 === bytes[startIndex] && 0x47 === bytes[endIndex]) {
-                            switch(packet = bytes.subarray(startIndex, endIndex), type = probe.ts.parseType(packet, pmt.pid)){
+                            switch(packet = bytes.subarray(startIndex, endIndex), probe.ts.parseType(packet, pmt.pid)){
                                 case "pat":
                                     pmt.pid = probe.ts.parsePat(packet);
                                     break;
@@ -10659,9 +10650,9 @@
                         startIndex++, endIndex++;
                     }
                 }, parseAudioPes_ = function(bytes, pmt, result) {
-                    for(var packet, type, pesType, pusi, parsed, startIndex = 0, endIndex = 188, endLoop = !1; endIndex <= bytes.byteLength;){
+                    for(var packet, pesType, pusi, parsed, startIndex = 0, endIndex = 188, endLoop = !1; endIndex <= bytes.byteLength;){
                         if (0x47 === bytes[startIndex] && (0x47 === bytes[endIndex] || endIndex === bytes.byteLength)) {
-                            if (packet = bytes.subarray(startIndex, endIndex), "pes" === (type = probe.ts.parseType(packet, pmt.pid)) && (pesType = probe.ts.parsePesType(packet, pmt.table), pusi = probe.ts.parsePayloadUnitStartIndicator(packet), "audio" === pesType && pusi && (parsed = probe.ts.parsePesTime(packet)) && (parsed.type = "audio", result.audio.push(parsed), endLoop = !0)), endLoop) break;
+                            if (packet = bytes.subarray(startIndex, endIndex), "pes" === probe.ts.parseType(packet, pmt.pid) && (pesType = probe.ts.parsePesType(packet, pmt.table), pusi = probe.ts.parsePayloadUnitStartIndicator(packet), "audio" === pesType && pusi && (parsed = probe.ts.parsePesTime(packet)) && (parsed.type = "audio", result.audio.push(parsed), endLoop = !0)), endLoop) break;
                             startIndex += 188, endIndex += 188;
                             continue;
                         }
@@ -10669,19 +10660,19 @@
                     }
                     for(startIndex = (endIndex = bytes.byteLength) - 188, endLoop = !1; startIndex >= 0;){
                         if (0x47 === bytes[startIndex] && (0x47 === bytes[endIndex] || endIndex === bytes.byteLength)) {
-                            if (packet = bytes.subarray(startIndex, endIndex), "pes" === (type = probe.ts.parseType(packet, pmt.pid)) && (pesType = probe.ts.parsePesType(packet, pmt.table), pusi = probe.ts.parsePayloadUnitStartIndicator(packet), "audio" === pesType && pusi && (parsed = probe.ts.parsePesTime(packet)) && (parsed.type = "audio", result.audio.push(parsed), endLoop = !0)), endLoop) break;
+                            if (packet = bytes.subarray(startIndex, endIndex), "pes" === probe.ts.parseType(packet, pmt.pid) && (pesType = probe.ts.parsePesType(packet, pmt.table), pusi = probe.ts.parsePayloadUnitStartIndicator(packet), "audio" === pesType && pusi && (parsed = probe.ts.parsePesTime(packet)) && (parsed.type = "audio", result.audio.push(parsed), endLoop = !0)), endLoop) break;
                             startIndex -= 188, endIndex -= 188;
                             continue;
                         }
                         startIndex--, endIndex--;
                     }
                 }, parseVideoPes_ = function(bytes, pmt, result) {
-                    for(var packet, type, pesType, pusi, parsed, frame, i, pes, startIndex = 0, endIndex = 188, endLoop = !1, currentFrame = {
+                    for(var packet, pesType, pusi, parsed, frame, i, pes, startIndex = 0, endIndex = 188, endLoop = !1, currentFrame = {
                         data: [],
                         size: 0
                     }; endIndex < bytes.byteLength;){
                         if (0x47 === bytes[startIndex] && 0x47 === bytes[endIndex]) {
-                            if (packet = bytes.subarray(startIndex, endIndex), "pes" === (type = probe.ts.parseType(packet, pmt.pid)) && (pesType = probe.ts.parsePesType(packet, pmt.table), pusi = probe.ts.parsePayloadUnitStartIndicator(packet), "video" === pesType && (pusi && !endLoop && (parsed = probe.ts.parsePesTime(packet)) && (parsed.type = "video", result.video.push(parsed), endLoop = !0), !result.firstKeyFrame))) {
+                            if (packet = bytes.subarray(startIndex, endIndex), "pes" === probe.ts.parseType(packet, pmt.pid) && (pesType = probe.ts.parsePesType(packet, pmt.table), pusi = probe.ts.parsePayloadUnitStartIndicator(packet), "video" === pesType && (pusi && !endLoop && (parsed = probe.ts.parsePesTime(packet)) && (parsed.type = "video", result.video.push(parsed), endLoop = !0), !result.firstKeyFrame))) {
                                 if (pusi && 0 !== currentFrame.size) {
                                     for(frame = new Uint8Array(currentFrame.size), i = 0; currentFrame.data.length;)pes = currentFrame.data.shift(), frame.set(pes, i), i += pes.byteLength;
                                     if (probe.ts.videoPacketContainsKeyFrame(frame)) {
@@ -10700,7 +10691,7 @@
                     }
                     for(startIndex = (endIndex = bytes.byteLength) - 188, endLoop = !1; startIndex >= 0;){
                         if (0x47 === bytes[startIndex] && 0x47 === bytes[endIndex]) {
-                            if (packet = bytes.subarray(startIndex, endIndex), "pes" === (type = probe.ts.parseType(packet, pmt.pid)) && (pesType = probe.ts.parsePesType(packet, pmt.table), pusi = probe.ts.parsePayloadUnitStartIndicator(packet), "video" === pesType && pusi && (parsed = probe.ts.parsePesTime(packet)) && (parsed.type = "video", result.video.push(parsed), endLoop = !0)), endLoop) break;
+                            if (packet = bytes.subarray(startIndex, endIndex), "pes" === probe.ts.parseType(packet, pmt.pid) && (pesType = probe.ts.parsePesType(packet, pmt.table), pusi = probe.ts.parsePayloadUnitStartIndicator(packet), "video" === pesType && pusi && (parsed = probe.ts.parsePesTime(packet)) && (parsed.type = "video", result.video.push(parsed), endLoop = !0)), endLoop) break;
                             startIndex -= 188, endIndex -= 188;
                             continue;
                         }
@@ -10963,7 +10954,7 @@
                     }
                     this.messageHandlers || (this.messageHandlers = new MessageHandlers(self)), event.data && event.data.action && "init" !== event.data.action && this.messageHandlers[event.data.action] && this.messageHandlers[event.data.action](event.data);
                 };
-            })), TransmuxWorker = factory(workerCode$1), handleData_ = function(event, transmuxedData, callback) {
+            }))), handleData_ = function(event, transmuxedData, callback) {
                 var _event$data$segment = event.data.segment, type = _event$data$segment.type, initSegment = _event$data$segment.initSegment, captions = _event$data$segment.captions, captionStreams = _event$data$segment.captionStreams, metadata = _event$data$segment.metadata, videoFrameDtsTime = _event$data$segment.videoFrameDtsTime, videoFramePtsTime = _event$data$segment.videoFramePtsTime;
                 transmuxedData.buffer.push({
                     captions: captions,
@@ -11428,7 +11419,7 @@
                     var keyRequestOptions = videojs.mergeOptions(xhrOptions, {
                         uri: segment.key.resolvedUri,
                         responseType: "arraybuffer"
-                    }), keyRequestCallback = handleKeyResponse(segment, objects, finishProcessingFn), keyXhr = xhr(keyRequestOptions, keyRequestCallback);
+                    }), keyXhr = xhr(keyRequestOptions, handleKeyResponse(segment, objects, finishProcessingFn));
                     activeXhrs.push(keyXhr);
                 }
                 if (segment.map && !segment.map.bytes) {
@@ -11436,19 +11427,19 @@
                         var mapKeyRequestOptions = videojs.mergeOptions(xhrOptions, {
                             uri: segment.map.key.resolvedUri,
                             responseType: "arraybuffer"
-                        }), mapKeyRequestCallback = handleKeyResponse(segment, [
+                        }), mapKeyXhr = xhr(mapKeyRequestOptions, handleKeyResponse(segment, [
                             segment.map.key
-                        ], finishProcessingFn), mapKeyXhr = xhr(mapKeyRequestOptions, mapKeyRequestCallback);
+                        ], finishProcessingFn));
                         activeXhrs.push(mapKeyXhr);
                     }
                     var initSegmentOptions = videojs.mergeOptions(xhrOptions, {
                         uri: segment.map.resolvedUri,
                         responseType: "arraybuffer",
                         headers: segmentXhrHeaders(segment.map)
-                    }), initSegmentRequestCallback = handleInitSegmentResponse({
+                    }), initSegmentXhr = xhr(initSegmentOptions, handleInitSegmentResponse({
                         segment: segment,
                         finishProcessingFn: finishProcessingFn
-                    }), initSegmentXhr = xhr(initSegmentOptions, initSegmentRequestCallback);
+                    }));
                     activeXhrs.push(initSegmentXhr);
                 }
                 var segmentRequestOptions = videojs.mergeOptions(xhrOptions, {
@@ -11538,10 +11529,10 @@
                 });
             }, comparePlaylistBandwidth = function(left, right) {
                 var leftBandwidth, rightBandwidth;
-                return left.attributes.BANDWIDTH && (leftBandwidth = left.attributes.BANDWIDTH), leftBandwidth = leftBandwidth || global_window__WEBPACK_IMPORTED_MODULE_0___default().Number.MAX_VALUE, right.attributes.BANDWIDTH && (rightBandwidth = right.attributes.BANDWIDTH), rightBandwidth = rightBandwidth || global_window__WEBPACK_IMPORTED_MODULE_0___default().Number.MAX_VALUE, leftBandwidth - rightBandwidth;
+                return left.attributes.BANDWIDTH && (leftBandwidth = left.attributes.BANDWIDTH), leftBandwidth = leftBandwidth || global_window__WEBPACK_IMPORTED_MODULE_0___default().Number.MAX_VALUE, right.attributes.BANDWIDTH && (rightBandwidth = right.attributes.BANDWIDTH), leftBandwidth - (rightBandwidth = rightBandwidth || global_window__WEBPACK_IMPORTED_MODULE_0___default().Number.MAX_VALUE);
             }, comparePlaylistResolution = function(left, right) {
                 var leftWidth, rightWidth;
-                return (left.attributes.RESOLUTION && left.attributes.RESOLUTION.width && (leftWidth = left.attributes.RESOLUTION.width), leftWidth = leftWidth || global_window__WEBPACK_IMPORTED_MODULE_0___default().Number.MAX_VALUE, right.attributes.RESOLUTION && right.attributes.RESOLUTION.width && (rightWidth = right.attributes.RESOLUTION.width), rightWidth = rightWidth || global_window__WEBPACK_IMPORTED_MODULE_0___default().Number.MAX_VALUE, leftWidth === rightWidth && left.attributes.BANDWIDTH && right.attributes.BANDWIDTH) ? left.attributes.BANDWIDTH - right.attributes.BANDWIDTH : leftWidth - rightWidth;
+                return (left.attributes.RESOLUTION && left.attributes.RESOLUTION.width && (leftWidth = left.attributes.RESOLUTION.width), leftWidth = leftWidth || global_window__WEBPACK_IMPORTED_MODULE_0___default().Number.MAX_VALUE, right.attributes.RESOLUTION && right.attributes.RESOLUTION.width && (rightWidth = right.attributes.RESOLUTION.width), leftWidth === (rightWidth = rightWidth || global_window__WEBPACK_IMPORTED_MODULE_0___default().Number.MAX_VALUE) && left.attributes.BANDWIDTH && right.attributes.BANDWIDTH) ? left.attributes.BANDWIDTH - right.attributes.BANDWIDTH : leftWidth - rightWidth;
             }, simpleSelector = function(master, playerBandwidth, playerWidth, playerHeight, limitRenditionByPlayerDimensions, masterPlaylistController) {
                 if (master) {
                     var resolutionPlusOneList, resolutionPlusOneSmallest, resolutionPlusOneRep, leastPixelDiffRep, options = {
@@ -13300,7 +13291,7 @@
                 }, _proto.dispose = function() {
                     this.trigger("dispose"), this.pendingTimelineChanges_ = {}, this.lastTimelineChanges_ = {}, this.off();
                 }, TimelineChangeController;
-            }(videojs.EventTarget), workerCode = transform(getWorkerString(function() {
+            }(videojs.EventTarget), Decrypter = factory(transform(getWorkerString(function() {
                 function createCommonjsModule(fn, basedir, module) {
                     return fn(module = {
                         path: basedir,
@@ -13347,7 +13338,7 @@
                     }, _proto.trigger = function(type) {
                         var callbacks = this.listeners[type];
                         if (callbacks) {
-                            if (2 === arguments.length) for(var length = callbacks.length, i = 0; i < length; ++i)callbacks[i].call(this, arguments[1]);
+                            if (2 == arguments.length) for(var length = callbacks.length, i = 0; i < length; ++i)callbacks[i].call(this, arguments[1]);
                             else for(var args = Array.prototype.slice.call(arguments, 1), _length = callbacks.length, _i = 0; _i < _length; ++_i)callbacks[_i].apply(this, args);
                         }
                     }, _proto.dispose = function() {
@@ -13476,7 +13467,7 @@
                         ]);
                     });
                 };
-            })), Decrypter = factory(workerCode), audioTrackKind_ = function(properties) {
+            }))), audioTrackKind_ = function(properties) {
                 var kind = properties.default ? "main" : "alternative";
                 return properties.characteristics && properties.characteristics.indexOf("public.accessibility.describes-video") >= 0 && (kind = "main-desc"), kind;
             }, stopLoaders = function(segmentLoader, mediaType) {
@@ -14690,9 +14681,9 @@
                 for(var keySystem in keySystemOptions)keySystemContentTypes[keySystem] = {}, audioContentType && (keySystemContentTypes[keySystem].audioContentType = audioContentType), videoContentType && (keySystemContentTypes[keySystem].videoContentType = videoContentType), mainPlaylist.contentProtection && mainPlaylist.contentProtection[keySystem] && mainPlaylist.contentProtection[keySystem].pssh && (keySystemContentTypes[keySystem].pssh = mainPlaylist.contentProtection[keySystem].pssh), "string" == typeof keySystemOptions[keySystem] && (keySystemContentTypes[keySystem].url = keySystemOptions[keySystem]);
                 return videojs.mergeOptions(keySystemOptions, keySystemContentTypes);
             }, waitForKeySessionCreation = function(_ref) {
-                var player = _ref.player, sourceKeySystems = _ref.sourceKeySystems, audioMedia = _ref.audioMedia, mainPlaylists = _ref.mainPlaylists;
+                var playlists, keySystems, player = _ref.player, sourceKeySystems = _ref.sourceKeySystems, audioMedia = _ref.audioMedia, mainPlaylists = _ref.mainPlaylists;
                 if (!player.eme.initializeMediaKeys) return Promise.resolve();
-                var playlists, keySystems, keySystemsOptionsArr = (playlists = audioMedia ? mainPlaylists.concat([
+                var keySystemsOptionsArr = (playlists = audioMedia ? mainPlaylists.concat([
                     audioMedia
                 ]) : mainPlaylists, keySystems = Object.keys(sourceKeySystems), playlists.reduce(function(keySystemsArr, playlist) {
                     if (!playlist.contentProtection) return keySystemsArr;

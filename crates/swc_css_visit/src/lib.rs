@@ -11,11 +11,6 @@ use swc_visit::define;
 pub trait Node {}
 
 define!({
-    pub struct Tokens {
-        pub span: Span,
-        pub tokens: Vec<TokenAndSpan>,
-    }
-
     pub struct TokenAndSpan {
         pub span: Span,
         pub token: Token,
@@ -23,7 +18,7 @@ define!({
 
     pub struct SimpleBlock {
         pub span: Span,
-        pub name: char,
+        pub name: TokenAndSpan,
         pub value: Vec<ComponentValue>,
     }
 
@@ -249,6 +244,26 @@ define!({
         pub value: Number,
     }
 
+    pub enum LengthPercentage {
+        Length(Length),
+        Percentage(Percentage),
+    }
+
+    pub enum FrequencyPercentage {
+        Frequency(Frequency),
+        Percentage(Percentage),
+    }
+
+    pub enum AnglePercentage {
+        Angle(Angle),
+        Percentage(Percentage),
+    }
+
+    pub enum TimePercentage {
+        Time(Time),
+        Percentage(Percentage),
+    }
+
     pub struct Ratio {
         pub span: Span,
         pub left: Number,
@@ -413,17 +428,31 @@ define!({
 
     pub struct UniversalSelector {
         pub span: Span,
-        pub prefix: Option<NsPrefix>,
+        pub prefix: Option<NamespacePrefix>,
     }
 
-    pub struct NsPrefix {
+    pub struct NamespacePrefix {
         pub span: Span,
-        pub prefix: Option<Ident>,
+        pub namespace: Option<Namespace>,
+    }
+
+    pub enum Namespace {
+        Named(NamedNamespace),
+        Any(AnyNamespace),
+    }
+
+    pub struct NamedNamespace {
+        pub span: Span,
+        pub name: Ident,
+    }
+
+    pub struct AnyNamespace {
+        pub span: Span,
     }
 
     pub struct WqName {
         pub span: Span,
-        pub prefix: Option<NsPrefix>,
+        pub prefix: Option<NamespacePrefix>,
         pub value: Ident,
     }
 
@@ -474,6 +503,7 @@ define!({
         Ident(Ident),
         Str(Str),
         Delimiter(Delimiter),
+        ComplexSelector(ComplexSelector),
         SelectorList(SelectorList),
         ForgivingSelectorList(ForgivingSelectorList),
         CompoundSelectorList(CompoundSelectorList),
@@ -505,6 +535,13 @@ define!({
         PreservedToken(TokenAndSpan),
         CompoundSelector(CompoundSelector),
         Ident(Ident),
+        CustomHighlightName(CustomHighlightName),
+    }
+
+    pub struct CustomHighlightName {
+        pub span: Span,
+        pub value: JsWord,
+        pub raw: Option<JsWord>,
     }
 
     pub struct IdSelector {
@@ -525,7 +562,7 @@ define!({
     pub enum Rule {
         QualifiedRule(Box<QualifiedRule>),
         AtRule(Box<AtRule>),
-        Invalid(Tokens),
+        ListOfComponentValues(Box<ListOfComponentValues>),
     }
 
     pub struct ImportPrelude {
@@ -591,6 +628,8 @@ define!({
         SupportsPrelude(SupportsCondition),
         PagePrelude(PageSelectorList),
         LayerPrelude(LayerPrelude),
+        ContainerPrelude(ContainerCondition),
+        CustomMediaPrelude(CustomMediaQuery),
     }
 
     pub struct ListOfComponentValues {
@@ -619,8 +658,22 @@ define!({
     }
 
     pub enum KeyframesName {
-        CustomIdent(CustomIdent),
-        Str(Str),
+        CustomIdent(Box<CustomIdent>),
+        Str(Box<Str>),
+        PseudoPrefix(Box<KeyframesPseudoPrefix>),
+        PseudoFunction(Box<KeyframesPseudoFunction>),
+    }
+
+    pub struct KeyframesPseudoPrefix {
+        pub span: Span,
+        pub pseudo: Ident,
+        pub name: KeyframesName,
+    }
+
+    pub struct KeyframesPseudoFunction {
+        pub span: Span,
+        pub pseudo: Ident,
+        pub name: KeyframesName,
     }
 
     pub struct KeyframeBlock {
@@ -715,6 +768,7 @@ define!({
     pub enum MediaInParens {
         MediaCondition(MediaCondition),
         Feature(Box<MediaFeature>),
+        GeneralEnclosed(GeneralEnclosed),
     }
 
     pub enum MediaFeature {
@@ -823,6 +877,133 @@ define!({
     pub enum SupportsFeature {
         Declaration(Box<Declaration>),
         Function(Function),
+    }
+
+    pub struct ContainerCondition {
+        pub span: Span,
+        pub name: Option<ContainerName>,
+        pub query: ContainerQuery,
+    }
+
+    pub enum ContainerName {
+        CustomIdent(CustomIdent),
+    }
+
+    pub struct ContainerQuery {
+        pub span: Span,
+        pub queries: Vec<ContainerQueryType>,
+    }
+
+    pub enum ContainerQueryType {
+        Not(ContainerQueryNot),
+        And(ContainerQueryAnd),
+        Or(ContainerQueryOr),
+        QueryInParens(QueryInParens),
+    }
+
+    pub struct ContainerQueryNot {
+        pub span: Span,
+        pub keyword: Option<Ident>,
+        pub query: QueryInParens,
+    }
+
+    pub struct ContainerQueryAnd {
+        pub span: Span,
+        pub keyword: Option<Ident>,
+        pub query: QueryInParens,
+    }
+
+    pub struct ContainerQueryOr {
+        pub span: Span,
+        pub keyword: Option<Ident>,
+        pub query: QueryInParens,
+    }
+
+    pub enum QueryInParens {
+        ContainerQuery(Box<ContainerQuery>),
+        SizeFeature(SizeFeature),
+        GeneralEnclosed(GeneralEnclosed),
+    }
+
+    pub enum SizeFeature {
+        Plain(SizeFeaturePlain),
+        Boolean(SizeFeatureBoolean),
+        Range(SizeFeatureRange),
+        RangeInterval(SizeFeatureRangeInterval),
+    }
+
+    pub struct SizeFeaturePlain {
+        pub span: Span,
+        pub name: SizeFeatureName,
+        pub value: Box<SizeFeatureValue>,
+    }
+
+    pub struct SizeFeatureBoolean {
+        pub span: Span,
+        pub name: SizeFeatureName,
+    }
+
+    pub enum SizeFeatureRangeComparison {
+        /// `<`
+        Lt,
+
+        /// `<=`
+        Le,
+
+        /// `>`
+        Gt,
+
+        /// `>=`
+        Ge,
+
+        /// `=`
+        Eq,
+    }
+
+    pub struct SizeFeatureRange {
+        pub span: Span,
+        pub left: Box<SizeFeatureValue>,
+        pub comparison: SizeFeatureRangeComparison,
+        pub right: Box<SizeFeatureValue>,
+    }
+
+    pub struct SizeFeatureRangeInterval {
+        pub span: Span,
+        pub left: Box<SizeFeatureValue>,
+        pub left_comparison: SizeFeatureRangeComparison,
+        pub name: SizeFeatureName,
+        pub right_comparison: SizeFeatureRangeComparison,
+        pub right: Box<SizeFeatureValue>,
+    }
+
+    pub enum SizeFeatureValue {
+        // TODO <length>
+        Number(Number),
+        Dimension(Dimension),
+        Ident(Ident),
+        Ratio(Ratio),
+        Function(Function),
+    }
+
+    pub enum SizeFeatureName {
+        Ident(Ident),
+    }
+
+    pub struct ExtensionName {
+        pub span: Span,
+        pub value: JsWord,
+        pub raw: Option<JsWord>,
+    }
+
+    pub struct CustomMediaQuery {
+        pub span: Span,
+        pub name: ExtensionName,
+        pub media: CustomMediaQueryMediaType,
+    }
+
+    pub enum CustomMediaQueryMediaType {
+        Ident(Ident),
+        MediaQueryList(MediaQueryList),
     }
 
     pub enum GeneralEnclosed {

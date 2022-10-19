@@ -129,8 +129,8 @@
         null != config && this.set(config);
     }
     function zeroFill(number, targetLength, forceSign) {
-        var absNumber = "" + Math.abs(number);
-        return (number >= 0 ? forceSign ? "+" : "" : "-") + Math.pow(10, Math.max(0, targetLength - absNumber.length)).toString().substr(1) + absNumber;
+        var absNumber = "" + Math.abs(number), zerosToFill = targetLength - absNumber.length;
+        return (number >= 0 ? forceSign ? "+" : "" : "-") + Math.pow(10, Math.max(0, zerosToFill)).toString().substr(1) + absNumber;
     }
     hooks.suppressDeprecationWarnings = !1, hooks.deprecationHandler = null, keys = Object.keys ? Object.keys : function(obj) {
         var i, res = [];
@@ -148,13 +148,10 @@
             return this.localeData().ordinal(func.apply(this, arguments), token);
         });
     }
-    function removeFormattingTokens(input) {
-        return input.match(/\[[\s\S]/) ? input.replace(/^\[|\]$/g, "") : input.replace(/\\/g, "");
-    }
     function formatMoment(m, format) {
         return m.isValid() ? (formatFunctions[format = expandFormat(format, m.localeData())] = formatFunctions[format] || function(format) {
-            var i, length, array = format.match(formattingTokens);
-            for(i = 0, length = array.length; i < length; i++)formatTokenFunctions[array[i]] ? array[i] = formatTokenFunctions[array[i]] : array[i] = removeFormattingTokens(array[i]);
+            var input, i, length, array = format.match(formattingTokens);
+            for(i = 0, length = array.length; i < length; i++)formatTokenFunctions[array[i]] ? array[i] = formatTokenFunctions[array[i]] : array[i] = (input = array[i]).match(/\[[\s\S]/) ? input.replace(/^\[|\]$/g, "") : input.replace(/\\/g, "");
             return function(mom) {
                 var i, output = "";
                 for(i = 0; i < length; i++)output += isFunction(array[i]) ? array[i].call(mom, format) : array[i];
@@ -211,11 +208,6 @@
             return isStrict && strictRegex ? strictRegex : regex;
         };
     }
-    function getParseRegexForToken(token, config) {
-        return hasOwnProp(regexes, token) ? regexes[token](config._strict, config._locale) : RegExp(regexEscape(token.replace("\\", "").replace(/\\(\[)|\\(\])|\[([^\]\[]*)\]|\\(.)/g, function(matched, p1, p2, p3, p4) {
-            return p1 || p2 || p3 || p4;
-        })));
-    }
     function regexEscape(s) {
         return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
     }
@@ -233,9 +225,6 @@
         addParseToken(token, function(input, array, config, token) {
             config._w = config._w || {}, callback(input, config._w, config, token);
         });
-    }
-    function addTimeToArrayFromToken(token, input, config) {
-        null != input && hasOwnProp(tokens, token) && tokens[token](input, config._a, config, token);
     }
     function daysInMonth(year, month) {
         if (isNaN(year) || isNaN(month)) return NaN;
@@ -285,7 +274,7 @@
         if (!mom.isValid()) return mom;
         if ("string" == typeof value) {
             if (/^\d+$/.test(value)) value = toInt(value);
-            else if (value = mom.localeData().monthsParse(value), !isNumber(value)) return mom;
+            else if (!isNumber(value = mom.localeData().monthsParse(value))) return mom;
         }
         return dayOfMonth = Math.min(mom.date(), daysInMonth(mom.year(), value)), mom._d["set" + (mom._isUTC ? "UTC" : "") + "Month"](value, dayOfMonth), mom;
     }
@@ -341,11 +330,11 @@
     var getSetYear = makeGetSet("FullYear", !0);
     function createDate(y, m, d, h, M, s, ms) {
         var date;
-        return y < 100 && y >= 0 ? (date = new Date(y + 400, m, d, h, M, s, ms), isFinite(date.getFullYear()) && date.setFullYear(y)) : date = new Date(y, m, d, h, M, s, ms), date;
+        return y < 100 && y >= 0 ? isFinite((date = new Date(y + 400, m, d, h, M, s, ms)).getFullYear()) && date.setFullYear(y) : date = new Date(y, m, d, h, M, s, ms), date;
     }
     function createUTCDate(y) {
         var date, args;
-        return y < 100 && y >= 0 ? (args = Array.prototype.slice.call(arguments), args[0] = y + 400, date = new Date(Date.UTC.apply(null, args)), isFinite(date.getUTCFullYear()) && date.setUTCFullYear(y)) : date = new Date(Date.UTC.apply(null, arguments)), date;
+        return y < 100 && y >= 0 ? (args = Array.prototype.slice.call(arguments), args[0] = y + 400, isFinite((date = new Date(Date.UTC.apply(null, args))).getUTCFullYear()) && date.setUTCFullYear(y)) : date = new Date(Date.UTC.apply(null, arguments)), date;
     }
     function firstWeekOffset(year, dow, doy) {
         var fwd = 7 + dow - doy;
@@ -542,11 +531,6 @@
         weekdaysShort: defaultLocaleWeekdaysShort,
         meridiemParse: /[ap]\.?m?\.?/i
     }, locales = {}, localeFamilies = {};
-    function commonPrefix(arr1, arr2) {
-        var i, minl = Math.min(arr1.length, arr2.length);
-        for(i = 0; i < minl; i += 1)if (arr1[i] !== arr2[i]) return i;
-        return minl;
-    }
     function normalizeLocale(key) {
         return key ? key.toLowerCase().replace("_", "-") : key;
     }
@@ -594,7 +578,11 @@
             for(var j, next, locale, split, i = 0; i < names.length;){
                 for(j = (split = normalizeLocale(names[i]).split("-")).length, next = (next = normalizeLocale(names[i + 1])) ? next.split("-") : null; j > 0;){
                     if (locale = loadLocale(split.slice(0, j).join("-"))) return locale;
-                    if (next && next.length >= j && commonPrefix(split, next) >= j - 1) break;
+                    if (next && next.length >= j && function(arr1, arr2) {
+                        var i, minl = Math.min(arr1.length, arr2.length);
+                        for(i = 0; i < minl; i += 1)if (arr1[i] !== arr2[i]) return i;
+                        return minl;
+                    }(split, next) >= j - 1) break;
                     j--;
                 }
                 i++;
@@ -749,22 +737,16 @@
         } else config._isValid = !1;
     }
     function configFromRFC2822(config) {
-        var yearStr, year, yearStr1, monthStr, dayStr, hourStr, minuteStr, secondStr, result, parsedArray, match = rfc2822.exec((0, config._i).replace(/\([^)]*\)|[\n\t]/g, " ").replace(/(\s\s+)/g, " ").replace(/^\s\s*/, "").replace(/\s\s*$/, ""));
+        var year, yearStr, monthStr, dayStr, hourStr, minuteStr, secondStr, result, weekdayStr, config1, match = rfc2822.exec(config._i.replace(/\([^)]*\)|[\n\t]/g, " ").replace(/(\s\s+)/g, " ").replace(/^\s\s*/, "").replace(/\s\s*$/, ""));
         if (match) {
-            if (yearStr1 = match[4], monthStr = match[3], dayStr = match[2], hourStr = match[5], minuteStr = match[6], secondStr = match[7], result = [
-                (yearStr = yearStr1, (year = parseInt(yearStr, 10)) <= 49 ? 2000 + year : year <= 999 ? 1900 + year : year),
+            if (yearStr = match[4], monthStr = match[3], dayStr = match[2], hourStr = match[5], minuteStr = match[6], secondStr = match[7], result = [
+                (year = parseInt(yearStr, 10)) <= 49 ? 2000 + year : year <= 999 ? 1900 + year : year,
                 defaultLocaleMonthsShort.indexOf(monthStr),
                 parseInt(dayStr, 10),
                 parseInt(hourStr, 10),
                 parseInt(minuteStr, 10)
-            ], secondStr && result.push(parseInt(secondStr, 10)), parsedArray = result, !function(weekdayStr, parsedInput, config) {
-                if (weekdayStr) {
-                    var weekdayProvided = defaultLocaleWeekdaysShort.indexOf(weekdayStr), weekdayActual = new Date(parsedInput[0], parsedInput[1], parsedInput[2]).getDay();
-                    if (weekdayProvided !== weekdayActual) return getParsingFlags(config).weekdayMismatch = !0, config._isValid = !1, !1;
-                }
-                return !0;
-            }(match[1], parsedArray, config)) return;
-            config._a = parsedArray, config._tzm = function(obsOffset, militaryOffset, numOffset) {
+            ], secondStr && result.push(parseInt(secondStr, 10)), weekdayStr = match[1], config1 = config, weekdayStr && defaultLocaleWeekdaysShort.indexOf(weekdayStr) !== new Date(result[0], result[1], result[2]).getDay() && (getParsingFlags(config1).weekdayMismatch = !0, config1._isValid = !1, 1)) return;
+            config._a = result, config._tzm = function(obsOffset, militaryOffset, numOffset) {
                 if (obsOffset) return obsOffsets[obsOffset];
                 if (militaryOffset) return 0;
                 var hm = parseInt(numOffset, 10), m = hm % 100;
@@ -776,9 +758,9 @@
         return null != a ? a : null != b ? b : c;
     }
     function configFromArray(config) {
-        var config1, w, weekYear, week, weekday, dow, doy, temp, weekdayOverflow, curWeek, config2, nowValue, i, date, currentDate, expectedWeekday, yearToUse, input = [];
+        var config1, w, weekYear, week, weekday, dow, doy, temp, weekdayOverflow, curWeek, nowValue, i, date, currentDate, expectedWeekday, yearToUse, input = [];
         if (!config._d) {
-            for(config2 = config, nowValue = new Date(hooks.now()), currentDate = config2._useUTC ? [
+            for(nowValue = new Date(hooks.now()), currentDate = config._useUTC ? [
                 nowValue.getUTCFullYear(),
                 nowValue.getUTCMonth(),
                 nowValue.getUTCDate()
@@ -801,8 +783,10 @@
             return;
         }
         config._a = [], getParsingFlags(config).empty = !0;
-        var locale, hour, meridiem, isPm, i, parsedInput, tokens, token, skipped, era, string = "" + config._i, stringLength = string.length, totalParsedInputLength = 0;
-        for(i = 0, tokens = expandFormat(config._f, config._locale).match(formattingTokens) || []; i < tokens.length; i++)token = tokens[i], (parsedInput = (string.match(getParseRegexForToken(token, config)) || [])[0]) && ((skipped = string.substr(0, string.indexOf(parsedInput))).length > 0 && getParsingFlags(config).unusedInput.push(skipped), string = string.slice(string.indexOf(parsedInput) + parsedInput.length), totalParsedInputLength += parsedInput.length), formatTokenFunctions[token] ? (parsedInput ? getParsingFlags(config).empty = !1 : getParsingFlags(config).unusedTokens.push(token), addTimeToArrayFromToken(token, parsedInput, config)) : config._strict && !parsedInput && getParsingFlags(config).unusedTokens.push(token);
+        var locale, hour, meridiem, isPm, i, parsedInput, tokens1, token, skipped, era, string = "" + config._i, stringLength = string.length, totalParsedInputLength = 0;
+        for(i = 0, tokens1 = expandFormat(config._f, config._locale).match(formattingTokens) || []; i < tokens1.length; i++)(token = tokens1[i], (parsedInput = (string.match(hasOwnProp(regexes, token) ? regexes[token](config._strict, config._locale) : RegExp(regexEscape(token.replace("\\", "").replace(/\\(\[)|\\(\])|\[([^\]\[]*)\]|\\(.)/g, function(matched, p1, p2, p3, p4) {
+            return p1 || p2 || p3 || p4;
+        })))) || [])[0]) && ((skipped = string.substr(0, string.indexOf(parsedInput))).length > 0 && getParsingFlags(config).unusedInput.push(skipped), string = string.slice(string.indexOf(parsedInput) + parsedInput.length), totalParsedInputLength += parsedInput.length), formatTokenFunctions[token]) ? (parsedInput ? getParsingFlags(config).empty = !1 : getParsingFlags(config).unusedTokens.push(token), null != parsedInput && hasOwnProp(tokens, token) && tokens[token](parsedInput, config._a, config, token)) : config._strict && !parsedInput && getParsingFlags(config).unusedTokens.push(token);
         getParsingFlags(config).charsLeftOver = stringLength - totalParsedInputLength, string.length > 0 && getParsingFlags(config).unusedInput.push(string), config._a[3] <= 12 && !0 === getParsingFlags(config).bigHour && config._a[3] > 0 && (getParsingFlags(config).bigHour = void 0), getParsingFlags(config).parsedDateParts = config._a.slice(0), getParsingFlags(config).meridiem = config._meridiem, config._a[3] = (locale = config._locale, hour = config._a[3], null == (meridiem = config._meridiem) ? hour : null != locale.meridiemHour ? locale.meridiemHour(hour, meridiem) : (null != locale.isPM && ((isPm = locale.isPM(meridiem)) && hour < 12 && (hour += 12), isPm || 12 !== hour || (hour = 0)), hour)), null !== (era = getParsingFlags(config).era) && (config._a[0] = config._locale.erasConvertYear(era, config._a[0])), configFromArray(config), checkOverflow(config);
     }
     function prepareConfig(config) {
@@ -817,7 +801,7 @@
             }
             for(i = 0; i < config._f.length; i++)currentScore = 0, validFormatFound = !1, tempConfig = copyConfig({}, config), null != config._useUTC && (tempConfig._useUTC = config._useUTC), tempConfig._f = config._f[i], configFromStringAndFormat(tempConfig), isValid(tempConfig) && (validFormatFound = !0), currentScore += getParsingFlags(tempConfig).charsLeftOver, currentScore += 10 * getParsingFlags(tempConfig).unusedTokens.length, getParsingFlags(tempConfig).score = currentScore, bestFormatIsValid ? currentScore < scoreToBeat && (scoreToBeat = currentScore, bestMoment = tempConfig) : (null == scoreToBeat || currentScore < scoreToBeat || validFormatFound) && (scoreToBeat = currentScore, bestMoment = tempConfig, validFormatFound && (bestFormatIsValid = !0));
             extend(config, bestMoment || tempConfig);
-        }(config) : format ? configFromStringAndFormat(config) : (input = (config1 = config)._i, isUndefined(input) ? config1._d = new Date(hooks.now()) : isDate(input) ? config1._d = new Date(input.valueOf()) : "string" == typeof input ? function(config) {
+        }(config) : format ? configFromStringAndFormat(config) : isUndefined(input = (config1 = config)._i) ? config1._d = new Date(hooks.now()) : isDate(input) ? config1._d = new Date(input.valueOf()) : "string" == typeof input ? function(config) {
             var matched = aspNetJsonRegex.exec(config._i);
             if (null !== matched) {
                 config._d = new Date(+matched[1]);
@@ -841,7 +825,7 @@
                     return obj && parseInt(obj, 10);
                 }), configFromArray(config);
             }
-        }(config1) : isNumber(input) ? config1._d = new Date(input) : hooks.createFromInputFallback(config1)), isValid(config) || (config._d = null), config);
+        }(config1) : isNumber(input) ? config1._d = new Date(input) : hooks.createFromInputFallback(config1), isValid(config) || (config._d = null), config);
     }
     function createLocalOrUTC(input, format, locale, strict, isUTC) {
         var res, c = {};
@@ -931,7 +915,7 @@
     hooks.updateOffset = function() {};
     var aspNetRegex = /^(-|\+)?(?:(\d*)[. ])?(\d+):(\d+)(?::(\d+)(\.\d*)?)?$/, isoRegex = /^(-|\+)?P(?:([-+]?[0-9,.]*)Y)?(?:([-+]?[0-9,.]*)M)?(?:([-+]?[0-9,.]*)W)?(?:([-+]?[0-9,.]*)D)?(?:T(?:([-+]?[0-9,.]*)H)?(?:([-+]?[0-9,.]*)M)?(?:([-+]?[0-9,.]*)S)?)?$/;
     function createDuration(input, key) {
-        var sign, ret, diffRes, base, other, res, duration = input, match = null;
+        var base, other, res, sign, ret, diffRes, duration = input, match = null;
         return isDuration(input) ? duration = {
             ms: input._milliseconds,
             d: input._days,
@@ -966,8 +950,8 @@
     }
     function createAdder(direction, name) {
         return function(val, period) {
-            var dur, tmp;
-            return null === period || isNaN(+period) || (deprecateSimple(name, "moment()." + name + "(period, number) is deprecated. Please use moment()." + name + "(number, period). See http://momentjs.com/guides/#/warnings/add-inverted-param/ for more info."), tmp = val, val = period, period = tmp), dur = createDuration(val, period), addSubtract(this, dur, direction), this;
+            var tmp;
+            return null === period || isNaN(+period) || (deprecateSimple(name, "moment()." + name + "(period, number) is deprecated. Please use moment()." + name + "(number, period). See http://momentjs.com/guides/#/warnings/add-inverted-param/ for more info."), tmp = val, val = period, period = tmp), addSubtract(this, createDuration(val, period), direction), this;
         };
     }
     function addSubtract(mom, duration, isAdding, updateOffset) {
@@ -997,9 +981,6 @@
     function localeData() {
         return this._locale;
     }
-    function mod$1(dividend, divisor) {
-        return (dividend % divisor + divisor) % divisor;
-    }
     function localStartOfDate(y, m, d) {
         return y < 100 && y >= 0 ? new Date(y + 400, m, d) - 12622780800000 : new Date(y, m, d).valueOf();
     }
@@ -1022,7 +1003,7 @@
     }
     function getSetWeekYearHelper(input, week, weekday, dow, doy) {
         var weeksTarget;
-        return null == input ? weekOfYear(this, dow, doy).year : (weeksTarget = weeksInYear(input, dow, doy), week > weeksTarget && (week = weeksTarget), setWeekAll.call(this, input, week, weekday, dow, doy));
+        return null == input ? weekOfYear(this, dow, doy).year : (week > (weeksTarget = weeksInYear(input, dow, doy)) && (week = weeksTarget), setWeekAll.call(this, input, week, weekday, dow, doy));
     }
     function setWeekAll(weekYear, week, weekday, dow, doy) {
         var dayOfYearData = dayOfYearFromWeeks(weekYear, week, weekday, dow, doy), date = createUTCDate(dayOfYearData.year, 0, dayOfYearData.dayOfYear);
@@ -1176,7 +1157,7 @@
         return string;
     }
     proto.add = add, proto.calendar = function(time, formats) {
-        if (1 === arguments.length) {
+        if (1 == arguments.length) {
             if (arguments[0]) {
                 var input, arrayTest, dataTypeTest;
                 (input = arguments[0], isMoment(input) || isDate(input) || isString(input) || isNumber(input) || (arrayTest = isArray(input), dataTypeTest = !1, arrayTest && (dataTypeTest = 0 === input.filter(function(item) {
@@ -1284,13 +1265,13 @@
                 time = startOfDate(this.year(), this.month(), this.date() + 1) - 1;
                 break;
             case "hour":
-                time = this._d.valueOf(), time += 3600000 - mod$1(time + (this._isUTC ? 0 : 60000 * this.utcOffset()), 3600000) - 1;
+                time = this._d.valueOf(), time += 3600000 - ((time + (this._isUTC ? 0 : 60000 * this.utcOffset())) % 3600000 + 3600000) % 3600000 - 1;
                 break;
             case "minute":
-                time = this._d.valueOf(), time += 60000 - mod$1(time, 60000) - 1;
+                time = this._d.valueOf(), time += 60000 - (time % 60000 + 60000) % 60000 - 1;
                 break;
             case "second":
-                time = this._d.valueOf(), time += 1000 - mod$1(time, 1000) - 1;
+                time = this._d.valueOf(), time += 1000 - (time % 1000 + 1000) % 1000 - 1;
         }
         return this._d.setTime(time), hooks.updateOffset(this, !0), this;
     }, proto.format = function(inputString) {
@@ -1312,7 +1293,7 @@
     }, proto.toNow = function(withoutSuffix) {
         return this.to(createLocal(), withoutSuffix);
     }, proto.get = function(units) {
-        return (units = normalizeUnits(units), isFunction(this[units])) ? this[units]() : this;
+        return isFunction(this[units = normalizeUnits(units)]) ? this[units]() : this;
     }, proto.invalidAt = function() {
         return getParsingFlags(this).overflow;
     }, proto.isAfter = function(input, units) {
@@ -1348,7 +1329,7 @@
                 }), units;
             }(units = normalizeObjectUnits(units));
             for(i = 0; i < prioritized.length; i++)this[prioritized[i].unit](units[prioritized[i].unit]);
-        } else if (units = normalizeUnits(units), isFunction(this[units])) return this[units](value);
+        } else if (isFunction(this[units = normalizeUnits(units)])) return this[units](value);
         return this;
     }, proto.startOf = function(units) {
         var time, startOfDate;
@@ -1374,13 +1355,13 @@
                 time = startOfDate(this.year(), this.month(), this.date());
                 break;
             case "hour":
-                time = this._d.valueOf(), time -= mod$1(time + (this._isUTC ? 0 : 60000 * this.utcOffset()), 3600000);
+                time = this._d.valueOf(), time -= ((time + (this._isUTC ? 0 : 60000 * this.utcOffset())) % 3600000 + 3600000) % 3600000;
                 break;
             case "minute":
-                time = this._d.valueOf(), time -= mod$1(time, 60000);
+                time = this._d.valueOf(), time -= (time % 60000 + 60000) % 60000;
                 break;
             case "second":
-                time = this._d.valueOf(), time -= mod$1(time, 1000);
+                time = this._d.valueOf(), time -= (time % 1000 + 1000) % 1000;
         }
         return this._d.setTime(time), hooks.updateOffset(this, !0), this;
     }, proto.subtract = subtract, proto.toArray = function() {
@@ -1766,7 +1747,7 @@
         return this.isValid() ? this._milliseconds + 864e5 * this._days + this._months % 12 * 2592e6 + 31536e6 * toInt(this._months / 12) : NaN;
     }, proto$2._bubble = function() {
         var seconds, minutes, hours, years, monthsFromDays, milliseconds = this._milliseconds, days = this._days, months = this._months, data = this._data;
-        return milliseconds >= 0 && days >= 0 && months >= 0 || milliseconds <= 0 && days <= 0 && months <= 0 || (milliseconds += 864e5 * absCeil(monthsToDays(months) + days), days = 0, months = 0), data.milliseconds = milliseconds % 1000, seconds = absFloor(milliseconds / 1000), data.seconds = seconds % 60, minutes = absFloor(seconds / 60), data.minutes = minutes % 60, hours = absFloor(minutes / 60), data.hours = hours % 24, days += absFloor(hours / 24), monthsFromDays = absFloor(daysToMonths(days)), months += monthsFromDays, days -= absCeil(monthsToDays(monthsFromDays)), years = absFloor(months / 12), months %= 12, data.days = days, data.months = months, data.years = years, this;
+        return milliseconds >= 0 && days >= 0 && months >= 0 || milliseconds <= 0 && days <= 0 && months <= 0 || (milliseconds += 864e5 * absCeil(monthsToDays(months) + days), days = 0, months = 0), data.milliseconds = milliseconds % 1000, seconds = absFloor(milliseconds / 1000), data.seconds = seconds % 60, minutes = absFloor(seconds / 60), data.minutes = minutes % 60, hours = absFloor(minutes / 60), data.hours = hours % 24, days += absFloor(hours / 24), months += monthsFromDays = absFloor(daysToMonths(days)), days -= absCeil(monthsToDays(monthsFromDays)), years = absFloor(months / 12), months %= 12, data.days = days, data.months = months, data.years = years, this;
     }, proto$2.clone = function() {
         return createDuration(this);
     }, proto$2.get = function(units) {
@@ -1775,8 +1756,8 @@
         return absFloor(this.days() / 7);
     }, proto$2.months = months, proto$2.years = years, proto$2.humanize = function(argWithSuffix, argThresholds) {
         if (!this.isValid()) return this.localeData().invalidDate();
-        var locale, output, withoutSuffix, thresholds1, duration, seconds, minutes, hours, days, months, weeks, years, a, withSuffix = !1, th = thresholds;
-        return "object" == typeof argWithSuffix && (argThresholds = argWithSuffix, argWithSuffix = !1), "boolean" == typeof argWithSuffix && (withSuffix = argWithSuffix), "object" == typeof argThresholds && (th = Object.assign({}, thresholds, argThresholds), null != argThresholds.s && null == argThresholds.ss && (th.ss = argThresholds.s - 1)), locale = this.localeData(), withoutSuffix = !withSuffix, thresholds1 = th, duration = createDuration(this).abs(), seconds = round(duration.as("s")), minutes = round(duration.as("m")), hours = round(duration.as("h")), days = round(duration.as("d")), months = round(duration.as("M")), weeks = round(duration.as("w")), years = round(duration.as("y")), a = seconds <= thresholds1.ss && [
+        var withoutSuffix, thresholds1, duration, seconds, minutes, hours, days, months, weeks, years, a, locale, output, withSuffix = !1, th = thresholds;
+        return "object" == typeof argWithSuffix && (argThresholds = argWithSuffix, argWithSuffix = !1), "boolean" == typeof argWithSuffix && (withSuffix = argWithSuffix), "object" == typeof argThresholds && (th = Object.assign({}, thresholds, argThresholds), null != argThresholds.s && null == argThresholds.ss && (th.ss = argThresholds.s - 1)), locale = this.localeData(), withoutSuffix = !withSuffix, thresholds1 = th, seconds = round((duration = createDuration(this).abs()).as("s")), minutes = round(duration.as("m")), hours = round(duration.as("h")), days = round(duration.as("d")), months = round(duration.as("M")), weeks = round(duration.as("w")), years = round(duration.as("y")), a = seconds <= thresholds1.ss && [
             "s",
             seconds
         ] || seconds < thresholds1.s && [

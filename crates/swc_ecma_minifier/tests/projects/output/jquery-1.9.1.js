@@ -87,7 +87,7 @@
         splice: [].splice
     }, jQuery.fn.init.prototype = jQuery.fn, jQuery.extend = jQuery.fn.extend = function() {
         var src, copyIsArray, copy, name1, options, clone, target = arguments[0] || {}, i = 1, length = arguments.length, deep = !1;
-        for("boolean" == typeof target && (deep = target, target = arguments[1] || {}, i = 2), "object" == typeof target || jQuery.isFunction(target) || (target = {}), length === i && (target = this, --i); i < length; i++)if (null != (options = arguments[i])) for(name1 in options)src = target[name1], target !== (copy = options[name1]) && (deep && copy && (jQuery.isPlainObject(copy) || (copyIsArray = jQuery.isArray(copy))) ? (copyIsArray ? (copyIsArray = !1, clone = src && jQuery.isArray(src) ? src : []) : clone = src && jQuery.isPlainObject(src) ? src : {}, target[name1] = jQuery.extend(deep, clone, copy)) : copy !== undefined && (target[name1] = copy));
+        for("boolean" == typeof target && (deep = target, target = arguments[1] || {}, i = 2), "object" == typeof target || jQuery.isFunction(target) || (target = {}), length === i && (target = this, --i); i < length; i++)if (null != (options = arguments[i])) for(name1 in options)src = target[name1], target !== (copy = options[name1]) && (deep && copy && (jQuery.isPlainObject(copy) || (copyIsArray = jQuery.isArray(copy))) ? (copyIsArray ? (copyIsArray = !1, clone = src && jQuery.isArray(src) ? src : []) : clone = src && jQuery.isPlainObject(src) ? src : {}, target[name1] = jQuery.extend(deep, clone, copy)) : undefined !== copy && (target[name1] = copy));
         return target;
     }, jQuery.extend({
         noConflict: function(deep) {
@@ -130,7 +130,7 @@
                 return !1;
             }
             for(key in obj);
-            return key === undefined || core_hasOwn.call(obj, key);
+            return undefined === key || core_hasOwn.call(obj, key);
         },
         isEmptyObject: function(obj) {
             var name1;
@@ -176,7 +176,7 @@
             return elem.nodeName && elem.nodeName.toLowerCase() === name1.toLowerCase();
         },
         each: function(obj, callback, args) {
-            var i = 0, length = obj.length, isArray = isArraylike(obj);
+            var value, i = 0, length = obj.length, isArray = isArraylike(obj);
             if (args) {
                 if (isArray) for(; i < length && !1 !== callback.apply(obj[i], args); i++);
                 else for(i in obj)if (!1 === callback.apply(obj[i], args)) break;
@@ -230,7 +230,7 @@
         access: function(elems, fn, key, value, chainable, emptyGet, raw) {
             var i = 0, length = elems.length, bulk = null == key;
             if ("object" === jQuery.type(key)) for(i in chainable = !0, key)jQuery.access(elems, fn, i, key[i], !0, emptyGet, raw);
-            else if (value !== undefined && (chainable = !0, jQuery.isFunction(value) || (raw = !0), bulk && (raw ? (fn.call(elems, value), fn = null) : (bulk = fn, fn = function(elem, key, value) {
+            else if (undefined !== value && (chainable = !0, jQuery.isFunction(value) || (raw = !0), bulk && (raw ? (fn.call(elems, value), fn = null) : (bulk = fn, fn = function(elem, key, value) {
                 return bulk.call(jQuery(elem), value);
             })), fn)) for(; i < length; i++)fn(elems[i], key, raw ? value : value.call(elems[i], i, fn(elems[i], key)));
             return chainable ? elems : bulk ? fn.call(elems) : length ? fn(elems[0], key) : emptyGet;
@@ -436,7 +436,7 @@
     function internalData(elem, name1, data, pvt) {
         if (jQuery.acceptData(elem)) {
             var thisCache, ret, internalKey = jQuery.expando, getByName = "string" == typeof name1, isNode = elem.nodeType, cache = isNode ? jQuery.cache : elem, id = isNode ? elem[internalKey] : elem[internalKey] && internalKey;
-            if (id && cache[id] && (pvt || cache[id].data) || !getByName || data !== undefined) return id || (isNode ? elem[internalKey] = id = core_deletedIds.pop() || jQuery.guid++ : id = internalKey), cache[id] || (cache[id] = {}, isNode || (cache[id].toJSON = jQuery.noop)), ("object" == typeof name1 || "function" == typeof name1) && (pvt ? cache[id] = jQuery.extend(cache[id], name1) : cache[id].data = jQuery.extend(cache[id].data, name1)), thisCache = cache[id], pvt || (thisCache.data || (thisCache.data = {}), thisCache = thisCache.data), data !== undefined && (thisCache[jQuery.camelCase(name1)] = data), getByName ? null == (ret = thisCache[name1]) && (ret = thisCache[jQuery.camelCase(name1)]) : ret = thisCache, ret;
+            if (id && cache[id] && (pvt || cache[id].data) || !getByName || undefined !== data) return id || (isNode ? elem[internalKey] = id = core_deletedIds.pop() || jQuery.guid++ : id = internalKey), cache[id] || (cache[id] = {}, isNode || (cache[id].toJSON = jQuery.noop)), ("object" == typeof name1 || "function" == typeof name1) && (pvt ? cache[id] = jQuery.extend(cache[id], name1) : cache[id].data = jQuery.extend(cache[id].data, name1)), thisCache = cache[id], pvt || (thisCache.data || (thisCache.data = {}), thisCache = thisCache.data), undefined !== data && (thisCache[jQuery.camelCase(name1)] = data), getByName ? null == (ret = thisCache[name1]) && (ret = thisCache[jQuery.camelCase(name1)]) : ret = thisCache, ret;
         }
     }
     function internalRemoveData(elem, name1, pvt) {
@@ -458,7 +458,7 @@
         }
     }
     function dataAttr(elem, key, data) {
-        if (data === undefined && 1 === elem.nodeType) {
+        if (undefined === data && 1 === elem.nodeType) {
             var name1 = "data-" + key.replace(rmultiDash, "-$1").toLowerCase();
             if ("string" == typeof (data = elem.getAttribute(name1))) {
                 try {
@@ -505,9 +505,9 @@
     }), jQuery.fn.extend({
         data: function(key, value) {
             var attrs, name1, elem = this[0], i = 0, data = null;
-            if (key === undefined) {
+            if (undefined === key) {
                 if (this.length && (data = jQuery.data(elem), 1 === elem.nodeType && !jQuery._data(elem, "parsedAttrs"))) {
-                    for(attrs = elem.attributes; i < attrs.length; i++)(name1 = attrs[i].name).indexOf("data-") || dataAttr(elem, name1 = jQuery.camelCase(name1.slice(5)), data[name1]);
+                    for(attrs = elem.attributes; i < attrs.length; i++)(name1 = attrs[i].name).indexOf("data-") || (name1 = jQuery.camelCase(name1.slice(5)), dataAttr(elem, name1, data[name1]));
                     jQuery._data(elem, "parsedAttrs", !0);
                 }
                 return data;
@@ -515,7 +515,7 @@
             return "object" == typeof key ? this.each(function() {
                 jQuery.data(this, key);
             }) : jQuery.access(this, function(value) {
-                if (value === undefined) return elem ? dataAttr(elem, key, jQuery.data(elem, key)) : null;
+                if (undefined === value) return elem ? dataAttr(elem, key, jQuery.data(elem, key)) : null;
                 this.each(function() {
                     jQuery.data(this, key, value);
                 });
@@ -549,7 +549,7 @@
     }), jQuery.fn.extend({
         queue: function(type, data) {
             var setter = 2;
-            return ("string" != typeof type && (data = type, type = "fx", setter--), arguments.length < setter) ? jQuery.queue(this[0], type) : data === undefined ? this : this.each(function() {
+            return ("string" != typeof type && (data = type, type = "fx", setter--), arguments.length < setter) ? jQuery.queue(this[0], type) : undefined === data ? this : this.each(function() {
                 var queue = jQuery.queue(this, type, data);
                 jQuery._queueHooks(this, type), "fx" === type && "inprogress" !== queue[0] && jQuery.dequeue(this, type);
             });
@@ -614,7 +614,7 @@
             return this;
         },
         removeClass: function(value) {
-            var classes, elem, cur, clazz, j, i = 0, len = this.length, proceed = 0 === arguments.length || "string" == typeof value && value;
+            var classes, elem, cur, clazz, j, i = 0, len = this.length, proceed = 0 == arguments.length || "string" == typeof value && value;
             if (jQuery.isFunction(value)) return this.each(function(j) {
                 jQuery(this).removeClass(value.call(this, j, this.className));
             });
@@ -641,12 +641,13 @@
         },
         val: function(value) {
             var ret, hooks, isFunction, elem = this[0];
-            return arguments.length ? (isFunction = jQuery.isFunction(value), this.each(function(i) {
+            if (!arguments.length) return elem ? (hooks = jQuery.valHooks[elem.type] || jQuery.valHooks[elem.nodeName.toLowerCase()]) && "get" in hooks && undefined !== (ret = hooks.get(elem, "value")) ? ret : "string" == typeof (ret = elem.value) ? ret.replace(rreturn, "") : null == ret ? "" : ret : void 0;
+            return isFunction = jQuery.isFunction(value), this.each(function(i) {
                 var val, self = jQuery(this);
                 1 === this.nodeType && (null == (val = isFunction ? value.call(this, i, self.val()) : value) ? val = "" : "number" == typeof val ? val += "" : jQuery.isArray(val) && (val = jQuery.map(val, function(value) {
                     return null == value ? "" : value + "";
                 })), (hooks = jQuery.valHooks[this.type] || jQuery.valHooks[this.nodeName.toLowerCase()]) && "set" in hooks && undefined !== hooks.set(this, val, "value") || (this.value = val));
-            })) : elem ? (hooks = jQuery.valHooks[elem.type] || jQuery.valHooks[elem.nodeName.toLowerCase()]) && "get" in hooks && undefined !== (ret = hooks.get(elem, "value")) ? ret : "string" == typeof (ret = elem.value) ? ret.replace(rreturn, "") : null == ret ? "" : ret : void 0;
+            });
         }
     }), jQuery.extend({
         valHooks: {
@@ -676,7 +677,7 @@
             var hooks, notxml, ret, nType = elem.nodeType;
             if (elem && 3 !== nType && 8 !== nType && 2 !== nType) {
                 if (typeof elem.getAttribute === core_strundefined) return jQuery.prop(elem, name1, value);
-                if ((notxml = 1 !== nType || !jQuery.isXMLDoc(elem)) && (name1 = name1.toLowerCase(), hooks = jQuery.attrHooks[name1] || (rboolean.test(name1) ? boolHook : nodeHook)), value !== undefined) {
+                if ((notxml = 1 !== nType || !jQuery.isXMLDoc(elem)) && (name1 = name1.toLowerCase(), hooks = jQuery.attrHooks[name1] || (rboolean.test(name1) ? boolHook : nodeHook)), undefined !== value) {
                     if (null === value) jQuery.removeAttr(elem, name1);
                     else if (hooks && notxml && "set" in hooks && undefined !== (ret = hooks.set(elem, value, name1))) return ret;
                     else return elem.setAttribute(name1, value + ""), value;
@@ -714,7 +715,7 @@
         },
         prop: function(elem, name1, value) {
             var ret, hooks, nType = elem.nodeType;
-            if (elem && 3 !== nType && 8 !== nType && 2 !== nType) return (1 === nType && jQuery.isXMLDoc(elem) || (name1 = jQuery.propFix[name1] || name1, hooks = jQuery.propHooks[name1]), value !== undefined) ? hooks && "set" in hooks && undefined !== (ret = hooks.set(elem, value, name1)) ? ret : elem[name1] = value : hooks && "get" in hooks && null !== (ret = hooks.get(elem, name1)) ? ret : elem[name1];
+            if (elem && 3 !== nType && 8 !== nType && 2 !== nType) return (1 === nType && jQuery.isXMLDoc(elem) || (name1 = jQuery.propFix[name1] || name1, hooks = jQuery.propHooks[name1]), undefined !== value) ? hooks && "set" in hooks && undefined !== (ret = hooks.set(elem, value, name1)) ? ret : elem[name1] = value : hooks && "get" in hooks && null !== (ret = hooks.get(elem, name1)) ? ret : elem[name1];
         },
         propHooks: {
             tabIndex: {
@@ -829,7 +830,7 @@
             var tmp, events, t, handleObjIn, special, eventHandle, handleObj, handlers, type, namespaces, origType, elemData = jQuery._data(elem);
             if (elemData) {
                 for(handler.handler && (handler = (handleObjIn = handler).handler, selector = handleObjIn.selector), handler.guid || (handler.guid = jQuery.guid++), (events = elemData.events) || (events = elemData.events = {}), (eventHandle = elemData.handle) || ((eventHandle = elemData.handle = function(e) {
-                    return "function" === core_strundefined || e && jQuery.event.triggered === e.type ? undefined : jQuery.event.dispatch.apply(eventHandle.elem, arguments);
+                    return e && jQuery.event.triggered === e.type ? undefined : jQuery.event.dispatch.apply(eventHandle.elem, arguments);
                 }).elem = elem), t = (types = (types || "").match(core_rnotwhite) || [
                     ""
                 ]).length; t--;)type = origType = (tmp = rtypenamespace.exec(types[t]) || [])[1], namespaces = (tmp[2] || "").split(".").sort(), special = jQuery.event.special[type] || {}, type = (selector ? special.delegateType : special.bindType) || type, special = jQuery.event.special[type] || {}, handleObj = jQuery.extend({
@@ -865,31 +866,33 @@
             var handle, ontype, cur, bubbleType, special, tmp, i, eventPath = [
                 elem || document
             ], type = core_hasOwn.call(event, "type") ? event.type : event, namespaces = core_hasOwn.call(event, "namespace") ? event.namespace.split(".") : [];
-            if (cur = tmp = elem = elem || document, !(3 === elem.nodeType || 8 === elem.nodeType || rfocusMorph.test(type + jQuery.event.triggered)) && (type.indexOf(".") >= 0 && (type = (namespaces = type.split(".")).shift(), namespaces.sort()), ontype = 0 > type.indexOf(":") && "on" + type, (event = event[jQuery.expando] ? event : new jQuery.Event(type, "object" == typeof event && event)).isTrigger = !0, event.namespace = namespaces.join("."), event.namespace_re = event.namespace ? RegExp("(^|\\.)" + namespaces.join("\\.(?:.*\\.|)") + "(\\.|$)") : null, event.result = undefined, event.target || (event.target = elem), data = null == data ? [
-                event
-            ] : jQuery.makeArray(data, [
-                event
-            ]), special = jQuery.event.special[type] || {}, onlyHandlers || !special.trigger || !1 !== special.trigger.apply(elem, data))) {
-                if (!onlyHandlers && !special.noBubble && !jQuery.isWindow(elem)) {
-                    for(bubbleType = special.delegateType || type, rfocusMorph.test(bubbleType + type) || (cur = cur.parentNode); cur; cur = cur.parentNode)eventPath.push(cur), tmp = cur;
-                    tmp === (elem.ownerDocument || document) && eventPath.push(tmp.defaultView || tmp.parentWindow || window1);
+            if (cur = tmp = elem = elem || document, !(3 === elem.nodeType || 8 === elem.nodeType || rfocusMorph.test(type + jQuery.event.triggered))) {
+                if (type.indexOf(".") >= 0 && (type = (namespaces = type.split(".")).shift(), namespaces.sort()), ontype = 0 > type.indexOf(":") && "on" + type, (event = event[jQuery.expando] ? event : new jQuery.Event(type, "object" == typeof event && event)).isTrigger = !0, event.namespace = namespaces.join("."), event.namespace_re = event.namespace ? RegExp("(^|\\.)" + namespaces.join("\\.(?:.*\\.|)") + "(\\.|$)") : null, event.result = undefined, event.target || (event.target = elem), data = null == data ? [
+                    event
+                ] : jQuery.makeArray(data, [
+                    event
+                ]), special = jQuery.event.special[type] || {}, onlyHandlers || !special.trigger || !1 !== special.trigger.apply(elem, data)) {
+                    if (!onlyHandlers && !special.noBubble && !jQuery.isWindow(elem)) {
+                        for(bubbleType = special.delegateType || type, rfocusMorph.test(bubbleType + type) || (cur = cur.parentNode); cur; cur = cur.parentNode)eventPath.push(cur), tmp = cur;
+                        tmp === (elem.ownerDocument || document) && eventPath.push(tmp.defaultView || tmp.parentWindow || window1);
+                    }
+                    for(i = 0; (cur = eventPath[i++]) && !event.isPropagationStopped();)event.type = i > 1 ? bubbleType : special.bindType || type, (handle = (jQuery._data(cur, "events") || {})[event.type] && jQuery._data(cur, "handle")) && handle.apply(cur, data), (handle = ontype && cur[ontype]) && jQuery.acceptData(cur) && handle.apply && !1 === handle.apply(cur, data) && event.preventDefault();
+                    if (event.type = type, !onlyHandlers && !event.isDefaultPrevented() && (!special._default || !1 === special._default.apply(elem.ownerDocument, data)) && !("click" === type && jQuery.nodeName(elem, "a")) && jQuery.acceptData(elem) && ontype && elem[type] && !jQuery.isWindow(elem)) {
+                        (tmp = elem[ontype]) && (elem[ontype] = null), jQuery.event.triggered = type;
+                        try {
+                            elem[type]();
+                        } catch (e) {}
+                        jQuery.event.triggered = undefined, tmp && (elem[ontype] = tmp);
+                    }
+                    return event.result;
                 }
-                for(i = 0; (cur = eventPath[i++]) && !event.isPropagationStopped();)event.type = i > 1 ? bubbleType : special.bindType || type, (handle = (jQuery._data(cur, "events") || {})[event.type] && jQuery._data(cur, "handle")) && handle.apply(cur, data), (handle = ontype && cur[ontype]) && jQuery.acceptData(cur) && handle.apply && !1 === handle.apply(cur, data) && event.preventDefault();
-                if (event.type = type, !onlyHandlers && !event.isDefaultPrevented() && (!special._default || !1 === special._default.apply(elem.ownerDocument, data)) && !("click" === type && jQuery.nodeName(elem, "a")) && jQuery.acceptData(elem) && ontype && elem[type] && !jQuery.isWindow(elem)) {
-                    (tmp = elem[ontype]) && (elem[ontype] = null), jQuery.event.triggered = type;
-                    try {
-                        elem[type]();
-                    } catch (e) {}
-                    jQuery.event.triggered = undefined, tmp && (elem[ontype] = tmp);
-                }
-                return event.result;
             }
         },
         dispatch: function(event) {
             event = jQuery.event.fix(event);
             var i, ret, handleObj, matched, j, handlerQueue = [], args = core_slice.call(arguments), handlers = (jQuery._data(this, "events") || {})[event.type] || [], special = jQuery.event.special[event.type] || {};
             if (args[0] = event, event.delegateTarget = this, !special.preDispatch || !1 !== special.preDispatch.call(this, event)) {
-                for(handlerQueue = jQuery.event.handlers.call(this, event, handlers), i = 0; (matched = handlerQueue[i++]) && !event.isPropagationStopped();)for(event.currentTarget = matched.elem, j = 0; (handleObj = matched.handlers[j++]) && !event.isImmediatePropagationStopped();)(!event.namespace_re || event.namespace_re.test(handleObj.namespace)) && (event.handleObj = handleObj, event.data = handleObj.data, undefined !== (ret = ((jQuery.event.special[handleObj.origType] || {}).handle || handleObj.handler).apply(matched.elem, args)) && !1 === (event.result = ret) && (event.preventDefault(), event.stopPropagation()));
+                for(handlerQueue = jQuery.event.handlers.call(this, event, handlers), i = 0; (matched = handlerQueue[i++]) && !event.isPropagationStopped();)for(event.currentTarget = matched.elem, j = 0; (handleObj = matched.handlers[j++]) && !event.isImmediatePropagationStopped();)(!event.namespace_re || event.namespace_re.test(handleObj.namespace)) && (event.handleObj = handleObj, event.data = handleObj.data, ret = ((jQuery.event.special[handleObj.origType] || {}).handle || handleObj.handler).apply(matched.elem, args), undefined !== ret && !1 === (event.result = ret) && (event.preventDefault(), event.stopPropagation()));
                 return special.postDispatch && special.postDispatch.call(this, event), event.result;
             }
         },
@@ -929,7 +932,7 @@
             props: "button buttons clientX clientY fromElement offsetX offsetY pageX pageY screenX screenY toElement".split(" "),
             filter: function(event, original) {
                 var body, eventDoc, doc, button = original.button, fromElement = original.fromElement;
-                return null == event.pageX && null != original.clientX && (doc = (eventDoc = event.target.ownerDocument || document).documentElement, body = eventDoc.body, event.pageX = original.clientX + (doc && doc.scrollLeft || body && body.scrollLeft || 0) - (doc && doc.clientLeft || body && body.clientLeft || 0), event.pageY = original.clientY + (doc && doc.scrollTop || body && body.scrollTop || 0) - (doc && doc.clientTop || body && body.clientTop || 0)), !event.relatedTarget && fromElement && (event.relatedTarget = fromElement === event.target ? original.toElement : fromElement), event.which || button === undefined || (event.which = 1 & button ? 1 : 2 & button ? 3 : 4 & button ? 2 : 0), event;
+                return null == event.pageX && null != original.clientX && (doc = (eventDoc = event.target.ownerDocument || document).documentElement, body = eventDoc.body, event.pageX = original.clientX + (doc && doc.scrollLeft || body && body.scrollLeft || 0) - (doc && doc.clientLeft || body && body.clientLeft || 0), event.pageY = original.clientY + (doc && doc.scrollTop || body && body.scrollTop || 0) - (doc && doc.clientTop || body && body.clientTop || 0)), !event.relatedTarget && fromElement && (event.relatedTarget = fromElement === event.target ? original.toElement : fromElement), event.which || undefined === button || (event.which = 1 & button ? 1 : 2 & button ? 3 : 4 & button ? 2 : 0), event;
             }
         },
         special: {
@@ -1096,7 +1099,7 @@
             return this.on(types, selector, data, fn);
         },
         undelegate: function(selector, types, fn) {
-            return 1 === arguments.length ? this.off(selector, "**") : this.off(types, selector || "**", fn);
+            return 1 == arguments.length ? this.off(selector, "**") : this.off(types, selector || "**", fn);
         },
         trigger: function(type, data) {
             return this.each(function() {
@@ -1203,17 +1206,6 @@
             }
             return a ? 1 : -1;
         }
-        function createInputPseudo(type) {
-            return function(elem) {
-                return "input" === elem.nodeName.toLowerCase() && elem.type === type;
-            };
-        }
-        function createButtonPseudo(type) {
-            return function(elem) {
-                var name1 = elem.nodeName.toLowerCase();
-                return ("input" === name1 || "button" === name1) && elem.type === type;
-            };
-        }
         function createPositionalPseudo(fn) {
             return markFunction(function(argument) {
                 return argument = +argument, markFunction(function(seed, matches) {
@@ -1303,7 +1295,9 @@
                 return !1;
             }, sortOrder = docElem.compareDocumentPosition ? function(a, b) {
                 var compare;
-                return a === b ? (hasDuplicate = !0, 0) : (compare = b.compareDocumentPosition && a.compareDocumentPosition && a.compareDocumentPosition(b)) ? 1 & compare || a.parentNode && 11 === a.parentNode.nodeType ? a === doc || contains(preferredDoc, a) ? -1 : b === doc || contains(preferredDoc, b) ? 1 : 0 : 4 & compare ? -1 : 1 : a.compareDocumentPosition ? -1 : 1;
+                if (a === b) return hasDuplicate = !0, 0;
+                if (compare = b.compareDocumentPosition && a.compareDocumentPosition && a.compareDocumentPosition(b)) return 1 & compare || a.parentNode && 11 === a.parentNode.nodeType ? a === doc || contains(preferredDoc, a) ? -1 : b === doc || contains(preferredDoc, b) ? 1 : 0 : 4 & compare ? -1 : 1;
+                return a.compareDocumentPosition ? -1 : 1;
             } : function(a, b) {
                 var cur, i = 0, aup = a.parentNode, bup = b.parentNode, ap = [
                     a
@@ -1564,11 +1558,20 @@
             file: !0,
             password: !0,
             image: !0
-        })Expr.pseudos[i] = createInputPseudo(i);
+        })Expr.pseudos[i] = function(type) {
+            return function(elem) {
+                return "input" === elem.nodeName.toLowerCase() && elem.type === type;
+            };
+        }(i);
         for(i in {
             submit: !0,
             reset: !0
-        })Expr.pseudos[i] = createButtonPseudo(i);
+        })Expr.pseudos[i] = function(type) {
+            return function(elem) {
+                var name1 = elem.nodeName.toLowerCase();
+                return ("input" === name1 || "button" === name1) && elem.type === type;
+            };
+        }(i);
         function tokenize(selector, parseOnly) {
             var matched, match, tokens, type, soFar, groups, preFilters, cached = tokenCache[selector + " "];
             if (cached) return parseOnly ? 0 : cached.slice(0);
@@ -1616,53 +1619,51 @@
             for(var elem, newUnmatched = [], i = 0, len = unmatched.length, mapped = null != map; i < len; i++)(elem = unmatched[i]) && (!filter || filter(elem, context, xml)) && (newUnmatched.push(elem), mapped && map.push(i));
             return newUnmatched;
         }
-        function setMatcher(preFilter, selector, matcher, postFilter, postFinder, postSelector) {
-            return postFilter && !postFilter[expando] && (postFilter = setMatcher(postFilter)), postFinder && !postFinder[expando] && (postFinder = setMatcher(postFinder, postSelector)), markFunction(function(seed, results, context, xml) {
-                var temp, i, elem, preMap = [], postMap = [], preexisting = results.length, elems = seed || function(selector, contexts, results) {
-                    for(var i = 0, len = contexts.length; i < len; i++)Sizzle(selector, contexts[i], results);
-                    return results;
-                }(selector || "*", context.nodeType ? [
-                    context
-                ] : context, []), matcherIn = preFilter && (seed || !selector) ? condense(elems, preMap, preFilter, context, xml) : elems, matcherOut = matcher ? postFinder || (seed ? preFilter : preexisting || postFilter) ? [] : results : matcherIn;
-                if (matcher && matcher(matcherIn, matcherOut, context, xml), postFilter) for(temp = condense(matcherOut, postMap), postFilter(temp, [], context, xml), i = temp.length; i--;)(elem = temp[i]) && (matcherOut[postMap[i]] = !(matcherIn[postMap[i]] = elem));
-                if (seed) {
-                    if (postFinder || preFilter) {
-                        if (postFinder) {
-                            for(temp = [], i = matcherOut.length; i--;)(elem = matcherOut[i]) && temp.push(matcherIn[i] = elem);
-                            postFinder(null, matcherOut = [], temp, xml);
-                        }
-                        for(i = matcherOut.length; i--;)(elem = matcherOut[i]) && (temp = postFinder ? indexOf.call(seed, elem) : preMap[i]) > -1 && (seed[temp] = !(results[temp] = elem));
-                    }
-                } else matcherOut = condense(matcherOut === results ? matcherOut.splice(preexisting, matcherOut.length) : matcherOut), postFinder ? postFinder(null, results, matcherOut, xml) : push.apply(results, matcherOut);
-            });
-        }
-        function matcherFromTokens(tokens) {
-            for(var checkContext, matcher, j, len = tokens.length, leadingRelative = Expr.relative[tokens[0].type], implicitRelative = leadingRelative || Expr.relative[" "], i = leadingRelative ? 1 : 0, matchContext = addCombinator(function(elem) {
-                return elem === checkContext;
-            }, implicitRelative, !0), matchAnyContext = addCombinator(function(elem) {
-                return indexOf.call(checkContext, elem) > -1;
-            }, implicitRelative, !0), matchers = [
-                function(elem, context, xml) {
-                    return !leadingRelative && (xml || context !== outermostContext) || ((checkContext = context).nodeType ? matchContext(elem, context, xml) : matchAnyContext(elem, context, xml));
-                }
-            ]; i < len; i++)if (matcher = Expr.relative[tokens[i].type]) matchers = [
-                addCombinator(elementMatcher(matchers), matcher)
-            ];
-            else {
-                if ((matcher = Expr.filter[tokens[i].type].apply(null, tokens[i].matches))[expando]) {
-                    for(j = ++i; j < len && !Expr.relative[tokens[j].type]; j++);
-                    return setMatcher(i > 1 && elementMatcher(matchers), i > 1 && toSelector(tokens.slice(0, i - 1)).replace(rtrim, "$1"), matcher, i < j && matcherFromTokens(tokens.slice(i, j)), j < len && matcherFromTokens(tokens = tokens.slice(j)), j < len && toSelector(tokens));
-                }
-                matchers.push(matcher);
-            }
-            return elementMatcher(matchers);
-        }
         function setFilters() {}
         compile = Sizzle.compile = function(selector, group) {
-            var elementMatchers, setMatchers, matcherCachedRuns, bySet, byElement, superMatcher, i, setMatchers1 = [], elementMatchers1 = [], cached = compilerCache[selector + " "];
+            var matcherCachedRuns, bySet, byElement, superMatcher, i, setMatchers = [], elementMatchers = [], cached = compilerCache[selector + " "];
             if (!cached) {
-                for(group || (group = tokenize(selector)), i = group.length; i--;)(cached = matcherFromTokens(group[i]))[expando] ? setMatchers1.push(cached) : elementMatchers1.push(cached);
-                cached = compilerCache(selector, (elementMatchers = elementMatchers1, setMatchers = setMatchers1, matcherCachedRuns = 0, bySet = setMatchers.length > 0, byElement = elementMatchers.length > 0, superMatcher = function(seed, context, xml, results, expandContext) {
+                for(group || (group = tokenize(selector)), i = group.length; i--;)(cached = function matcherFromTokens(tokens) {
+                    for(var checkContext, matcher, j, len = tokens.length, leadingRelative = Expr.relative[tokens[0].type], implicitRelative = leadingRelative || Expr.relative[" "], i = leadingRelative ? 1 : 0, matchContext = addCombinator(function(elem) {
+                        return elem === checkContext;
+                    }, implicitRelative, !0), matchAnyContext = addCombinator(function(elem) {
+                        return indexOf.call(checkContext, elem) > -1;
+                    }, implicitRelative, !0), matchers = [
+                        function(elem, context, xml) {
+                            return !leadingRelative && (xml || context !== outermostContext) || ((checkContext = context).nodeType ? matchContext(elem, context, xml) : matchAnyContext(elem, context, xml));
+                        }
+                    ]; i < len; i++)if (matcher = Expr.relative[tokens[i].type]) matchers = [
+                        addCombinator(elementMatcher(matchers), matcher)
+                    ];
+                    else {
+                        if ((matcher = Expr.filter[tokens[i].type].apply(null, tokens[i].matches))[expando]) {
+                            for(j = ++i; j < len && !Expr.relative[tokens[j].type]; j++);
+                            return function setMatcher(preFilter, selector, matcher, postFilter, postFinder, postSelector) {
+                                return postFilter && !postFilter[expando] && (postFilter = setMatcher(postFilter)), postFinder && !postFinder[expando] && (postFinder = setMatcher(postFinder, postSelector)), markFunction(function(seed, results, context, xml) {
+                                    var temp, i, elem, preMap = [], postMap = [], preexisting = results.length, elems = seed || function(selector, contexts, results) {
+                                        for(var i = 0, len = contexts.length; i < len; i++)Sizzle(selector, contexts[i], results);
+                                        return results;
+                                    }(selector || "*", context.nodeType ? [
+                                        context
+                                    ] : context, []), matcherIn = preFilter && (seed || !selector) ? condense(elems, preMap, preFilter, context, xml) : elems, matcherOut = matcher ? postFinder || (seed ? preFilter : preexisting || postFilter) ? [] : results : matcherIn;
+                                    if (matcher && matcher(matcherIn, matcherOut, context, xml), postFilter) for(temp = condense(matcherOut, postMap), postFilter(temp, [], context, xml), i = temp.length; i--;)(elem = temp[i]) && (matcherOut[postMap[i]] = !(matcherIn[postMap[i]] = elem));
+                                    if (seed) {
+                                        if (postFinder || preFilter) {
+                                            if (postFinder) {
+                                                for(temp = [], i = matcherOut.length; i--;)(elem = matcherOut[i]) && temp.push(matcherIn[i] = elem);
+                                                postFinder(null, matcherOut = [], temp, xml);
+                                            }
+                                            for(i = matcherOut.length; i--;)(elem = matcherOut[i]) && (temp = postFinder ? indexOf.call(seed, elem) : preMap[i]) > -1 && (seed[temp] = !(results[temp] = elem));
+                                        }
+                                    } else matcherOut = condense(matcherOut === results ? matcherOut.splice(preexisting, matcherOut.length) : matcherOut), postFinder ? postFinder(null, results, matcherOut, xml) : push.apply(results, matcherOut);
+                                });
+                            }(i > 1 && elementMatcher(matchers), i > 1 && toSelector(tokens.slice(0, i - 1)).replace(rtrim, "$1"), matcher, i < j && matcherFromTokens(tokens.slice(i, j)), j < len && matcherFromTokens(tokens = tokens.slice(j)), j < len && toSelector(tokens));
+                        }
+                        matchers.push(matcher);
+                    }
+                    return elementMatcher(matchers);
+                }(group[i]))[expando] ? setMatchers.push(cached) : elementMatchers.push(cached);
+                cached = compilerCache(selector, (matcherCachedRuns = 0, bySet = setMatchers.length > 0, byElement = elementMatchers.length > 0, superMatcher = function(seed, context, xml, results, expandContext) {
                     var elem, j, matcher, setMatched = [], matchedCount = 0, i = "0", unmatched = seed && [], outermost = null != expandContext, contextBackup = outermostContext, elems = seed || byElement && Expr.find.TAG("*", expandContext && context.parentNode || context), dirrunsUnique = dirruns += null == contextBackup ? 1 : Math.random() || 0.1;
                     for(outermost && (outermostContext = context !== document && context, cachedruns = matcherCachedRuns); null != (elem = elems[i]); i++){
                         if (byElement && elem) {
@@ -1818,7 +1819,7 @@
             ] : [] : jQuery.find.matches(expr, elems);
         },
         dir: function(elem, dir, until) {
-            for(var matched = [], cur = elem[dir]; cur && 9 !== cur.nodeType && (until === undefined || 1 !== cur.nodeType || !jQuery(cur).is(until));)1 === cur.nodeType && matched.push(cur), cur = cur[dir];
+            for(var matched = [], cur = elem[dir]; cur && 9 !== cur.nodeType && (undefined === until || 1 !== cur.nodeType || !jQuery(cur).is(until));)1 === cur.nodeType && matched.push(cur), cur = cur[dir];
             return matched;
         },
         sibling: function(n, elem) {
@@ -1877,9 +1878,6 @@
             "</div>"
         ]
     }, fragmentDiv = createSafeFragment(document).appendChild(document.createElement("div"));
-    function findOrAppend(elem, tag) {
-        return elem.getElementsByTagName(tag)[0] || elem.appendChild(elem.ownerDocument.createElement(tag));
-    }
     function disableScript(elem) {
         var attr = elem.getAttributeNode("type");
         return elem.type = (attr && attr.specified) + "/" + elem.type, elem;
@@ -1898,20 +1896,10 @@
             curData.data && (curData.data = jQuery.extend({}, curData.data));
         }
     }
-    function fixCloneNodeIssues(src, dest) {
-        var nodeName, e, data;
-        if (1 === dest.nodeType) {
-            if (nodeName = dest.nodeName.toLowerCase(), !jQuery.support.noCloneEvent && dest[jQuery.expando]) {
-                for(e in (data = jQuery._data(dest)).events)jQuery.removeEvent(dest, e, data.handle);
-                dest.removeAttribute(jQuery.expando);
-            }
-            "script" === nodeName && dest.text !== src.text ? (disableScript(dest).text = src.text, restoreScript(dest)) : "object" === nodeName ? (dest.parentNode && (dest.outerHTML = src.outerHTML), jQuery.support.html5Clone && src.innerHTML && !jQuery.trim(dest.innerHTML) && (dest.innerHTML = src.innerHTML)) : "input" === nodeName && manipulation_rcheckableType.test(src.type) ? (dest.defaultChecked = dest.checked = src.checked, dest.value !== src.value && (dest.value = src.value)) : "option" === nodeName ? dest.defaultSelected = dest.selected = src.defaultSelected : ("input" === nodeName || "textarea" === nodeName) && (dest.defaultValue = src.defaultValue);
-        }
-    }
     function getAll(context, tag) {
         var elems, elem, i = 0, found = typeof context.getElementsByTagName !== core_strundefined ? context.getElementsByTagName(tag || "*") : typeof context.querySelectorAll !== core_strundefined ? context.querySelectorAll(tag || "*") : undefined;
         if (!found) for(found = [], elems = context.childNodes || context; null != (elem = elems[i]); i++)!tag || jQuery.nodeName(elem, tag) ? found.push(elem) : jQuery.merge(found, getAll(elem, tag));
-        return tag === undefined || tag && jQuery.nodeName(context, tag) ? jQuery.merge([
+        return undefined === tag || tag && jQuery.nodeName(context, tag) ? jQuery.merge([
             context
         ], found) : found;
     }
@@ -1921,7 +1909,7 @@
     wrapMap.optgroup = wrapMap.option, wrapMap.tbody = wrapMap.tfoot = wrapMap.colgroup = wrapMap.caption = wrapMap.thead, wrapMap.th = wrapMap.td, jQuery.fn.extend({
         text: function(value) {
             return jQuery.access(this, function(value) {
-                return value === undefined ? jQuery.text(this) : this.empty().append((this[0] && this[0].ownerDocument || document).createTextNode(value));
+                return undefined === value ? jQuery.text(this) : this.empty().append((this[0] && this[0].ownerDocument || document).createTextNode(value));
             }, null, value, arguments.length);
         },
         wrapAll: function(html) {
@@ -1997,7 +1985,7 @@
         html: function(value) {
             return jQuery.access(this, function(value) {
                 var elem = this[0] || {}, i = 0, l = this.length;
-                if (value === undefined) return 1 === elem.nodeType ? elem.innerHTML.replace(rinlinejQuery, "") : undefined;
+                if (undefined === value) return 1 === elem.nodeType ? elem.innerHTML.replace(rinlinejQuery, "") : undefined;
                 if ("string" == typeof value && !rnoInnerhtml.test(value) && (jQuery.support.htmlSerialize || !rnoshimcache.test(value)) && (jQuery.support.leadingWhitespace || !rleadingWhitespace.test(value)) && !wrapMap[(rtagName.exec(value) || [
                     "",
                     ""
@@ -2024,13 +2012,15 @@
         },
         domManip: function(args, table, callback) {
             args = core_concat.apply([], args);
-            var first, node, hasScripts, scripts, doc, fragment, i = 0, l = this.length, set = this, iNoClone = l - 1, value = args[0], isFunction = jQuery.isFunction(value);
+            var elem, tag, first, node, hasScripts, scripts, doc, fragment, i = 0, l = this.length, set = this, iNoClone = l - 1, value = args[0], isFunction = jQuery.isFunction(value);
             if (isFunction || !(l <= 1 || "string" != typeof value || jQuery.support.checkClone || !rchecked.test(value))) return this.each(function(index) {
                 var self = set.eq(index);
                 isFunction && (args[0] = value.call(this, index, table ? self.html() : undefined)), self.domManip(args, table, callback);
             });
             if (l && (first = (fragment = jQuery.buildFragment(args, this[0].ownerDocument, !1, this)).firstChild, 1 === fragment.childNodes.length && (fragment = first), first)) {
-                for(table = table && jQuery.nodeName(first, "tr"), hasScripts = (scripts = jQuery.map(getAll(fragment, "script"), disableScript)).length; i < l; i++)node = fragment, i !== iNoClone && (node = jQuery.clone(node, !0, !0), hasScripts && jQuery.merge(scripts, getAll(node, "script"))), callback.call(table && jQuery.nodeName(this[i], "table") ? findOrAppend(this[i], "tbody") : this[i], node, i);
+                for(table = table && jQuery.nodeName(first, "tr"), hasScripts = (scripts = jQuery.map(getAll(fragment, "script"), disableScript)).length; i < l; i++){
+                    node = fragment, i !== iNoClone && (node = jQuery.clone(node, !0, !0), hasScripts && jQuery.merge(scripts, getAll(node, "script"))), callback.call(table && jQuery.nodeName(this[i], "table") ? (elem = this[i], tag = "tbody", elem.getElementsByTagName(tag)[0] || elem.appendChild(elem.ownerDocument.createElement(tag))) : this[i], node, i);
+                }
                 if (hasScripts) for(doc = scripts[scripts.length - 1].ownerDocument, jQuery.map(scripts, restoreScript), i = 0; i < hasScripts; i++)node = scripts[i], rscriptType.test(node.type || "") && !jQuery._data(node, "globalEval") && jQuery.contains(doc, node) && (node.src ? jQuery.ajax({
                     url: node.src,
                     type: "GET",
@@ -2057,7 +2047,16 @@
     }), jQuery.extend({
         clone: function(elem, dataAndEvents, deepDataAndEvents) {
             var destElements, node, clone, i, srcElements, inPage = jQuery.contains(elem.ownerDocument, elem);
-            if (jQuery.support.html5Clone || jQuery.isXMLDoc(elem) || !rnoshimcache.test("<" + elem.nodeName + ">") ? clone = elem.cloneNode(!0) : (fragmentDiv.innerHTML = elem.outerHTML, fragmentDiv.removeChild(clone = fragmentDiv.firstChild)), (!jQuery.support.noCloneEvent || !jQuery.support.noCloneChecked) && (1 === elem.nodeType || 11 === elem.nodeType) && !jQuery.isXMLDoc(elem)) for(i = 0, destElements = getAll(clone), srcElements = getAll(elem); null != (node = srcElements[i]); ++i)destElements[i] && fixCloneNodeIssues(node, destElements[i]);
+            if (jQuery.support.html5Clone || jQuery.isXMLDoc(elem) || !rnoshimcache.test("<" + elem.nodeName + ">") ? clone = elem.cloneNode(!0) : (fragmentDiv.innerHTML = elem.outerHTML, fragmentDiv.removeChild(clone = fragmentDiv.firstChild)), (!jQuery.support.noCloneEvent || !jQuery.support.noCloneChecked) && (1 === elem.nodeType || 11 === elem.nodeType) && !jQuery.isXMLDoc(elem)) for(i = 0, destElements = getAll(clone), srcElements = getAll(elem); null != (node = srcElements[i]); ++i)destElements[i] && function(src, dest) {
+                var nodeName, e, data;
+                if (1 === dest.nodeType) {
+                    if (nodeName = dest.nodeName.toLowerCase(), !jQuery.support.noCloneEvent && dest[jQuery.expando]) {
+                        for(e in (data = jQuery._data(dest)).events)jQuery.removeEvent(dest, e, data.handle);
+                        dest.removeAttribute(jQuery.expando);
+                    }
+                    "script" === nodeName && dest.text !== src.text ? (disableScript(dest).text = src.text, restoreScript(dest)) : "object" === nodeName ? (dest.parentNode && (dest.outerHTML = src.outerHTML), jQuery.support.html5Clone && src.innerHTML && !jQuery.trim(dest.innerHTML) && (dest.innerHTML = src.innerHTML)) : "input" === nodeName && manipulation_rcheckableType.test(src.type) ? (dest.defaultChecked = dest.checked = src.checked, dest.value !== src.value && (dest.value = src.value)) : "option" === nodeName ? dest.defaultSelected = dest.selected = src.defaultSelected : ("input" === nodeName || "textarea" === nodeName) && (dest.defaultValue = src.defaultValue);
+                }
+            }(node, destElements[i]);
             if (dataAndEvents) {
                 if (deepDataAndEvents) for(i = 0, srcElements = srcElements || getAll(elem), destElements = destElements || getAll(clone); null != (node = srcElements[i]); i++)cloneCopyEvent(node, destElements[i]);
                 else cloneCopyEvent(elem, clone);
@@ -2154,7 +2153,7 @@
                     for(styles = getStyles(elem), len = name1.length; i < len; i++)map[name1[i]] = jQuery.css(elem, name1[i], !1, styles);
                     return map;
                 }
-                return value !== undefined ? jQuery.style(elem, name1, value) : jQuery.css(elem, name1);
+                return undefined !== value ? jQuery.style(elem, name1, value) : jQuery.css(elem, name1);
             }, name1, value, arguments.length > 1);
         },
         show: function() {
@@ -2197,15 +2196,17 @@
         style: function(elem, name1, value, extra) {
             if (elem && 3 !== elem.nodeType && 8 !== elem.nodeType && elem.style) {
                 var ret, type, hooks, origName = jQuery.camelCase(name1), style = elem.style;
-                if (name1 = jQuery.cssProps[origName] || (jQuery.cssProps[origName] = vendorPropName(style, origName)), hooks = jQuery.cssHooks[name1] || jQuery.cssHooks[origName], value === undefined) return hooks && "get" in hooks && undefined !== (ret = hooks.get(elem, !1, extra)) ? ret : style[name1];
-                if ("string" == (type = typeof value) && (ret = rrelNum.exec(value)) && (value = (ret[1] + 1) * ret[2] + parseFloat(jQuery.css(elem, name1)), type = "number"), !(null == value || "number" === type && isNaN(value)) && ("number" !== type || jQuery.cssNumber[origName] || (value += "px"), jQuery.support.clearCloneStyle || "" !== value || 0 !== name1.indexOf("background") || (style[name1] = "inherit"), !hooks || !("set" in hooks) || undefined !== (value = hooks.set(elem, value, extra)))) try {
-                    style[name1] = value;
-                } catch (e) {}
+                if (name1 = jQuery.cssProps[origName] || (jQuery.cssProps[origName] = vendorPropName(style, origName)), hooks = jQuery.cssHooks[name1] || jQuery.cssHooks[origName], undefined === value) return hooks && "get" in hooks && undefined !== (ret = hooks.get(elem, !1, extra)) ? ret : style[name1];
+                if ("string" == (type = typeof value) && (ret = rrelNum.exec(value)) && (value = (ret[1] + 1) * ret[2] + parseFloat(jQuery.css(elem, name1)), type = "number"), !(null == value || "number" === type && isNaN(value))) {
+                    if ("number" !== type || jQuery.cssNumber[origName] || (value += "px"), jQuery.support.clearCloneStyle || "" !== value || 0 !== name1.indexOf("background") || (style[name1] = "inherit"), !hooks || !("set" in hooks) || undefined !== (value = hooks.set(elem, value, extra))) try {
+                        style[name1] = value;
+                    } catch (e) {}
+                }
             }
         },
         css: function(elem, name1, extra, styles) {
             var num, val, hooks, origName = jQuery.camelCase(name1);
-            return (name1 = jQuery.cssProps[origName] || (jQuery.cssProps[origName] = vendorPropName(elem.style, origName)), (hooks = jQuery.cssHooks[name1] || jQuery.cssHooks[origName]) && "get" in hooks && (val = hooks.get(elem, !0, extra)), val === undefined && (val = curCSS(elem, name1, styles)), "normal" === val && name1 in cssNormalTransform && (val = cssNormalTransform[name1]), "" === extra || extra) ? (num = parseFloat(val), !0 === extra || jQuery.isNumeric(num) ? num || 0 : val) : val;
+            return (name1 = jQuery.cssProps[origName] || (jQuery.cssProps[origName] = vendorPropName(elem.style, origName)), (hooks = jQuery.cssHooks[name1] || jQuery.cssHooks[origName]) && "get" in hooks && (val = hooks.get(elem, !0, extra)), undefined === val && (val = curCSS(elem, name1, styles)), "normal" === val && name1 in cssNormalTransform && (val = cssNormalTransform[name1]), "" === extra || extra) ? (num = parseFloat(val), !0 === extra || jQuery.isNumeric(num) ? num || 0 : val) : val;
         },
         swap: function(elem, options, callback, args) {
             var ret, name1, old = {};
@@ -2244,7 +2245,7 @@
         },
         set: function(elem, value) {
             var style = elem.style, currentStyle = elem.currentStyle, opacity = jQuery.isNumeric(value) ? "alpha(opacity=" + 100 * value + ")" : "", filter = currentStyle && currentStyle.filter || style.filter || "";
-            style.zoom = 1, (value >= 1 || "" === value) && "" === jQuery.trim(filter.replace(ralpha, "")) && style.removeAttribute && (style.removeAttribute("filter"), "" === value || currentStyle && !currentStyle.filter) || (style.filter = ralpha.test(filter) ? filter.replace(ralpha, opacity) : filter + " " + opacity);
+            style.zoom = 1, (!(value >= 1) && "" !== value || "" !== jQuery.trim(filter.replace(ralpha, "")) || !style.removeAttribute || (style.removeAttribute("filter"), "" !== value && (!currentStyle || currentStyle.filter))) && (style.filter = ralpha.test(filter) ? filter.replace(ralpha, opacity) : filter + " " + opacity);
         }
     }), jQuery(function() {
         jQuery.support.reliableMarginRight || (jQuery.cssHooks.marginRight = {
@@ -2285,14 +2286,6 @@
         }, rmargin.test(prefix) || (jQuery.cssHooks[prefix + suffix].set = setPositiveNumber);
     });
     var r20 = /%20/g, rbracket = /\[\]$/, rCRLF = /\r?\n/g, rsubmitterTypes = /^(?:submit|button|image|reset|file)$/i, rsubmittable = /^(?:input|select|textarea|keygen)/i;
-    function buildParams(prefix, obj, traditional, add) {
-        var name1;
-        if (jQuery.isArray(obj)) jQuery.each(obj, function(i, v) {
-            traditional || rbracket.test(prefix) ? add(prefix, v) : buildParams(prefix + "[" + ("object" == typeof v ? i : "") + "]", v, traditional, add);
-        });
-        else if (traditional || "object" !== jQuery.type(obj)) add(prefix, obj);
-        else for(name1 in obj)buildParams(prefix + "[" + name1 + "]", obj[name1], traditional, add);
-    }
     jQuery.fn.extend({
         serialize: function() {
             return jQuery.param(this.serializeArray());
@@ -2321,10 +2314,17 @@
         var prefix, s = [], add = function(key, value) {
             value = jQuery.isFunction(value) ? value() : null == value ? "" : value, s[s.length] = encodeURIComponent(key) + "=" + encodeURIComponent(value);
         };
-        if (traditional === undefined && (traditional = jQuery.ajaxSettings && jQuery.ajaxSettings.traditional), jQuery.isArray(a) || a.jquery && !jQuery.isPlainObject(a)) jQuery.each(a, function() {
+        if (undefined === traditional && (traditional = jQuery.ajaxSettings && jQuery.ajaxSettings.traditional), jQuery.isArray(a) || a.jquery && !jQuery.isPlainObject(a)) jQuery.each(a, function() {
             add(this.name, this.value);
         });
-        else for(prefix in a)buildParams(prefix, a[prefix], traditional, add);
+        else for(prefix in a)(function buildParams(prefix, obj, traditional, add) {
+            var name1;
+            if (jQuery.isArray(obj)) jQuery.each(obj, function(i, v) {
+                traditional || rbracket.test(prefix) ? add(prefix, v) : buildParams(prefix + "[" + ("object" == typeof v ? i : "") + "]", v, traditional, add);
+            });
+            else if (traditional || "object" !== jQuery.type(obj)) add(prefix, obj);
+            else for(name1 in obj)buildParams(prefix + "[" + name1 + "]", obj[name1], traditional, add);
+        })(prefix, a[prefix], traditional, add);
         return s.join("&").replace(r20, "+");
     }, jQuery.each("blur focus focusin focusout load resize scroll unload click dblclick mousedown mouseup mousemove mouseover mouseout mouseenter mouseleave change select submit keydown keypress keyup error contextmenu".split(" "), function(i, name1) {
         jQuery.fn[name1] = function(data, fn) {
@@ -2514,7 +2514,7 @@
                 2 !== state && (state = 2, timeoutTimer && clearTimeout(timeoutTimer), transport = undefined, responseHeadersString = headers || "", jqXHR.readyState = status > 0 ? 4 : 0, responses && (response = function(s, jqXHR, responses) {
                     var firstDataType, ct, finalDataType, type, contents = s.contents, dataTypes = s.dataTypes, responseFields = s.responseFields;
                     for(type in responseFields)type in responses && (jqXHR[responseFields[type]] = responses[type]);
-                    for(; "*" === dataTypes[0];)dataTypes.shift(), ct === undefined && (ct = s.mimeType || jqXHR.getResponseHeader("Content-Type"));
+                    for(; "*" === dataTypes[0];)dataTypes.shift(), undefined === ct && (ct = s.mimeType || jqXHR.getResponseHeader("Content-Type"));
                     if (ct) {
                         for(type in contents)if (contents[type] && contents[type].test(ct)) {
                             dataTypes.unshift(type);
@@ -2937,7 +2937,7 @@
             return elem === fn.elem;
         }).length;
     }), jQuery.fn.offset = function(options) {
-        if (arguments.length) return options === undefined ? this : this.each(function(i) {
+        if (arguments.length) return undefined === options ? this : this.each(function(i) {
             jQuery.offset.setOffset(this, options, i);
         });
         var docElem, win, box = {
@@ -2985,7 +2985,7 @@
         jQuery.fn[method] = function(val) {
             return jQuery.access(this, function(elem, method, val) {
                 var win = getWindow(elem);
-                if (val === undefined) return win ? prop in win ? win[prop] : win.document.documentElement[method] : elem[method];
+                if (undefined === val) return win ? prop in win ? win[prop] : win.document.documentElement[method] : elem[method];
                 win ? win.scrollTo(top ? jQuery(win).scrollLeft() : val, top ? val : jQuery(win).scrollTop()) : elem[method] = val;
             }, method, val, arguments.length, null);
         };
@@ -3002,7 +3002,7 @@
                 var chainable = arguments.length && (defaultExtra || "boolean" != typeof margin), extra = defaultExtra || (!0 === margin || !0 === value ? "margin" : "border");
                 return jQuery.access(this, function(elem, type, value) {
                     var doc;
-                    return jQuery.isWindow(elem) ? elem.document.documentElement["client" + name1] : 9 === elem.nodeType ? (doc = elem.documentElement, Math.max(elem.body["scroll" + name1], doc["scroll" + name1], elem.body["offset" + name1], doc["offset" + name1], doc["client" + name1])) : value === undefined ? jQuery.css(elem, type, extra) : jQuery.style(elem, type, value, extra);
+                    return jQuery.isWindow(elem) ? elem.document.documentElement["client" + name1] : 9 === elem.nodeType ? (doc = elem.documentElement, Math.max(elem.body["scroll" + name1], doc["scroll" + name1], elem.body["offset" + name1], doc["offset" + name1], doc["client" + name1])) : undefined === value ? jQuery.css(elem, type, extra) : jQuery.style(elem, type, value, extra);
                 }, type, chainable ? margin : undefined, chainable, null);
             };
         });

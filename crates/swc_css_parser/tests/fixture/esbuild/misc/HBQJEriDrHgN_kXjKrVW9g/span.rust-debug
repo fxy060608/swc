@@ -53,10 +53,22 @@
    :  ^^^^^^^^^
    `----
 
-  x NsPrefix
+  x NamespacePrefix
    ,-[$DIR/tests/fixture/esbuild/misc/HBQJEriDrHgN_kXjKrVW9g/input.css:1:1]
  1 | [ns|\61ttr] {}
    :  ^^^
+   `----
+
+  x Namespace
+   ,-[$DIR/tests/fixture/esbuild/misc/HBQJEriDrHgN_kXjKrVW9g/input.css:1:1]
+ 1 | [ns|\61ttr] {}
+   :  ^^
+   `----
+
+  x NamedNamespace
+   ,-[$DIR/tests/fixture/esbuild/misc/HBQJEriDrHgN_kXjKrVW9g/input.css:1:1]
+ 1 | [ns|\61ttr] {}
+   :  ^^
    `----
 
   x Ident
@@ -75,4 +87,10 @@
    ,-[$DIR/tests/fixture/esbuild/misc/HBQJEriDrHgN_kXjKrVW9g/input.css:1:1]
  1 | [ns|\61ttr] {}
    :             ^^
+   `----
+
+  x LBrace
+   ,-[$DIR/tests/fixture/esbuild/misc/HBQJEriDrHgN_kXjKrVW9g/input.css:1:1]
+ 1 | [ns|\61ttr] {}
+   :             ^
    `----

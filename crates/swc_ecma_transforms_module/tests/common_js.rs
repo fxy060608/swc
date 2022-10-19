@@ -5,7 +5,7 @@ use swc_ecma_parser::{Syntax, TsConfig};
 use swc_ecma_transforms_base::{feature::FeatureFlag, resolver};
 use swc_ecma_transforms_compat::es2015::for_of;
 use swc_ecma_transforms_module::common_js::{self, common_js};
-use swc_ecma_transforms_testing::{test, test_fixture};
+use swc_ecma_transforms_testing::{test, test_fixture, FixtureTestConfig};
 use swc_ecma_visit::Fold;
 
 fn syntax() -> Syntax {
@@ -59,13 +59,20 @@ fn esm_to_cjs(input: PathBuf) {
         &|tester| tr(config.clone(), is_ts, tester.comments.clone()),
         &input,
         &output,
+        FixtureTestConfig {
+            sourcemap: false,
+            ..Default::default()
+        },
     );
 }
 
 test!(
     syntax(),
     |tester| chain!(
-        for_of(for_of::Config { assume_array: true }),
+        for_of(for_of::Config {
+            assume_array: true,
+            ..Default::default()
+        }),
         tr(Default::default(), false, tester.comments.clone())
     ),
     for_of_as_array_for_of_import_commonjs,

@@ -4,7 +4,10 @@ use swc_common::collections::AHashSet;
 use swc_ecma_ast::*;
 
 use super::{ScopeDataLike, Storage, VarDataLike};
-use crate::analyzer::{ctx::Ctx, ProgramData, ScopeData, ScopeKind, VarUsageInfo};
+use crate::{
+    alias::Access,
+    analyzer::{ctx::Ctx, ProgramData, ScopeData, ScopeKind, VarUsageInfo},
+};
 
 impl Storage for ProgramData {
     type ScopeData = ScopeData;
@@ -41,12 +44,22 @@ impl Storage for ProgramData {
                 Entry::Occupied(mut e) => {
                     e.get_mut().inline_prevented |= var_info.inline_prevented;
 
-                    e.get_mut().ref_count += var_info.ref_count;
                     e.get_mut().cond_init |= if !inited && e.get().var_initialized {
                         true
                     } else {
                         var_info.cond_init
                     };
+                    if var_info.var_initialized {
+                        if e.get().var_initialized || e.get().ref_count > 0 {
+                            e.get_mut().assign_count += 1;
+                            e.get_mut().reassigned_with_assignment = true;
+                        } else {
+                            // If it is referred outside child scope, it will
+                            // be marked as var_initialized false
+                            e.get_mut().var_initialized = true;
+                        }
+                    }
+                    e.get_mut().ref_count += var_info.ref_count;
 
                     e.get_mut().reassigned_with_assignment |= var_info.reassigned_with_assignment;
                     e.get_mut().reassigned_with_var_decl |= var_info.reassigned_with_var_decl;
@@ -59,6 +72,7 @@ impl Storage for ProgramData {
                     e.get_mut().declared |= var_info.declared;
                     e.get_mut().declared_count += var_info.declared_count;
                     e.get_mut().declared_as_fn_param |= var_info.declared_as_fn_param;
+                    e.get_mut().declared_as_fn_decl |= var_info.declared_as_fn_decl;
                     e.get_mut().declared_as_fn_expr |= var_info.declared_as_fn_expr;
 
                     // If a var is registered at a parent scope, it means that it's delcared before
@@ -79,32 +93,32 @@ impl Storage for ProgramData {
                         e.get_mut().no_side_effect_for_member_access
                             && var_info.no_side_effect_for_member_access;
 
-                    e.get_mut().used_as_callee |= var_info.used_as_callee;
+                    e.get_mut().callee_count += var_info.callee_count;
                     e.get_mut().used_as_arg |= var_info.used_as_arg;
                     e.get_mut().indexed_with_dynamic_key |= var_info.indexed_with_dynamic_key;
 
                     e.get_mut().pure_fn |= var_info.pure_fn;
 
-                    if !var_info.is_fn_local {
-                        e.get_mut().is_fn_local = false;
-                    }
+                    e.get_mut().used_recursively |= var_info.used_recursively;
 
-                    if var_info.var_initialized {
-                        if e.get().var_initialized || e.get().ref_count > 0 {
-                            e.get_mut().assign_count += 1;
-                            e.get_mut().reassigned_with_assignment = true;
-                        }
+                    e.get_mut().is_fn_local &= var_info.is_fn_local;
+                    e.get_mut().used_in_non_child_fn |= var_info.used_in_non_child_fn;
+
+                    for (k, v) in *var_info.accessed_props {
+                        *e.get_mut().accessed_props.entry(k).or_default() += v;
                     }
 
                     match kind {
                         ScopeKind::Fn => {
                             e.get_mut().is_fn_local = false;
-                            e.get_mut().used_by_nested_fn = true;
+                            if !var_info.used_recursively {
+                                e.get_mut().used_in_non_child_fn = true
+                            }
                         }
                         ScopeKind::Block => {
-                            if var_info.used_by_nested_fn {
+                            if var_info.used_in_non_child_fn {
                                 e.get_mut().is_fn_local = false;
-                                e.get_mut().used_by_nested_fn = true;
+                                e.get_mut().used_in_non_child_fn = true;
                             }
                         }
                     }
@@ -112,7 +126,9 @@ impl Storage for ProgramData {
                 Entry::Vacant(e) => {
                     match kind {
                         ScopeKind::Fn => {
-                            var_info.used_by_nested_fn = true;
+                            if !var_info.used_recursively {
+                                var_info.used_in_non_child_fn = true
+                            }
                         }
                         ScopeKind::Block => {}
                     }
@@ -137,30 +153,27 @@ impl Storage for ProgramData {
         //     debug!(has_init = has_init, "declare_decl(`{}`)", i);
         // }
 
-        let v = self
-            .vars
-            .entry(i.to_id())
-            .and_modify(|v| {
-                if has_init && v.declared {
-                    trace_op!("declare_decl(`{}`): Already declared", i);
+        let v = self.vars.entry(i.to_id()).or_default();
 
-                    v.mutated = true;
-                    v.reassigned_with_var_decl = true;
-                    v.assign_count += 1;
-                }
+        if has_init && (v.declared || v.var_initialized) {
+            trace_op!("declare_decl(`{}`): Already declared", i);
 
-                if v.used_by_nested_fn {
-                    v.is_fn_local = false;
-                }
-            })
-            .or_insert_with(|| VarUsageInfo {
-                is_fn_local: true,
-                var_kind: kind,
-                var_initialized: has_init,
-                no_side_effect_for_member_access: ctx.in_decl_with_no_side_effect_for_member_access,
+            v.mutated = true;
+            v.reassigned_with_var_decl = true;
+            v.assign_count += 1;
+        }
 
-                ..Default::default()
-            });
+        // This is not delcared yet, so this is the first declaration.
+        if !v.declared {
+            v.var_kind = kind;
+            v.no_side_effect_for_member_access = ctx.in_decl_with_no_side_effect_for_member_access;
+        }
+
+        if v.used_in_non_child_fn {
+            v.is_fn_local = false;
+        }
+
+        v.var_initialized |= has_init;
 
         v.declared_count += 1;
         v.declared = true;
@@ -219,9 +232,11 @@ impl ProgramData {
         let e = self.vars.entry(i.clone()).or_insert_with(|| {
             // trace!("insert({}{:?})", i.0, i.1);
 
+            let simple_assign = ctx.is_exact_reassignment && !ctx.is_op_assign;
+
             VarUsageInfo {
                 is_fn_local: true,
-                used_above_decl: true,
+                used_above_decl: !simple_assign,
                 ..Default::default()
             }
         });
@@ -266,7 +281,7 @@ impl ProgramData {
             }
 
             for other in e.infects.clone() {
-                self.report(other, ctx, true, dejavu)
+                self.report(other.0, ctx, true, dejavu)
             }
         } else {
             if ctx.in_call_arg && ctx.is_exact_arg {
@@ -283,6 +298,10 @@ impl VarDataLike for VarUsageInfo {
         self.declared_as_fn_param = true;
     }
 
+    fn mark_declared_as_fn_decl(&mut self) {
+        self.declared_as_fn_decl = true;
+    }
+
     fn mark_declared_as_fn_expr(&mut self) {
         self.declared_as_fn_expr = true;
     }
@@ -296,7 +315,7 @@ impl VarDataLike for VarUsageInfo {
     }
 
     fn mark_used_as_callee(&mut self) {
-        self.used_as_callee = true;
+        self.callee_count += 1;
     }
 
     fn mark_used_as_arg(&mut self) {
@@ -319,7 +338,7 @@ impl VarDataLike for VarUsageInfo {
         self.reassigned_with_assignment = true;
     }
 
-    fn add_infects_to(&mut self, other: Id) {
+    fn add_infects_to(&mut self, other: Access) {
         self.infects.push(other);
     }
 
@@ -337,5 +356,9 @@ impl VarDataLike for VarUsageInfo {
 
     fn mark_used_above_decl(&mut self) {
         self.used_above_decl = true;
+    }
+
+    fn mark_used_recursively(&mut self) {
+        self.used_recursively = true;
     }
 }

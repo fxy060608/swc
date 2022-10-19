@@ -8,7 +8,7 @@ use swc_common::{
     SyntaxContext,
 };
 use swc_ecma_ast::*;
-use swc_ecma_utils::{find_pat_ids, ident::IdentLike, IsEmpty, StmtExt};
+use swc_ecma_utils::{find_pat_ids, IsEmpty, StmtExt};
 use swc_ecma_visit::{noop_visit_type, Visit, VisitWith};
 use swc_timer::timer;
 
@@ -17,7 +17,7 @@ use self::{
     storage::{Storage, *},
 };
 use crate::{
-    alias::{collect_infects_from, AliasConfig},
+    alias::{collect_infects_from, Access, AccessKind, AliasConfig},
     marks::Marks,
     util::can_end_conditionally,
 };
@@ -68,7 +68,7 @@ where
     v.data
 }
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Clone)]
 pub(crate) struct VarUsageInfo {
     pub inline_prevented: bool,
 
@@ -85,6 +85,7 @@ pub(crate) struct VarUsageInfo {
     /// `true` if the enclosing function defines this variable as a parameter.
     pub declared_as_fn_param: bool,
 
+    pub declared_as_fn_decl: bool,
     pub declared_as_fn_expr: bool,
 
     pub assign_count: u32,
@@ -93,7 +94,7 @@ pub(crate) struct VarUsageInfo {
     /// The number of direct and indirect reference to this identifier.
     /// ## Things to note
     ///
-    /// - Update is counted as usage
+    /// - Update is counted as usage, but assign is not
     pub usage_count: u32,
 
     /// The variable itself is modified.
@@ -123,7 +124,7 @@ pub(crate) struct VarUsageInfo {
 
     pub no_side_effect_for_member_access: bool,
 
-    pub used_as_callee: bool,
+    pub callee_count: u32,
 
     pub used_as_arg: bool,
 
@@ -133,11 +134,53 @@ pub(crate) struct VarUsageInfo {
 
     /// `infects_to`. This should be renamed, but it will be done with another
     /// PR. (because it's hard to review)
-    infects: Vec<Id>,
+    infects: Vec<Access>,
 
-    used_by_nested_fn: bool,
-
+    pub used_in_non_child_fn: bool,
+    /// Only **string** properties.
     pub accessed_props: Box<AHashMap<JsWord, u32>>,
+
+    pub used_recursively: bool,
+}
+
+impl Default for VarUsageInfo {
+    fn default() -> Self {
+        Self {
+            inline_prevented: Default::default(),
+            ref_count: Default::default(),
+            cond_init: Default::default(),
+            declared: Default::default(),
+            declared_count: Default::default(),
+            declared_as_fn_param: Default::default(),
+            declared_as_fn_decl: Default::default(),
+            declared_as_fn_expr: Default::default(),
+            assign_count: Default::default(),
+            mutation_by_call_count: Default::default(),
+            usage_count: Default::default(),
+            reassigned_with_assignment: Default::default(),
+            reassigned_with_var_decl: Default::default(),
+            mutated: Default::default(),
+            has_property_access: Default::default(),
+            has_property_mutation: Default::default(),
+            exported: Default::default(),
+            used_above_decl: Default::default(),
+            is_fn_local: true,
+            executed_multiple_time: Default::default(),
+            used_in_cond: Default::default(),
+            var_kind: Default::default(),
+            var_initialized: Default::default(),
+            declared_as_catch_param: Default::default(),
+            no_side_effect_for_member_access: Default::default(),
+            callee_count: Default::default(),
+            used_as_arg: Default::default(),
+            indexed_with_dynamic_key: Default::default(),
+            pure_fn: Default::default(),
+            infects: Default::default(),
+            used_in_non_child_fn: Default::default(),
+            accessed_props: Default::default(),
+            used_recursively: Default::default(),
+        }
+    }
 }
 
 impl VarUsageInfo {
@@ -195,9 +238,9 @@ impl ProgramData {
     pub(crate) fn expand_infected(
         &self,
         module_info: &ModuleInfo,
-        ids: FxHashSet<Id>,
+        ids: FxHashSet<Access>,
         max_num: usize,
-    ) -> Result<FxHashSet<Id>, ()> {
+    ) -> Result<FxHashSet<Access>, ()> {
         let init =
             HashSet::with_capacity_and_hasher(max_num, BuildHasherDefault::<FxHasher>::default());
         ids.into_iter().try_fold(init, |mut res, id| {
@@ -210,7 +253,7 @@ impl ProgramData {
                     let iid = ids.get(index).unwrap();
 
                     // Abort on imported variables, because we can't analyze them
-                    if module_info.blackbox_imports.contains(iid) {
+                    if module_info.blackbox_imports.contains(&iid.0) {
                         return Err(());
                     }
                     if !res.insert(iid.clone()) {
@@ -219,11 +262,27 @@ impl ProgramData {
                     if res.len() >= max_num {
                         return Err(());
                     }
-                    if let Some(info) = self.vars.get(iid) {
+                    if let Some(info) = self.vars.get(&iid.0) {
                         let infects = &info.infects;
                         if !infects.is_empty() {
                             let old_len = ids.len();
-                            ids.extend_from_slice(infects.as_slice());
+
+                            // This is not a call, so effects from call can be skipped
+                            let can_skip_non_call = matches!(iid.1, AccessKind::Reference)
+                                || (info.declared_count == 1
+                                    && info.declared_as_fn_decl
+                                    && !info.reassigned());
+
+                            if can_skip_non_call {
+                                ids.extend(
+                                    infects
+                                        .iter()
+                                        .filter(|(_, kind)| *kind != AccessKind::Call)
+                                        .cloned(),
+                                );
+                            } else {
+                                ids.extend_from_slice(infects.as_slice());
+                            }
                             let new_len = ids.len();
                             ranges.push(old_len..new_len);
                         }
@@ -363,6 +422,7 @@ where
                     self.data.report_usage(self.ctx, i, is_assign);
                     self.data.var_or_default(i.to_id()).mark_used_above_decl()
                 }
+                self.data.var_or_default(i.to_id()).mark_used_recursively();
                 return;
             }
         }
@@ -375,11 +435,17 @@ where
         i: &Ident,
         has_init: bool,
         kind: Option<VarDeclKind>,
-        _is_fn_decl: bool,
+        is_fn_decl: bool,
     ) -> &mut S::VarData {
         self.scope.add_declared_symbol(i);
 
-        self.data.declare_decl(self.ctx, i, has_init, kind)
+        let v = self.data.declare_decl(self.ctx, i, has_init, kind);
+
+        if is_fn_decl {
+            v.mark_declared_as_fn_decl();
+        }
+
+        v
     }
 
     fn visit_in_cond<T: VisitWith<Self>>(&mut self, t: &T) {
@@ -407,6 +473,7 @@ where
             {
                 let ctx = Ctx {
                     in_pat_of_param: true,
+                    is_delete_arg: false,
                     ..child.ctx
                 };
                 n.params.visit_with(&mut *child.with_ctx(ctx));
@@ -423,12 +490,32 @@ where
         })
     }
 
+    #[cfg_attr(feature = "debug", tracing::instrument(skip_all))]
+    fn visit_constructor(&mut self, n: &Constructor) {
+        self.with_child(n.span.ctxt, ScopeKind::Fn, |child| {
+            {
+                let ctx = Ctx {
+                    in_pat_of_param: true,
+                    is_delete_arg: false,
+                    ..child.ctx
+                };
+                n.params.visit_with(&mut *child.with_ctx(ctx));
+            }
+
+            // Bypass visit_block_stmt
+            if let Some(body) = &n.body {
+                body.visit_with(child);
+            }
+        })
+    }
+
     #[cfg_attr(feature = "debug", tracing::instrument(skip(self, n)))]
     fn visit_assign_expr(&mut self, n: &AssignExpr) {
         let ctx = Ctx {
             in_assign_lhs: true,
             is_exact_reassignment: true,
             is_op_assign: n.op != op!("="),
+            is_delete_arg: false,
             ..self.ctx
         };
         n.left.visit_with(&mut *self.with_ctx(ctx));
@@ -436,6 +523,7 @@ where
         let ctx = Ctx {
             in_assign_lhs: false,
             is_exact_reassignment: false,
+            is_delete_arg: false,
             ..self.ctx
         };
         n.right.visit_with(&mut *self.with_ctx(ctx));
@@ -461,7 +549,6 @@ where
                     self.data
                         .var_or_default(left.clone())
                         .add_infects_to(id.clone());
-                    self.data.var_or_default(id).add_infects_to(left.clone());
                 }
             }
         }
@@ -473,6 +560,7 @@ where
         {
             let ctx = Ctx {
                 in_pat_of_param: false,
+                is_delete_arg: false,
                 var_decl_kind_of_pat: None,
                 ..self.ctx
             };
@@ -484,6 +572,7 @@ where
     fn visit_await_expr(&mut self, n: &AwaitExpr) {
         let ctx = Ctx {
             in_await_arg: true,
+            is_delete_arg: false,
             ..self.ctx
         };
         n.visit_children_with(&mut *self.with_ctx(ctx));
@@ -565,6 +654,7 @@ where
             let ctx = Ctx {
                 inline_prevented,
                 in_call_arg: true,
+                is_delete_arg: false,
                 is_exact_arg: true,
                 is_exact_reassignment: false,
                 is_callee: false,
@@ -594,6 +684,7 @@ where
         {
             let ctx = Ctx {
                 in_cond: true,
+                is_delete_arg: false,
                 in_catch_param: true,
                 ..self.ctx
             };
@@ -603,6 +694,7 @@ where
         {
             let ctx = Ctx {
                 in_cond: true,
+                is_delete_arg: false,
                 ..self.ctx
             };
             self.with_ctx(ctx).visit_in_cond(&n.body);
@@ -616,6 +708,7 @@ where
         {
             let ctx = Ctx {
                 inline_prevented: true,
+                is_delete_arg: false,
                 ..self.ctx
             };
             n.super_class.visit_with(&mut *self.with_ctx(ctx));
@@ -675,10 +768,12 @@ where
     #[cfg_attr(feature = "debug", tracing::instrument(skip(self, n)))]
     fn visit_do_while_stmt(&mut self, n: &DoWhileStmt) {
         n.body.visit_with(&mut *self.with_ctx(Ctx {
+            is_delete_arg: false,
             executed_multiple_time: true,
             ..self.ctx
         }));
         n.test.visit_with(&mut *self.with_ctx(Ctx {
+            is_delete_arg: false,
             executed_multiple_time: true,
             ..self.ctx
         }));
@@ -779,6 +874,7 @@ where
             e.left.visit_with(self);
             let ctx = Ctx {
                 in_cond: true,
+                is_delete_arg: false,
                 ..self.ctx
             };
             self.with_ctx(ctx).visit_in_cond(&e.right);
@@ -807,6 +903,7 @@ where
     fn visit_fn_decl(&mut self, n: &FnDecl) {
         let ctx = Ctx {
             in_decl_with_no_side_effect_for_member_access: true,
+            is_delete_arg: false,
             ..self.ctx
         };
         self.with_ctx(ctx).declare_decl(&n.ident, true, None, true);
@@ -838,12 +935,15 @@ where
 
     #[cfg_attr(feature = "debug", tracing::instrument(skip(self, n)))]
     fn visit_fn_expr(&mut self, n: &FnExpr) {
-        n.visit_children_with(self);
-
         if let Some(n_id) = &n.ident {
             self.data
                 .var_or_default(n_id.to_id())
                 .mark_declared_as_fn_expr();
+
+            self.used_recursively
+                .insert(n_id.to_id(), RecursiveUsage::FnOrClass);
+
+            n.visit_children_with(self);
 
             {
                 for id in collect_infects_from(
@@ -853,11 +953,12 @@ where
                         ..Default::default()
                     },
                 ) {
-                    self.data
-                        .var_or_default(n_id.to_id())
-                        .add_infects_to(id.to_id());
+                    self.data.var_or_default(n_id.to_id()).add_infects_to(id);
                 }
             }
+            self.used_recursively.remove(&n_id.to_id());
+        } else {
+            n.visit_children_with(self);
         }
     }
 
@@ -867,8 +968,9 @@ where
 
         self.with_child(n.span.ctxt, ScopeKind::Block, |child| {
             let ctx = Ctx {
-                in_left_of_for_loop: true,
                 is_exact_reassignment: true,
+                is_delete_arg: false,
+                in_left_of_for_loop: true,
                 ..child.ctx
             };
             n.left.visit_with(&mut *child.with_ctx(ctx));
@@ -876,6 +978,7 @@ where
             n.right.visit_with(child);
 
             let ctx = Ctx {
+                is_delete_arg: false,
                 executed_multiple_time: true,
                 in_cond: true,
                 ..child.ctx
@@ -893,6 +996,7 @@ where
             let ctx = Ctx {
                 in_left_of_for_loop: true,
                 is_exact_reassignment: true,
+                is_delete_arg: false,
                 ..child.ctx
             };
             n.left.visit_with(&mut *child.with_ctx(ctx));
@@ -900,6 +1004,7 @@ where
             let ctx = Ctx {
                 executed_multiple_time: true,
                 in_cond: true,
+                is_delete_arg: false,
                 ..child.ctx
             };
             child.with_ctx(ctx).visit_in_cond(&n.body);
@@ -913,6 +1018,7 @@ where
         let ctx = Ctx {
             executed_multiple_time: true,
             in_cond: true,
+            is_delete_arg: false,
             ..self.ctx
         };
 
@@ -961,6 +1067,7 @@ where
     fn visit_if_stmt(&mut self, n: &IfStmt) {
         let ctx = Ctx {
             in_cond: true,
+            is_delete_arg: false,
             ..self.ctx
         };
         n.test.visit_with(self);
@@ -998,6 +1105,7 @@ where
                 is_exact_arg: false,
                 is_exact_reassignment: false,
                 is_callee: false,
+                is_delete_arg: false,
                 ..self.ctx
             };
             c.visit_with(&mut *self.with_ctx(ctx));
@@ -1014,7 +1122,7 @@ where
                 v.mark_indexed_with_dynamic_key();
             }
 
-            if self.ctx.in_assign_lhs {
+            if self.ctx.in_assign_lhs || self.ctx.is_delete_arg {
                 v.mark_has_property_mutation();
             }
 
@@ -1214,6 +1322,7 @@ where
             in_call_arg: false,
             in_assign_lhs: false,
             in_await_arg: false,
+            is_delete_arg: false,
             ..self.ctx
         };
         n.visit_children_with(&mut *self.with_ctx(ctx));
@@ -1225,6 +1334,7 @@ where
         for stmt in stmts {
             let ctx = Ctx {
                 in_cond: self.ctx.in_cond || had_cond,
+                is_delete_arg: false,
                 ..self.ctx
             };
 
@@ -1240,6 +1350,7 @@ where
             let ctx = Ctx {
                 is_exact_arg: false,
                 is_exact_reassignment: false,
+                is_delete_arg: false,
                 ..self.ctx
             };
             c.visit_with(&mut *self.with_ctx(ctx));
@@ -1254,6 +1365,7 @@ where
 
         for case in n.cases.iter() {
             let ctx = Ctx {
+                is_delete_arg: false,
                 in_cond: true,
                 ..self.ctx
             };
@@ -1271,6 +1383,7 @@ where
     fn visit_try_stmt(&mut self, n: &TryStmt) {
         let ctx = Ctx {
             in_cond: true,
+            is_delete_arg: false,
             ..self.ctx
         };
 
@@ -1282,6 +1395,18 @@ where
         let ctx = Ctx {
             in_update_arg: true,
             is_exact_reassignment: true,
+            is_delete_arg: false,
+            ..self.ctx
+        };
+        n.visit_children_with(&mut *self.with_ctx(ctx));
+    }
+
+    #[cfg_attr(feature = "debug", tracing::instrument(skip(self, n)))]
+    fn visit_unary_expr(&mut self, n: &UnaryExpr) {
+        let ctx = Ctx {
+            in_update_arg: false,
+            is_exact_reassignment: false,
+            is_delete_arg: n.op == op!("delete"),
             ..self.ctx
         };
         n.visit_children_with(&mut *self.with_ctx(ctx));
@@ -1295,6 +1420,7 @@ where
             in_call_arg: false,
             in_assign_lhs: false,
             in_await_arg: false,
+            is_delete_arg: false,
             ..self.ctx
         };
         n.visit_children_with(&mut *self.with_ctx(ctx));
@@ -1311,7 +1437,6 @@ where
                     self.data
                         .var_or_default(var.to_id())
                         .add_infects_to(id.clone());
-                    self.data.var_or_default(id).add_infects_to(var.to_id());
                 }
             }
         }
@@ -1339,6 +1464,7 @@ where
                     .as_deref()
                     .map(is_safe_to_access_prop)
                     .unwrap_or(false),
+                is_delete_arg: false,
                 ..self.ctx
             };
             e.name.visit_with(&mut *self.with_ctx(ctx));
@@ -1381,11 +1507,13 @@ where
     fn visit_while_stmt(&mut self, n: &WhileStmt) {
         n.test.visit_with(&mut *self.with_ctx(Ctx {
             executed_multiple_time: true,
+            is_delete_arg: false,
             ..self.ctx
         }));
         let ctx = Ctx {
             executed_multiple_time: true,
             in_cond: true,
+            is_delete_arg: false,
             ..self.ctx
         };
 

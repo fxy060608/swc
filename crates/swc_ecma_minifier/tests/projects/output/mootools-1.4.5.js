@@ -1840,7 +1840,7 @@ Elements.prototype = {
             return document.id(Slick.find(this, expression));
         }
     });
-    var set, translations, contains = {
+    var types, div, set, translations, contains = {
         contains: function(element) {
             return Slick.contains(this, element);
         }
@@ -2019,7 +2019,7 @@ Elements.prototype = {
     "button" != el.type && (propertySetters.type = function(node, value) {
         node.setAttribute("type", value);
     }), el = null;
-    var types, div, input = document.createElement("input");
+    var input = document.createElement("input");
     input.value = "t", input.type = "submit", "t" != input.value && (propertySetters.type = function(node, type) {
         var value = node.value;
         node.type = type, node.value = value;
@@ -2232,7 +2232,7 @@ Elements.prototype = {
     }), tr = document.createElement("tr"), html = "<td></td>";
     tr.innerHTML = html;
     var supportsTRInnerHTML = tr.innerHTML == html;
-    tr = null, supportsTableInnerHTML && supportsTRInnerHTML && supportsHTML5Elements || (Element.Properties.html.set = (set = Element.Properties.html.set, (translations = {
+    tr = null, (!supportsTableInnerHTML || !supportsTRInnerHTML || !supportsHTML5Elements) && (Element.Properties.html.set = (set = Element.Properties.html.set, (translations = {
         table: [
             1,
             "<table>",

@@ -1,7 +1,7 @@
 use is_macro::Is;
 use string_enum::StringEnum;
 use swc_atoms::JsWord;
-use swc_common::{ast_node, EqIgnoreSpan, Span};
+use swc_common::{ast_node, util::take::Take, EqIgnoreSpan, Span};
 
 use crate::{Delimiter, Ident, ListOfComponentValues, Str, TokenAndSpan};
 
@@ -63,6 +63,15 @@ pub enum ForgivingRelativeSelector {
 pub struct ComplexSelector {
     pub span: Span,
     pub children: Vec<ComplexSelectorChildren>,
+}
+
+impl Take for ComplexSelector {
+    fn dummy() -> Self {
+        Self {
+            span: Take::dummy(),
+            children: Take::dummy(),
+        }
+    }
 }
 
 #[ast_node]
@@ -156,21 +165,43 @@ pub struct TagNameSelector {
 #[derive(Eq, Hash, EqIgnoreSpan)]
 pub struct UniversalSelector {
     pub span: Span,
-    pub prefix: Option<NsPrefix>,
+    pub prefix: Option<NamespacePrefix>,
 }
 
-#[ast_node("NsPrefix")]
+#[ast_node("NamespacePrefix")]
 #[derive(Eq, Hash, EqIgnoreSpan)]
-pub struct NsPrefix {
+pub struct NamespacePrefix {
     pub span: Span,
-    pub prefix: Option<Ident>,
+    pub namespace: Option<Namespace>,
+}
+
+#[ast_node]
+#[derive(Eq, Hash, Is, EqIgnoreSpan)]
+pub enum Namespace {
+    #[tag("NamedNamespace")]
+    Named(NamedNamespace),
+    #[tag("AnyNamespace")]
+    Any(AnyNamespace),
+}
+
+#[ast_node("NamedNamespace")]
+#[derive(Eq, Hash, EqIgnoreSpan)]
+pub struct NamedNamespace {
+    pub span: Span,
+    pub name: Ident,
+}
+
+#[ast_node("AnyNamespace")]
+#[derive(Eq, Hash, EqIgnoreSpan)]
+pub struct AnyNamespace {
+    pub span: Span,
 }
 
 #[ast_node("WqName")]
 #[derive(Eq, Hash, EqIgnoreSpan)]
 pub struct WqName {
     pub span: Span,
-    pub prefix: Option<NsPrefix>,
+    pub prefix: Option<NamespacePrefix>,
     pub value: Ident,
 }
 
@@ -302,6 +333,9 @@ pub enum PseudoClassSelectorChildren {
     #[tag("Delimiter")]
     Delimiter(Delimiter),
 
+    #[tag("ComplexSelector")]
+    ComplexSelector(ComplexSelector),
+
     #[tag("SelectorList")]
     SelectorList(SelectorList),
 
@@ -359,4 +393,22 @@ pub enum PseudoElementSelectorChildren {
     Ident(Ident),
     #[tag("CompoundSelector")]
     CompoundSelector(CompoundSelector),
+    #[tag("CustomHighlightName")]
+    CustomHighlightName(CustomHighlightName),
+}
+
+#[ast_node("CustomHighlightName")]
+#[derive(Eq, Hash)]
+pub struct CustomHighlightName {
+    pub span: Span,
+    #[cfg_attr(feature = "rkyv", with(swc_atoms::EncodeJsWord))]
+    pub value: JsWord,
+    #[cfg_attr(feature = "rkyv", with(swc_atoms::EncodeJsWord))]
+    pub raw: Option<JsWord>,
+}
+
+impl EqIgnoreSpan for CustomHighlightName {
+    fn eq_ignore_span(&self, other: &Self) -> bool {
+        self.value == other.value
+    }
 }

@@ -4,14 +4,17 @@ use swc_atoms::js_word;
 use swc_common::{iter::IdentifyLast, util::take::Take, Span, DUMMY_SP};
 use swc_ecma_ast::*;
 use swc_ecma_utils::{
-    ExprExt, ExprFactory, Type,
+    ExprExt, ExprFactory, IdentUsageFinder, Type,
     Value::{self, Known},
 };
 
 use super::Pure;
-use crate::compress::{
-    pure::strings::{convert_str_value_to_tpl_cooked, convert_str_value_to_tpl_raw},
-    util::{is_global_var_with_pure_property_access, is_pure_undefined},
+use crate::{
+    compress::{
+        pure::strings::{convert_str_value_to_tpl_cooked, convert_str_value_to_tpl_raw},
+        util::is_pure_undefined,
+    },
+    util::is_global_var_with_pure_property_access,
 };
 
 impl Pure<'_> {
@@ -295,6 +298,8 @@ impl Pure<'_> {
                 }
             })
             .unwrap_or_default();
+
+        report_change!("Optimized regex");
 
         Some(Expr::Lit(Lit::Regex(Regex {
             span: *span,
@@ -647,6 +652,50 @@ impl Pure<'_> {
         }))
     }
 
+    /// Calls [`Self::ignore_return_value`] on the arguments of return
+    /// statemetns.
+    ///
+    /// This function is recursive but does not go into nested scopes.
+    pub(super) fn ignore_return_value_of_return_stmt(&mut self, s: &mut Stmt, opts: DropOpts) {
+        match s {
+            Stmt::Return(s) => {
+                if let Some(arg) = &mut s.arg {
+                    self.ignore_return_value(arg, opts);
+                    if arg.is_invalid() {
+                        report_change!(
+                            "Dropped the argument of a return statement because the return value \
+                             is ignored"
+                        );
+                        s.arg = None;
+                    }
+                }
+            }
+
+            Stmt::Block(s) => {
+                for stmt in &mut s.stmts {
+                    self.ignore_return_value_of_return_stmt(stmt, opts);
+                }
+            }
+
+            Stmt::If(s) => {
+                self.ignore_return_value_of_return_stmt(&mut s.cons, opts);
+                if let Some(alt) = &mut s.alt {
+                    self.ignore_return_value_of_return_stmt(alt, opts);
+                }
+            }
+
+            Stmt::Switch(s) => {
+                for case in &mut s.cases {
+                    for stmt in &mut case.cons {
+                        self.ignore_return_value_of_return_stmt(stmt, opts);
+                    }
+                }
+            }
+
+            _ => {}
+        }
+    }
+
     pub(super) fn ignore_return_value(&mut self, e: &mut Expr, opts: DropOpts) {
         self.optimize_expr_in_bool_ctx(e, true);
 
@@ -871,7 +920,6 @@ impl Pure<'_> {
                             op!(bin, "+")
                             | op!(bin, "-")
                             | op!("*")
-                            | op!("/")
                             | op!("%")
                             | op!("**")
                             | op!("^")
@@ -1003,6 +1051,46 @@ impl Pure<'_> {
             _ => {}
         }
 
+        if self.options.side_effects {
+            if let Expr::Call(CallExpr {
+                callee: Callee::Expr(callee),
+                ..
+            }) = e
+            {
+                match &mut **callee {
+                    Expr::Fn(callee) => {
+                        if let Some(body) = &mut callee.function.body {
+                            if let Some(ident) = &callee.ident {
+                                if IdentUsageFinder::find(&ident.to_id(), body) {
+                                    return;
+                                }
+                            }
+
+                            for stmt in &mut body.stmts {
+                                self.ignore_return_value_of_return_stmt(stmt, opts);
+                            }
+                        }
+                    }
+                    Expr::Arrow(callee) => match &mut callee.body {
+                        BlockStmtOrExpr::BlockStmt(body) => {
+                            for stmt in &mut body.stmts {
+                                self.ignore_return_value_of_return_stmt(stmt, opts);
+                            }
+                        }
+                        BlockStmtOrExpr::Expr(body) => {
+                            self.ignore_return_value(body, opts);
+
+                            if body.is_invalid() {
+                                *body = 0.into();
+                                return;
+                            }
+                        }
+                    },
+                    _ => {}
+                }
+            }
+        }
+
         if self.options.side_effects && self.options.pristine_globals {
             match e {
                 Expr::New(NewExpr { callee, args, .. })
@@ -1082,6 +1170,48 @@ impl Pure<'_> {
                 }
 
                 Expr::Array(arr) => {
+                    if arr.elems.iter().any(|e| match e {
+                        Some(ExprOrSpread {
+                            spread: Some(..), ..
+                        }) => true,
+                        _ => false,
+                    }) {
+                        *e = Expr::Array(ArrayLit {
+                            elems: arr
+                                .elems
+                                .take()
+                                .into_iter()
+                                .flatten()
+                                .filter_map(|mut e| {
+                                    if e.spread.is_some() {
+                                        return Some(e);
+                                    }
+
+                                    self.ignore_return_value(
+                                        &mut e.expr,
+                                        DropOpts {
+                                            drop_global_refs_if_unused: true,
+                                            drop_zero: true,
+                                            drop_str_lit: true,
+                                            ..opts
+                                        },
+                                    );
+                                    if e.expr.is_invalid() {
+                                        return None;
+                                    }
+
+                                    Some(ExprOrSpread {
+                                        spread: None,
+                                        expr: e.expr,
+                                    })
+                                })
+                                .map(Some)
+                                .collect(),
+                            ..*arr
+                        });
+                        return;
+                    }
+
                     let mut exprs = vec![];
 
                     //

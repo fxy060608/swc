@@ -61,16 +61,24 @@
           "end": 74,
           "ctxt": 0
         },
-        "name": "{",
+        "name": {
+          "type": "PreservedToken",
+          "span": {
+            "start": 14,
+            "end": 15,
+            "ctxt": 0
+          },
+          "token": "LBrace"
+        },
         "value": [
           {
-            "type": "Tokens",
+            "type": "ListOfComponentValues",
             "span": {
               "start": 20,
               "end": 32,
               "ctxt": 0
             },
-            "tokens": [
+            "children": [
               {
                 "type": "PreservedToken",
                 "span": {
@@ -203,7 +211,15 @@
                 "end": 72,
                 "ctxt": 0
               },
-              "name": "{",
+              "name": {
+                "type": "PreservedToken",
+                "span": {
+                  "start": 42,
+                  "end": 43,
+                  "ctxt": 0
+                },
+                "token": "LBrace"
+              },
               "value": [
                 {
                   "type": "Declaration",

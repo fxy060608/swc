@@ -1,14 +1,13 @@
 #![allow(clippy::needless_update)]
 
 use rustc_hash::FxHashSet;
-use swc_atoms::js_word;
 use swc_common::{collections::AHashSet, SyntaxContext};
 use swc_ecma_ast::*;
 use swc_ecma_utils::{collect_decls, BindingCollector};
 use swc_ecma_visit::{noop_visit_type, Visit, VisitWith};
 
 use self::ctx::Ctx;
-use crate::marks::Marks;
+use crate::{marks::Marks, util::is_global_var_with_pure_property_access};
 
 mod ctx;
 
@@ -16,6 +15,9 @@ mod ctx;
 pub(crate) struct AliasConfig {
     pub marks: Option<Marks>,
     pub ignore_nested: bool,
+    /// TODO(kdy1): This field is used for sequential inliner.
+    /// It should be renamed to some correct name.
+    pub need_all: bool,
 }
 
 pub(crate) trait InfectableNode {
@@ -46,7 +48,16 @@ where
     }
 }
 
-pub(crate) fn collect_infects_from<N>(node: &N, config: AliasConfig) -> FxHashSet<Id>
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+
+pub(crate) enum AccessKind {
+    Reference,
+    Call,
+}
+
+pub(crate) type Access = (Id, AccessKind);
+
+pub(crate) fn collect_infects_from<N>(node: &N, config: AliasConfig) -> FxHashSet<Access>
 where
     N: InfectableNode
         + VisitWith<BindingCollector<Id>>
@@ -70,12 +81,12 @@ where
             track_expr_ident: true,
             ..Default::default()
         },
-        aliases: FxHashSet::default(),
+        accesses: FxHashSet::default(),
     };
 
     node.visit_with(&mut visitor);
 
-    visitor.aliases
+    visitor.accesses
 }
 
 pub(crate) struct InfectionCollector<'a> {
@@ -87,7 +98,7 @@ pub(crate) struct InfectionCollector<'a> {
 
     ctx: Ctx,
 
-    aliases: FxHashSet<Id>,
+    accesses: FxHashSet<Access>,
 }
 
 impl InfectionCollector<'_> {
@@ -97,20 +108,19 @@ impl InfectionCollector<'_> {
         }
 
         if self.unresolved_ctxt == Some(e.1) {
-            match e.0 {
-                js_word!("JSON")
-                | js_word!("String")
-                | js_word!("Object")
-                | js_word!("Number")
-                | js_word!("BigInt")
-                | js_word!("Boolean")
-                | js_word!("Math")
-                | js_word!("Error") => return,
-                _ => {}
+            if is_global_var_with_pure_property_access(&e.0) {
+                return;
             }
         }
 
-        self.aliases.insert(e.clone());
+        self.accesses.insert((
+            e.clone(),
+            if self.ctx.is_callee {
+                AccessKind::Call
+            } else {
+                AccessKind::Reference
+            },
+        ));
     }
 }
 
@@ -142,6 +152,7 @@ impl Visit for InfectionCollector<'_> {
             | op!(">>>") => {
                 let ctx = Ctx {
                     track_expr_ident: false,
+                    is_callee: false,
                     ..self.ctx
                 };
                 e.visit_children_with(&mut *self.with_ctx(ctx));
@@ -149,6 +160,7 @@ impl Visit for InfectionCollector<'_> {
             _ => {
                 let ctx = Ctx {
                     track_expr_ident: true,
+                    is_callee: false,
                     ..self.ctx
                 };
                 e.visit_children_with(&mut *self.with_ctx(ctx));
@@ -160,6 +172,7 @@ impl Visit for InfectionCollector<'_> {
         {
             let ctx = Ctx {
                 track_expr_ident: false,
+                is_callee: false,
                 ..self.ctx
             };
             e.test.visit_with(&mut *self.with_ctx(ctx));
@@ -200,7 +213,7 @@ impl Visit for InfectionCollector<'_> {
     fn visit_member_expr(&mut self, n: &MemberExpr) {
         {
             let ctx = Ctx {
-                track_expr_ident: false,
+                track_expr_ident: self.config.need_all,
                 ..self.ctx
             };
             n.obj.visit_with(&mut *self.with_ctx(ctx));
@@ -208,7 +221,7 @@ impl Visit for InfectionCollector<'_> {
 
         {
             let ctx = Ctx {
-                track_expr_ident: false,
+                track_expr_ident: self.config.need_all,
                 ..self.ctx
             };
             n.prop.visit_with(&mut *self.with_ctx(ctx));
@@ -217,13 +230,19 @@ impl Visit for InfectionCollector<'_> {
 
     fn visit_member_prop(&mut self, n: &MemberProp) {
         if let MemberProp::Computed(c) = &n {
-            c.visit_with(self);
+            c.visit_with(&mut *self.with_ctx(Ctx {
+                is_callee: false,
+                ..self.ctx
+            }));
         }
     }
 
     fn visit_super_prop_expr(&mut self, n: &SuperPropExpr) {
         if let SuperProp::Computed(c) = &n.prop {
-            c.visit_with(self);
+            c.visit_with(&mut *self.with_ctx(Ctx {
+                is_callee: false,
+                ..self.ctx
+            }));
         }
     }
 
@@ -237,6 +256,7 @@ impl Visit for InfectionCollector<'_> {
             | op!("void") => {
                 let ctx = Ctx {
                     track_expr_ident: false,
+                    is_callee: false,
                     ..self.ctx
                 };
                 e.visit_children_with(&mut *self.with_ctx(ctx));
@@ -245,6 +265,7 @@ impl Visit for InfectionCollector<'_> {
             _ => {
                 let ctx = Ctx {
                     track_expr_ident: true,
+                    is_callee: false,
                     ..self.ctx
                 };
                 e.visit_children_with(&mut *self.with_ctx(ctx));
@@ -255,6 +276,7 @@ impl Visit for InfectionCollector<'_> {
     fn visit_update_expr(&mut self, e: &UpdateExpr) {
         let ctx = Ctx {
             track_expr_ident: false,
+            is_callee: false,
             ..self.ctx
         };
         e.arg.visit_with(&mut *self.with_ctx(ctx));
@@ -262,7 +284,18 @@ impl Visit for InfectionCollector<'_> {
 
     fn visit_prop_name(&mut self, n: &PropName) {
         if let PropName::Computed(c) = &n {
-            c.visit_with(self);
+            c.visit_with(&mut *self.with_ctx(Ctx {
+                is_callee: false,
+                ..self.ctx
+            }));
         }
+    }
+
+    fn visit_callee(&mut self, n: &Callee) {
+        let ctx = Ctx {
+            is_callee: true,
+            ..self.ctx
+        };
+        n.visit_children_with(&mut *self.with_ctx(ctx));
     }
 }

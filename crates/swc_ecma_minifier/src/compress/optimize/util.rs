@@ -1,20 +1,30 @@
 use std::ops::{Deref, DerefMut};
 
-use rustc_hash::FxHashMap;
+use rustc_hash::{FxHashMap, FxHashSet};
 use swc_atoms::js_word;
-use swc_common::{Span, SyntaxContext, DUMMY_SP};
+use swc_common::{util::take::Take, Span, SyntaxContext, DUMMY_SP};
 use swc_ecma_ast::*;
+use swc_ecma_transforms_base::perf::{Parallel, ParallelExt};
 use swc_ecma_utils::{ExprCtx, ExprExt};
 use swc_ecma_visit::{noop_visit_mut_type, VisitMut, VisitMutWith};
 use tracing::debug;
 
 use super::{Ctx, Optimizer};
-use crate::mode::Mode;
+use crate::{mode::Mode, HEAVY_TASK_PARALLELS};
 
 impl<'b, M> Optimizer<'b, M>
 where
     M: Mode,
 {
+    pub(super) fn normalize_expr(&mut self, e: &mut Expr) {
+        if let Expr::Seq(seq) = e {
+            self.normalize_sequences(seq);
+            if seq.exprs.len() == 1 {
+                *e = *seq.exprs.take().into_iter().next().unwrap();
+            }
+        }
+    }
+
     pub(super) fn access_numeric_property<'e>(
         &mut self,
         _expr: &'e mut Expr,
@@ -156,43 +166,199 @@ impl VisitMut for Remapper {
     }
 }
 
-pub(crate) struct MultiReplacer<'a> {
-    vars: &'a mut FxHashMap<Id, Box<Expr>>,
-    clone: bool,
-    mode: MultiReplacerMode,
-    worked: &'a mut bool,
+/// A visitor responsible for inlining special kind of variables and removing
+/// (some) unused variables. Due to the order of visit, the main visitor cannot
+/// handle all edge cases and this type is the complement for it.
+#[derive(Clone, Copy)]
+pub(crate) struct Finalizer<'a> {
+    pub simple_functions: &'a FxHashMap<Id, Box<Expr>>,
+    pub lits_for_cmp: &'a FxHashMap<Id, Box<Expr>>,
+    pub lits_for_array_access: &'a FxHashMap<Id, Box<Expr>>,
+
+    pub vars_to_remove: &'a FxHashSet<Id>,
+
+    pub changed: bool,
 }
 
-#[repr(u8)]
+impl Parallel for Finalizer<'_> {
+    fn create(&self) -> Self {
+        *self
+    }
+
+    fn merge(&mut self, other: Self) {
+        self.changed |= other.changed;
+    }
+}
+
+impl<'a> Finalizer<'a> {
+    fn var(&mut self, i: &Id, mode: FinalizerMode) -> Option<Box<Expr>> {
+        let mut e = match mode {
+            FinalizerMode::Callee => self.simple_functions.get(i).cloned()?,
+            FinalizerMode::ComparisonWithLit => self.lits_for_cmp.get(i).cloned()?,
+            FinalizerMode::MemberAccess => self.lits_for_array_access.get(i).cloned()?,
+        };
+
+        e.visit_mut_children_with(self);
+
+        match &*e {
+            Expr::Ident(Ident {
+                sym: js_word!("eval"),
+                ..
+            }) => Some(Box::new(Expr::Seq(SeqExpr {
+                span: DUMMY_SP,
+                exprs: vec![0.into(), e],
+            }))),
+            _ => Some(e),
+        }
+    }
+
+    fn check(&mut self, e: &mut Expr, mode: FinalizerMode) {
+        if let Expr::Ident(i) = e {
+            if let Some(new) = self.var(&i.to_id(), mode) {
+                debug!("multi-replacer: Replaced `{}`", i);
+                self.changed = true;
+
+                *e = *new;
+            }
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy)]
-
-pub enum MultiReplacerMode {
-    Normal,
-    OnlyCallee,
+enum FinalizerMode {
+    Callee,
+    ComparisonWithLit,
+    MemberAccess,
 }
 
-impl<'a> MultiReplacer<'a> {
+impl VisitMut for Finalizer<'_> {
+    noop_visit_mut_type!();
+
+    fn visit_mut_callee(&mut self, e: &mut Callee) {
+        e.visit_mut_children_with(self);
+
+        if let Callee::Expr(e) = e {
+            self.check(e, FinalizerMode::Callee);
+        }
+    }
+
+    fn visit_mut_member_expr(&mut self, e: &mut MemberExpr) {
+        e.visit_mut_children_with(self);
+
+        if let MemberProp::Computed(ref mut prop) = e.prop {
+            if let Expr::Lit(Lit::Num(..)) = &*prop.expr {
+                self.check(&mut e.obj, FinalizerMode::MemberAccess);
+            }
+        }
+    }
+
+    fn visit_mut_bin_expr(&mut self, e: &mut BinExpr) {
+        e.visit_mut_children_with(self);
+
+        match e.op {
+            op!("===") | op!("!==") | op!("==") | op!("!=") => {
+                //
+                if e.left.is_lit() {
+                    self.check(&mut e.right, FinalizerMode::ComparisonWithLit);
+                } else if e.right.is_lit() {
+                    self.check(&mut e.left, FinalizerMode::ComparisonWithLit);
+                }
+            }
+            _ => {}
+        }
+    }
+
+    fn visit_mut_var_declarators(&mut self, n: &mut Vec<VarDeclarator>) {
+        n.visit_mut_children_with(self);
+
+        n.retain(|v| !v.name.is_invalid());
+    }
+
+    fn visit_mut_var_declarator(&mut self, n: &mut VarDeclarator) {
+        n.visit_mut_children_with(self);
+
+        if n.init.is_none() {
+            if let Pat::Ident(i) = &n.name {
+                if self.vars_to_remove.contains(&i.to_id()) {
+                    n.name.take();
+                }
+            }
+        }
+    }
+
+    fn visit_mut_opt_var_decl_or_expr(&mut self, n: &mut Option<VarDeclOrExpr>) {
+        n.visit_mut_children_with(self);
+
+        if let Some(VarDeclOrExpr::VarDecl(v)) = n {
+            if v.decls.is_empty() {
+                *n = None;
+            }
+        }
+    }
+
+    fn visit_mut_stmt(&mut self, n: &mut Stmt) {
+        n.visit_mut_children_with(self);
+
+        if let Stmt::Decl(Decl::Var(v)) = n {
+            if v.decls.is_empty() {
+                n.take();
+            }
+        }
+    }
+
+    fn visit_mut_prop_or_spreads(&mut self, n: &mut Vec<PropOrSpread>) {
+        self.maybe_par(*HEAVY_TASK_PARALLELS, n, |v, n| {
+            n.visit_mut_with(v);
+        });
+    }
+
+    fn visit_mut_expr_or_spreads(&mut self, n: &mut Vec<ExprOrSpread>) {
+        self.maybe_par(*HEAVY_TASK_PARALLELS, n, |v, n| {
+            n.visit_mut_with(v);
+        });
+    }
+
+    fn visit_mut_opt_vec_expr_or_spreads(&mut self, n: &mut Vec<Option<ExprOrSpread>>) {
+        self.maybe_par(*HEAVY_TASK_PARALLELS, n, |v, n| {
+            n.visit_mut_with(v);
+        });
+    }
+
+    fn visit_mut_exprs(&mut self, n: &mut Vec<Box<Expr>>) {
+        self.maybe_par(*HEAVY_TASK_PARALLELS, n, |v, n| {
+            n.visit_mut_with(v);
+        });
+    }
+
+    fn visit_mut_stmts(&mut self, n: &mut Vec<Stmt>) {
+        self.maybe_par(*HEAVY_TASK_PARALLELS, n, |v, n| {
+            n.visit_mut_with(v);
+        });
+    }
+
+    fn visit_mut_module_items(&mut self, n: &mut Vec<ModuleItem>) {
+        self.maybe_par(*HEAVY_TASK_PARALLELS, n, |v, n| {
+            n.visit_mut_with(v);
+        });
+    }
+}
+
+pub(crate) struct NormalMultiReplacer<'a> {
+    pub vars: &'a mut FxHashMap<Id, Box<Expr>>,
+    pub changed: bool,
+}
+
+impl<'a> NormalMultiReplacer<'a> {
     /// `worked` will be changed to `true` if any replacement is done
-    pub fn new(
-        vars: &'a mut FxHashMap<Id, Box<Expr>>,
-        clone: bool,
-        mode: MultiReplacerMode,
-        worked: &'a mut bool,
-    ) -> Self {
-        MultiReplacer {
+    pub fn new(vars: &'a mut FxHashMap<Id, Box<Expr>>) -> Self {
+        NormalMultiReplacer {
             vars,
-            clone,
-            mode,
-            worked,
+            changed: false,
         }
     }
 
     fn var(&mut self, i: &Id) -> Option<Box<Expr>> {
-        let mut e = if self.clone {
-            self.vars.get(i).cloned()?
-        } else {
-            self.vars.remove(i)?
-        };
+        let mut e = self.vars.remove(i)?;
 
         e.visit_mut_children_with(self);
 
@@ -209,25 +375,8 @@ impl<'a> MultiReplacer<'a> {
     }
 }
 
-impl VisitMut for MultiReplacer<'_> {
+impl VisitMut for NormalMultiReplacer<'_> {
     noop_visit_mut_type!();
-
-    fn visit_mut_callee(&mut self, e: &mut Callee) {
-        e.visit_mut_children_with(self);
-
-        if matches!(self.mode, MultiReplacerMode::OnlyCallee) {
-            if let Callee::Expr(e) = e {
-                if let Expr::Ident(i) = &**e {
-                    if let Some(new) = self.var(&i.to_id()) {
-                        debug!("multi-replacer: Replaced `{}`", i);
-                        *self.worked = true;
-
-                        **e = *new;
-                    }
-                }
-            }
-        }
-    }
 
     fn visit_mut_expr(&mut self, e: &mut Expr) {
         if self.vars.is_empty() {
@@ -239,14 +388,12 @@ impl VisitMut for MultiReplacer<'_> {
             return;
         }
 
-        if matches!(self.mode, MultiReplacerMode::Normal) {
-            if let Expr::Ident(i) = e {
-                if let Some(new) = self.var(&i.to_id()) {
-                    debug!("multi-replacer: Replaced `{}`", i);
-                    *self.worked = true;
+        if let Expr::Ident(i) = e {
+            if let Some(new) = self.var(&i.to_id()) {
+                debug!("multi-replacer: Replaced `{}`", i);
+                self.changed = true;
 
-                    *e = *new;
-                }
+                *e = *new;
             }
         }
     }
@@ -267,20 +414,18 @@ impl VisitMut for MultiReplacer<'_> {
     fn visit_mut_prop(&mut self, p: &mut Prop) {
         p.visit_mut_children_with(self);
 
-        if matches!(self.mode, MultiReplacerMode::Normal) {
-            if let Prop::Shorthand(i) = p {
-                if let Some(value) = self.var(&i.to_id()) {
-                    debug!("multi-replacer: Replaced `{}` as shorthand", i);
-                    *self.worked = true;
+        if let Prop::Shorthand(i) = p {
+            if let Some(value) = self.var(&i.to_id()) {
+                debug!("multi-replacer: Replaced `{}` as shorthand", i);
+                self.changed = true;
 
-                    *p = Prop::KeyValue(KeyValueProp {
-                        key: PropName::Ident(Ident::new(
-                            i.sym.clone(),
-                            i.span.with_ctxt(Default::default()),
-                        )),
-                        value,
-                    });
-                }
+                *p = Prop::KeyValue(KeyValueProp {
+                    key: PropName::Ident(Ident::new(
+                        i.sym.clone(),
+                        i.span.with_ctxt(Default::default()),
+                    )),
+                    value,
+                });
             }
         }
     }

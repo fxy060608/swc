@@ -1,8 +1,10 @@
 var n = 0;
-(function (o, c) {
-    (function o(i) {
-        var l = 2;
-        while (--c + (i = { p: n++ }) && --l > 0);
+(function(o, c) {
+    (function o(o) {
+        var i = 2;
+        while(--c + (o = {
+            p: n++
+        }) && --i > 0);
     })();
 })();
 console.log(n);

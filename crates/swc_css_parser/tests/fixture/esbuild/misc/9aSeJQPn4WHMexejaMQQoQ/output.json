@@ -54,21 +54,29 @@
                         "ctxt": 0
                       },
                       "prefix": {
-                        "type": "NsPrefix",
+                        "type": "NamespacePrefix",
                         "span": {
                           "start": 2,
                           "end": 6,
                           "ctxt": 0
                         },
-                        "prefix": {
-                          "type": "Ident",
+                        "namespace": {
+                          "type": "NamedNamespace",
                           "span": {
                             "start": 2,
                             "end": 5,
                             "ctxt": 0
                           },
-                          "value": "*",
-                          "raw": "\\2a"
+                          "name": {
+                            "type": "Ident",
+                            "span": {
+                              "start": 2,
+                              "end": 5,
+                              "ctxt": 0
+                            },
+                            "value": "*",
+                            "raw": "\\2a"
+                          }
                         }
                       },
                       "value": {
@@ -99,7 +107,15 @@
           "end": 14,
           "ctxt": 0
         },
-        "name": "{",
+        "name": {
+          "type": "PreservedToken",
+          "span": {
+            "start": 12,
+            "end": 13,
+            "ctxt": 0
+          },
+          "token": "LBrace"
+        },
         "value": []
       }
     }

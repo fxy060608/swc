@@ -402,6 +402,24 @@ impl Visit for Analyzer<'_> {
         }
     }
 
+    fn visit_export_decl(&mut self, n: &ExportDecl) {
+        let name = match &n.decl {
+            Decl::Class(c) => vec![c.ident.to_id()],
+            Decl::Fn(f) => vec![f.ident.to_id()],
+            Decl::Var(v) => v
+                .decls
+                .iter()
+                .flat_map(|d| find_pat_ids(d).into_iter())
+                .collect(),
+            _ => Vec::new(),
+        };
+        for ident in name {
+            self.add(ident, false);
+        }
+
+        n.visit_children_with(self)
+    }
+
     fn visit_expr(&mut self, e: &Expr) {
         let old_in_var_decl = self.in_var_decl;
 
@@ -651,8 +669,6 @@ impl VisitMut for TreeShaker {
     }
 
     fn visit_mut_block_stmt(&mut self, n: &mut BlockStmt) {
-        n.visit_mut_children_with(self);
-
         let old_in_block_stmt = self.in_block_stmt;
         self.in_block_stmt = true;
         n.visit_mut_children_with(self);

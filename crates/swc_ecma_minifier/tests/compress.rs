@@ -291,7 +291,8 @@ fn find_config(dir: &Path) -> String {
 }
 
 #[testing::fixture("tests/fixture/**/input.js")]
-#[testing::fixture("tests/single-pass/**/input.js")]
+#[testing::fixture("tests/pass-1/**/input.js")]
+#[testing::fixture("tests/pass-default/**/input.js")]
 fn custom_fixture(input: PathBuf) {
     let dir = input.parent().unwrap();
     let config = find_config(dir);
@@ -384,6 +385,48 @@ fn projects(input: PathBuf) {
                     .join("output")
                     .join(input.file_name().unwrap()),
             )
+            .unwrap();
+
+        Ok(())
+    })
+    .unwrap()
+}
+
+/// antd and typescript test is way too slow
+#[testing::fixture("benches/full/*.js", exclude("typescript", "antd"))]
+fn projects_bench(input: PathBuf) {
+    let dir = input
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap()
+        .join("tests")
+        .join("benches-full");
+
+    testing::run_test2(false, |cm, handler| {
+        let output = run(
+            cm.clone(),
+            &handler,
+            &input,
+            r#"{ "defaults": true, "toplevel": true, "passes": 3 }"#,
+            None,
+            false,
+        );
+        let output_module = match output {
+            Some(v) => v,
+            None => return Ok(()),
+        };
+
+        let output = print(cm, &[output_module], false, false);
+
+        eprintln!("---- {} -----\n{}", Color::Green.paint("Output"), output);
+
+        println!("{}", input.display());
+
+        NormalizedOutput::from(output)
+            .compare_to_file(dir.join(input.file_name().unwrap()))
             .unwrap();
 
         Ok(())

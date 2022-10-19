@@ -95,7 +95,7 @@
                 }();
             }
             exports.default = function(_param) {
-                var sizerSvg, src = _param.src, sizes = _param.sizes, _unoptimized = _param.unoptimized, unoptimized = void 0 !== _unoptimized && _unoptimized, _priority = _param.priority, priority = void 0 !== _priority && _priority, loading = _param.loading, _lazyBoundary = _param.lazyBoundary, className = _param.className, quality = _param.quality, width = _param.width, height = _param.height, objectFit = _param.objectFit, objectPosition = _param.objectPosition, onLoadingComplete = _param.onLoadingComplete, _loader = _param.loader, loader = void 0 === _loader ? defaultImageLoader : _loader, _placeholder = _param.placeholder, placeholder = void 0 === _placeholder ? "empty" : _placeholder, blurDataURL = _param.blurDataURL, all = function(source, excluded) {
+                var src, arr, sizerSvg, src1 = _param.src, sizes = _param.sizes, _unoptimized = _param.unoptimized, unoptimized = void 0 !== _unoptimized && _unoptimized, _priority = _param.priority, priority = void 0 !== _priority && _priority, loading = _param.loading, _lazyBoundary = _param.lazyBoundary, className = _param.className, quality = _param.quality, width = _param.width, height = _param.height, objectFit = _param.objectFit, objectPosition = _param.objectPosition, onLoadingComplete = _param.onLoadingComplete, _loader = _param.loader, loader = void 0 === _loader ? defaultImageLoader : _loader, _placeholder = _param.placeholder, placeholder = void 0 === _placeholder ? "empty" : _placeholder, blurDataURL = _param.blurDataURL, rest = function(source, excluded) {
                     if (null == source) return {};
                     var key, i, target = function(source, excluded) {
                         if (null == source) return {};
@@ -126,17 +126,17 @@
                     "placeholder",
                     "blurDataURL"
                 ]), layout = sizes ? "responsive" : "intrinsic";
-                "layout" in all && (all.layout && (layout = all.layout), delete all.layout);
-                var src1, staticSrc = "";
-                if ("object" == typeof (src1 = src) && (isStaticRequire(src1) || void 0 !== src1.src)) {
-                    var staticImageData = isStaticRequire(src) ? src.default : src;
+                "layout" in rest && (rest.layout && (layout = rest.layout), delete rest.layout);
+                var staticSrc = "";
+                if ("object" == typeof (src = src1) && (isStaticRequire(src) || void 0 !== src.src)) {
+                    var staticImageData = isStaticRequire(src1) ? src1.default : src1;
                     if (!staticImageData.src) throw Error("An object should only be passed to the image component src parameter if it comes from a static image import. It must include src. Received ".concat(JSON.stringify(staticImageData)));
                     if (blurDataURL = blurDataURL || staticImageData.blurDataURL, staticSrc = staticImageData.src, (!layout || "fill" !== layout) && (height = height || staticImageData.height, width = width || staticImageData.width, !staticImageData.height || !staticImageData.width)) throw Error("An object should only be passed to the image component src parameter if it comes from a static image import. It must include height and width. Received ".concat(JSON.stringify(staticImageData)));
                 }
-                src = "string" == typeof src ? src : staticSrc;
+                src1 = "string" == typeof src1 ? src1 : staticSrc;
                 var widthInt = getInt(width), heightInt = getInt(height), qualityInt = getInt(quality), isLazy = !priority && ("lazy" === loading || void 0 === loading);
-                (src.startsWith("data:") || src.startsWith("blob:")) && (unoptimized = !0, isLazy = !1), loadedImageURLs.has(src) && (isLazy = !1);
-                var arr, ref2 = function(arr) {
+                (src1.startsWith("data:") || src1.startsWith("blob:")) && (unoptimized = !0, isLazy = !1), loadedImageURLs.has(src1) && (isLazy = !1);
+                var ref2 = function(arr) {
                     if (Array.isArray(arr)) return arr;
                 }(arr = _useIntersection.useIntersection({
                     rootMargin: void 0 === _lazyBoundary ? "200px" : _lazyBoundary,
@@ -214,7 +214,7 @@
                     sizes: void 0
                 };
                 isVisible && (imgAttributes = generateImgAttrs({
-                    src: src,
+                    src: src1,
                     unoptimized: unoptimized,
                     layout: layout,
                     width: widthInt,
@@ -222,7 +222,7 @@
                     sizes: sizes,
                     loader: loader
                 }));
-                var srcString = src;
+                var srcString = src1;
                 return _react.default.createElement("span", {
                     style: wrapperStyle
                 }, hasSizer ? _react.default.createElement("span", {
@@ -242,7 +242,7 @@
                     alt: "",
                     "aria-hidden": !0,
                     src: "data:image/svg+xml;base64,".concat(_toBase64.toBase64(sizerSvg))
-                }) : null) : null, _react.default.createElement("img", Object.assign({}, all, imgAttributes, {
+                }) : null) : null, _react.default.createElement("img", Object.assign({}, rest, imgAttributes, {
                     decoding: "async",
                     "data-nimg": layout,
                     className: className,
@@ -251,19 +251,22 @@
                             if (img) {
                                 var handleLoad = function() {
                                     img.src !== emptyDataURL && ("decode" in img ? img.decode() : Promise.resolve()).catch(function() {}).then(function() {
-                                        "blur" === placeholder && (img.style.filter = "none", img.style.backgroundSize = "none", img.style.backgroundImage = "none"), loadedImageURLs.add(src), onLoadingComplete && onLoadingComplete({
-                                            naturalWidth: img.naturalWidth,
-                                            naturalHeight: img.naturalHeight
-                                        });
+                                        if ("blur" === placeholder && (img.style.filter = "none", img.style.backgroundSize = "none", img.style.backgroundImage = "none"), loadedImageURLs.add(src), onLoadingComplete) {
+                                            var naturalWidth = img.naturalWidth, naturalHeight = img.naturalHeight;
+                                            onLoadingComplete({
+                                                naturalWidth: naturalWidth,
+                                                naturalHeight: naturalHeight
+                                            });
+                                        }
                                     });
                                 };
                                 img.complete ? handleLoad() : img.onload = handleLoad;
                             }
-                        }(img, srcString, layout, placeholder, onLoadingComplete);
+                        }(img, srcString, 0, placeholder, onLoadingComplete);
                     },
                     style: _objectSpread({}, imgStyle, blurStyle)
-                })), _react.default.createElement("noscript", null, _react.default.createElement("img", Object.assign({}, all, generateImgAttrs({
-                    src: src,
+                })), _react.default.createElement("noscript", null, _react.default.createElement("img", Object.assign({}, rest, generateImgAttrs({
+                    src: src1,
                     unoptimized: unoptimized,
                     layout: layout,
                     width: widthInt,
@@ -596,20 +599,18 @@
                 for(var i = 1; i < arguments.length; i++){
                     var source = null != arguments[i] ? arguments[i] : {};
                     i % 2 ? ownKeys(Object(source), !0).forEach(function(key) {
-                        _defineProperty(target, key, source[key]);
+                        var obj, value;
+                        obj = target, value = source[key], key in obj ? Object.defineProperty(obj, key, {
+                            value: value,
+                            enumerable: !0,
+                            configurable: !0,
+                            writable: !0
+                        }) : obj[key] = value;
                     }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function(key) {
                         Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
                     });
                 }
                 return target;
-            }
-            function _defineProperty(obj, key, value) {
-                return key in obj ? Object.defineProperty(obj, key, {
-                    value: value,
-                    enumerable: !0,
-                    configurable: !0,
-                    writable: !0
-                }) : obj[key] = value, obj;
             }
             function _extends() {
                 return (_extends = Object.assign || function(target) {

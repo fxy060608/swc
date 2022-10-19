@@ -4,7 +4,7 @@ use swc_common::{ast_node, EqIgnoreSpan, Span};
 use crate::{
     AlphaValue, AtRule, CalcSum, CmykComponent, Color, ComplexSelector, DashedIdent, Delimiter,
     Dimension, Hue, Ident, Integer, KeyframeBlock, LayerName, Number, Percentage, Ratio,
-    SelectorList, Str, TokenAndSpan, Tokens, UnicodeRange, Url,
+    SelectorList, Str, TokenAndSpan, UnicodeRange, Url,
 };
 
 #[ast_node("Stylesheet")]
@@ -20,11 +20,11 @@ pub enum Rule {
     #[tag("QualifiedRule")]
     QualifiedRule(Box<QualifiedRule>),
 
-    #[tag("Tokens")]
-    Invalid(Tokens),
-
     #[tag("AtRule")]
     AtRule(Box<AtRule>),
+
+    #[tag("ListOfComponentValues")]
+    ListOfComponentValues(Box<ListOfComponentValues>),
 }
 
 #[ast_node("QualifiedRule")]
@@ -61,9 +61,7 @@ pub enum StyleBlock {
 #[derive(Eq, Hash, EqIgnoreSpan)]
 pub struct SimpleBlock {
     pub span: Span,
-    // TODO Create a simple block with its associated token set to the current input token and with
-    // its value initially set to an empty list.
-    pub name: char,
+    pub name: TokenAndSpan,
     pub value: Vec<ComponentValue>,
 }
 

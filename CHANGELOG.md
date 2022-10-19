@@ -5,7 +5,433 @@
 
 
 
+- **(css/codegen)** Fix codegen of pseudo class selectors (#6186) ([4fba0db](https://github.com/swc-project/swc/commit/4fba0db3d9a4ffc6c13e134b3c75441737ff83d5))
+
+
+- **(html/minifier)** Avoid `;` at the end of js (#6188) ([5571c0c](https://github.com/swc-project/swc/commit/5571c0c2029577929ec547948319497144c34c28))
+
+### Features
+
+
+
+- **(css/ast)** Support `@custom-media` at-rule (#6152) ([d46a19b](https://github.com/swc-project/swc/commit/d46a19b55420ab3a88a4399eac4768f8a5fae838))
+
+
+- **(css/minifier)** Handle nested `calc()` (#6153) ([d4a733d](https://github.com/swc-project/swc/commit/d4a733d76461995b7549f5470e53df913a30ef0f))
+
+
+- **(es/compat)** Support readonly and writeonly for private fields (#6182) ([aefc11b](https://github.com/swc-project/swc/commit/aefc11b8a7355c496b60cda4ed7998a97f1bd8d4))
+
+
+- **(es/minifier)** Make sequential inliner self-repeat (#6168) ([3f0fcf4](https://github.com/swc-project/swc/commit/3f0fcf4fa9dbc654f56f60863ca7058522202ade))
+
+
+- **(es/minifier)** Skip function declarations in sequential inliner (#6147) ([f2e8f98](https://github.com/swc-project/swc/commit/f2e8f98d381cff75229e29564ce5a7458175fea9))
+
+### Refactor
+
+
+
+- **(css/parser)** Improve project structure (#6110) ([6e2e2ad](https://github.com/swc-project/swc/commit/6e2e2ada4eab95a75554eecc8fab423bb8c94033))
+
+### Testing
+
+
+
+- **(html/parser)** Update html5lib-test (#6156) ([7a38fde](https://github.com/swc-project/swc/commit/7a38fde2305f20ead731c8c1938c9f2c7919f2df))
+
+
+- **(html/parser)** Refactor tests to make `git` faster (#6158) ([a4acc7a](https://github.com/swc-project/swc/commit/a4acc7ab07a5e12179176b0c6928207228b67c85))
+
+## [1.3.9] - 2022-10-17
+
+### Bug Fixes
+
+
+
+- **(css/parser)** Improve handling of math functions in at-rules (#6140) ([26aeb18](https://github.com/swc-project/swc/commit/26aeb18c0cbb3299951be7b7a9398705d33374cd))
+
+
+- **(es/codegen)** Emit `readonly` for `TsIndexSignature` (#6172) ([083924c](https://github.com/swc-project/swc/commit/083924c0e1bf738ae8e6b945dac00dda18dfeb26))
+
+
+- **(es/minifier)** Fix ordering issue of analyzer (#6150) ([6d0ca05](https://github.com/swc-project/swc/commit/6d0ca05cb50c0b33fa0786824e07950d4db91819))
+
+
+- **(es/minifier)** Consider function body cost while inlining function (#5342) ([b40d486](https://github.com/swc-project/swc/commit/b40d4862534d53b763bff24a55e7d9bf41007d82))
+
+
+- **(es/minifier)** Preserve `this` of tagged template literals (#6165) ([aec5cda](https://github.com/swc-project/swc/commit/aec5cdacc64296269d4c75f834d2a3021ca2db4b))
+
+
+- **(es/minifier)** Don't create a numeric literal with `NaN` value (#6166) ([2e153e5](https://github.com/swc-project/swc/commit/2e153e5555a8d03bc04da0cbcc849aa1f05a16e3))
+
+
+- **(es/modules)** Resolve `jsc.paths` for export alls (#6170) ([82cca67](https://github.com/swc-project/swc/commit/82cca674e34022212b507f7cbbe3e903b7591f95))
+
+
+- **(es/parser)** Fix parsing of arrow in cond (#6067) ([0ca5ded](https://github.com/swc-project/swc/commit/0ca5ded61833906181348ce215dfba3ed4f1bde6))
+
+
+- **(es/plugin)** Disable SIMD (#6163) ([899021e](https://github.com/swc-project/swc/commit/899021e440c40b954825d1c0996fd1c14b1af457))
+
+
+- **(es/plugin)** Fix plugin on non `x86_64` (#6178) ([cb8f350](https://github.com/swc-project/swc/commit/cb8f3500b2eac333eb126ab3844271d344e58a35))
+
+
+- **(es/quote)** Fix handling of template literals (#6157) ([6502979](https://github.com/swc-project/swc/commit/65029793a6915c11156dcc5c0265d3e2df41e2b4))
+
+
+- **(es/typescript)** Don't generate class field for abstract properties (#6174) ([9d93b6c](https://github.com/swc-project/swc/commit/9d93b6cd856f27192b88b09bbc6e1032cea74afe))
+
+### Documentation
+
+
+
+- **(repo)** Document maintenance (#6145) ([f1bb365](https://github.com/swc-project/swc/commit/f1bb365e8e31ee6f0d9aead16a3bca7fec9c0401))
+
+### Features
+
+
+
+- **(css/minifier)** Handle zero in at-rules (#6155) ([0f38e38](https://github.com/swc-project/swc/commit/0f38e38984fe5508a1dd51275e81c21a0345f063))
+
+
+- **(css/modules)** Add a lifetime to config parameter (#6144) ([1196d60](https://github.com/swc-project/swc/commit/1196d60182e6fcc7b9ba35150f9f5ea4f4ea0881))
+
+
+- **(es/minifier)** Ignore return value if a param of IIFE is not used (#6115) ([d334c6e](https://github.com/swc-project/swc/commit/d334c6e78393ee9cc853c46d9144f22033ce62d0))
+
+
+- **(es/utils)** Add indexed API to the parallel helper (#6149) ([6a42e51](https://github.com/swc-project/swc/commit/6a42e511e8ba8d8d5f7de83df64883edd00a7ab3))
+
+### Miscellaneous Tasks
+- **general**: Add lock action ([55a836a](https://github.com/swc-project/swc/commit/55a836ac823c62d83ecd7eb63dea4cb9e51604d4))
+
+### Build
+
+
+
+- **(es/plugin)** Fix Wasm build (#6179) ([7c40e44](https://github.com/swc-project/swc/commit/7c40e44d3f434035651941753a1a5aac19737446))
+
+
+- **(es/plugin)** Fix Wasm build, really (#6180) ([ea4ae3d](https://github.com/swc-project/swc/commit/ea4ae3dfbcd3546ed5d734c1c7c3c8cd091cce6a))
+
+
+- **(es/plugin)** Fix Wasm build (#6181) ([d13a397](https://github.com/swc-project/swc/commit/d13a3973603e8d7666be9ced5f616bfecfc29efa))
+
+## [1.3.8] - 2022-10-14
+
+### Bug Fixes
+
+
+
+- **(css/ast)** Fix AST types for simple block (#6131) ([e63fa28](https://github.com/swc-project/swc/commit/e63fa28008fc643c4ddc973d2b39d2da093b44c5))
+
+
+- **(css/modules)** Fix parsing and refactor code (#6132) ([39cfade](https://github.com/swc-project/swc/commit/39cfade7f8b199b9db3240ffd561524f2f209798))
+
+
+- **(es/minifier)** Preserve return values of recursive IIFE (#6142) ([3d271e8](https://github.com/swc-project/swc/commit/3d271e82a2ec3ac69ee36e5b1f090bf323f56046))
+
+### Features
+
+
+
+- **(css/minifier)** Compute `calc` expressions (#5966) ([205a317](https://github.com/swc-project/swc/commit/205a317c4d44edb46f96d8b052c5e88990682638))
+
+
+- **(es/minifier)** Enable `reduce_vars` by default (#6096) ([fc5d8a5](https://github.com/swc-project/swc/commit/fc5d8a5d41103adeb0293ed649789a2256b31f97))
+
+
+- **(es/minifier)** Merge assignments using sequential inliner (#6103) ([5875298](https://github.com/swc-project/swc/commit/58752983775337067127f219569bd0c7fbc55564))
+
+
+- **(es/minifier)** Swap more binary expressions (#6134) ([c37839f](https://github.com/swc-project/swc/commit/c37839fc628d62ec8ddb9372b45db72c6aa9e18d))
+
+
+- **(es/minifier)** Change default pass limit to 3 (#6138) ([3a29bfe](https://github.com/swc-project/swc/commit/3a29bfee9b3be0e85fe9e45272b7151c449779db))
+
+
+- **(es/minifier)** Improve trivial rules (#6136) ([ec0d6d5](https://github.com/swc-project/swc/commit/ec0d6d5a0d52d86824493556ac9b75237197711e))
+
+### Miscellaneous Tasks
+
+
+
+- **(ci)** Deny clippy warnings (#6126) ([d6fd476](https://github.com/swc-project/swc/commit/d6fd47672150aa3a020c55b1c61c4ac593d0c9fe))
+
+### Performance
+
+
+
+- **(atoms)** Use thin pointer for `Atom` (#6135) ([9c8ec0e](https://github.com/swc-project/swc/commit/9c8ec0ea560ba97abcb864d482202bd8173a4e80))
+
+### Refactor
+
+
+
+- **(css/ast)** Refactor AST types (#6124) ([85b2188](https://github.com/swc-project/swc/commit/85b218820492d4567e17998513067fa6b3490346))
+
+## [1.3.7] - 2022-10-12
+
+### Bug Fixes
+
+
+
+- **(css/ast)** Fix AST types for namespace (#6112) ([c765f0f](https://github.com/swc-project/swc/commit/c765f0ff73a6cdeeb86521427355a584a424fcc3))
+
+
+- **(es/preset-env)** Update data (#6106) ([8d4d326](https://github.com/swc-project/swc/commit/8d4d32664d7f4feeba5faa3dec95691d5560ca6c))
+
+
+- **(swc_core)** Reexport `swc_css_compat` correctly (#6114) ([5fd0e97](https://github.com/swc-project/swc/commit/5fd0e97c15c2f2c4feaacaf74984cca7571e4340))
+
+### Documentation
+
+
+
+- **(es/parser)** Change file extension in TypeScript example (#6094) ([ca67d52](https://github.com/swc-project/swc/commit/ca67d5244dc30c47bf70266f75af2fd3231fd83d))
+
+### Features
+
+
+
+- **(bindings)** Apply `resolver` to the output of `parse` apis (#6118) ([0cd8aee](https://github.com/swc-project/swc/commit/0cd8aeeb5c07e1fba76a43b78ed2e3cfabf88256))
+
+
+- **(css/ast)** Support `::highlight()` (#6109) ([1938ed2](https://github.com/swc-project/swc/commit/1938ed26a158510ee15f57ca9f2599b26d0f43ac))
+
+
+- **(css/ast)** Add AST types for gradients (#6111) ([6b3f4bb](https://github.com/swc-project/swc/commit/6b3f4bb1c6933990e2468c1430760bbf57180162))
+
+
+- **(css/codegen)** Support lowercase case insensitivity (#6113) ([a920997](https://github.com/swc-project/swc/commit/a920997f4b1e4a194e2b74bc8a27184d0e438d31))
+
+
+- **(dbg-swc)** Remove comments from the output of `terser` (#6119) ([8549c47](https://github.com/swc-project/swc/commit/8549c4780775ef329b7ea35e56a91de6c1fc9577))
+
+
+- **(es/minifier)** Mark ref to fn as non-call in alias analyzer (#6088) ([b0c5745](https://github.com/swc-project/swc/commit/b0c57458c838097835fd9e1f1af1888867cc1b71))
+
+
+- **(es/minifier)** Inline more lazily initialized vars (#6089) ([657e5b3](https://github.com/swc-project/swc/commit/657e5b31116974cd0c90cdb0871178e36fa41daf))
+
+
+- **(es/minifier)** Enable `reduce_funcs` by default (#6097) ([3c6cdbc](https://github.com/swc-project/swc/commit/3c6cdbc61cba7dcca38251413cc9033487677dd4))
+
+
+- **(es/minifier)** Detect type of `.length` (#6120) ([ad960c7](https://github.com/swc-project/swc/commit/ad960c76c059fbd33de1cdb0525aef509124e205))
+
+
+- **(es/minifier)** Inline and remove vars in one pass (#6093) ([5a23949](https://github.com/swc-project/swc/commit/5a23949f1284f71447b9292a374a0cf88759a318))
+
+
+- **(es/minifier)** Inline pure array literal partially (#6099) ([66196a6](https://github.com/swc-project/swc/commit/66196a65be7164bf519dbc749c687ac815f22ee7))
+
+
+- **(swc_core)** Reexport `swc_css_compat` (#6102) ([16dc746](https://github.com/swc-project/swc/commit/16dc746cd3a1b6e03903d23a9ba78d0c65128710))
+
+### Performance
+
+
+
+- **(atoms)** Add more atoms (#6122) ([7343cf3](https://github.com/swc-project/swc/commit/7343cf33891a96c1ac0216e14ef40b8d7b95da9c))
+
+### Testing
+
+
+
+- **(css/prefixer)** Verify old gradient syntax (#6121) ([7e4d207](https://github.com/swc-project/swc/commit/7e4d20791bbd518a48570dba3386d6bf9d94e0f7))
+
+
+- **(es/minifier)** Organize terser tests (#6116) ([6365acc](https://github.com/swc-project/swc/commit/6365acc9f5cb9a44671316aa03edd0e057a7d7f5))
+
+### Build
+
+
+
+- **(cargo)** Remove unused deps (#6117) ([27bda13](https://github.com/swc-project/swc/commit/27bda13591a57995708f60bdcb3cbe50b9bb42ec))
+
+## [1.3.6] - 2022-10-08
+
+### Bug Fixes
+
+
+
+- **(es/minifier)** Improve infection analysis (#6044) ([c9427f1](https://github.com/swc-project/swc/commit/c9427f1ec4ae3bb369fa301341b856c7c298d3cd))
+
+### Documentation
+
+
+
+- **(es/minifier)** Document assumptions (#6085) ([d0418eb](https://github.com/swc-project/swc/commit/d0418ebe5bc61ae64dc617a308c07b2e4eee4a31))
+
+### Features
+
+
+
+- **(css/ast)** Support `@container` at-rule (#6076) ([0a61374](https://github.com/swc-project/swc/commit/0a61374d028cc5fa3a35747cab892f3a11617dd4))
+
+
+- **(css/ast)** Support `<general-enclosed>` for `@media` at-rules (#6082) ([b71dd3e](https://github.com/swc-project/swc/commit/b71dd3ec0515f6d0b4f598f4f195ec6817113af8))
+
+
+- **(css/compat)** Implement transform for nested css (#6077) ([347d4b7](https://github.com/swc-project/swc/commit/347d4b7602d434608efb8d6fdb6874cd25aaa437))
+
+
+- **(es/codegen)** Remove the trailing comma of binding patterns (#6078) ([8003dc8](https://github.com/swc-project/swc/commit/8003dc856369a71f73a5c15ae204bbdf27fdbf9c))
+
+
+- **(es/minifier)** Use `usage_count` in sequential inliner (#6071) ([ac150c7](https://github.com/swc-project/swc/commit/ac150c7ced9d9d9112d377437bdca7616de43a00))
+
+
+- **(es/minifier)** Distinguish calls in alias analyzer (#6080) ([9ce3df0](https://github.com/swc-project/swc/commit/9ce3df091f2e5ce3d59274cfaa2aa4be99ab5b33))
+
+
+- **(es/testing)** Add an option to test sourcemap (#6079) ([e6b1dd4](https://github.com/swc-project/swc/commit/e6b1dd47315775f68694305905a958c9b66b5a8d))
+
+
+- **(swc_core)** Expose `swc_ecma_preset_env` (#6083) ([4cde4f9](https://github.com/swc-project/swc/commit/4cde4f9acef8658b7c24be354fe66cb2c86bc556))
+
+### Miscellaneous Tasks
+
+
+
+- **(common)** Make `Mark::root` const fn (#6072) ([047da86](https://github.com/swc-project/swc/commit/047da86baa76198fe8e1b750ffd623348d4f8773))
+
+### Performance
+
+
+
+- **(es/minifier)** Remove double-visit of DCE (#6069) ([e88c1c0](https://github.com/swc-project/swc/commit/e88c1c04e1e399c31c7f375ac183fcf4fa11a4f9))
+
+## [1.3.5] - 2022-10-06
+
+### Bug Fixes
+
+
+
+- **(bindings)** Fix type definitions (#6018) ([8fea8ca](https://github.com/swc-project/swc/commit/8fea8ca3fa5d9d441b67bffe5f64efbcc9ea4d2c))
+
+
+- **(cli)** Configure `GLOBALS` (#6061) ([6cdb5ed](https://github.com/swc-project/swc/commit/6cdb5ed97fb821fa9ac04306eaa8a2e0f42260af))
+
+
+- **(es)** Respect exclude option (#6054) ([69da081](https://github.com/swc-project/swc/commit/69da0817982eda2e9e9e755e3526f83286e874b1))
+
+
+- **(es/codegen)** Improve performance of debug build (#6003) ([8b31b65](https://github.com/swc-project/swc/commit/8b31b65059a3b62fd1d12be57e0b62f62e499354))
+
+
+- **(es/compat)** Fix handling of deep array pattern of object rest pass (#6035) ([0c67a3a](https://github.com/swc-project/swc/commit/0c67a3adbaec69d72016fe7c525223888d34ef3e))
+
+
+- **(es/compat)** Fix handling of op-assignment in `generator` (#6036) ([7554482](https://github.com/swc-project/swc/commit/755448220529f82e82b56624e5a431c256c172ba))
+
+
+- **(es/minifier)** Don't inline into nested scope (#6002) ([2ee3ad0](https://github.com/swc-project/swc/commit/2ee3ad00663a515697769cef55ad5606e14943da))
+
+
+- **(es/minifier)** Don't evaluate `String.fromCharCode` for non-ascii values (#6033) ([197c4e2](https://github.com/swc-project/swc/commit/197c4e269d639a188bc3cca01f8618a61fed8d58))
+
+
+- **(es/minifier)** Don't skip unresolved identifiers (#6050) ([c5fb774](https://github.com/swc-project/swc/commit/c5fb7744870dd2ba9ec606513c4e17142035ed14))
+
+
+- **(es/minifier)** Fix optimization of numeric keys (#6052) ([e3b55e4](https://github.com/swc-project/swc/commit/e3b55e4bcf2bc12bbcc0fb2cb65e0931622d5dcb))
+
+
+- **(es/minifier)** Fix analysis of var declaration after usage (#6043) ([36d467e](https://github.com/swc-project/swc/commit/36d467e7d7792bff9f735171a611b714e108e41f))
+
+
+- **(es/minifier)** Fix infection analysis of sequential inliner (#6053) ([d65fba1](https://github.com/swc-project/swc/commit/d65fba134d50609543c1d1ef0dc07db9891913ac))
+
+
+- **(es/minifier)** Mark `delete` as a property mutation (#6063) ([38df597](https://github.com/swc-project/swc/commit/38df5978c14c1fd7c24c0881f7cd1c19021b3f9f))
+
+
+- **(es/renamer)** Use a separate scope for the name of `FnExpr` (#6008) ([31ffd5a](https://github.com/swc-project/swc/commit/31ffd5a01dc9a20de36c9b9606a15c42f023e72f))
+
+### Features
+
+
+
+- **(css/modules)** Implement css modules (#6000) ([2cce1c8](https://github.com/swc-project/swc/commit/2cce1c82b2a72e69668c170e1b9a0bc78b2b4afd))
+
+
+- **(css/modules)** Support `:local` and `:global` (#6045) ([10d0f8e](https://github.com/swc-project/swc/commit/10d0f8e0011fc9e02769cde49fcfd8f8730ca15e))
+
+
+- **(css/modules)** Support `:global` in `@keyframes` (#6046) ([51e935e](https://github.com/swc-project/swc/commit/51e935eb4abd8911b2568f1598b20a9c0db7dbbf))
+
+
+- **(es/compat)** Support iterator protocol on loose mode (#6034) ([80da098](https://github.com/swc-project/swc/commit/80da0981bd31e612d97d5c9fb10101891cabac90))
+
+
+- **(es/minifier)** Drop vars from sequential inliner (#5993) ([286334c](https://github.com/swc-project/swc/commit/286334c4d0b15d92347c6e51e05a3c3bf506e982))
+
+
+- **(es/minifier)** Inline function calls in more cases (#6010) ([61807ab](https://github.com/swc-project/swc/commit/61807abf6e482df5f34d24955c8fa56d6857659c))
+
+
+- **(es/minifier)** Ignore return values of ignored IIFEs (#6020) ([2b62752](https://github.com/swc-project/swc/commit/2b627524acaeb555988a9537d84fe51033e7f8fd))
+
+
+- **(es/minifier)** Clone trivial literals in sequential inliner (#6005) ([877936f](https://github.com/swc-project/swc/commit/877936f626882e7fe139a97e3d0ea53f93d56344))
+
+
+- **(es/minifier)** Inline vars initialized before the declaration (#6027) ([c485099](https://github.com/swc-project/swc/commit/c4850997a292f9bc6c057b28e002d427db6587c8))
+
+
+- **(html/codegen)** Add an option to keep quotes while minifying (#5996) ([35da762](https://github.com/swc-project/swc/commit/35da76241dd9e456a9124717cc8ddba82c97a2b2))
+
+### Miscellaneous Tasks
+
+
+
+- **(ci)** Merge CI scripts (#5999) ([10fb645](https://github.com/swc-project/swc/commit/10fb645552131d48c99789b346e6c31ed3a969cb))
+
+
+- **(ci)** Extract bot action to a separate repository (#6064) ([39481c6](https://github.com/swc-project/swc/commit/39481c622c288139ccd74fd2b3ba1bd65f4d9708))
+
+
+- **(ci)** Fix publish action by reverting #5969 ([fee747d](https://github.com/swc-project/swc/commit/fee747de594de0de19496068d85e982888491a6c))- **general**: Update `README.md` (#6007) ([185d6fe](https://github.com/swc-project/swc/commit/185d6fe98276d413a10159cac96adce1e2e4d549))
+
+### Performance
+
+
+
+- **(common)** Split the mutex for the hygiene system (#6019) ([5ea2d81](https://github.com/swc-project/swc/commit/5ea2d81aa3cd7ce46d92582fc88e50676c54c202))
+
+### Testing
+
+
+
+- **(es/minifier)** Organize terser tests (#6015) ([1aae503](https://github.com/swc-project/swc/commit/1aae503913da14134b758527fa5049a1e46352ef))
+
+### Build
+
+
+
+- **(cargo)** Introduce workspace deps (#5997) ([af64217](https://github.com/swc-project/swc/commit/af64217f19107ba654c086470ba3a2d1379eebde))
+
+
+- **(cargo)** Use workspace deps for internal pkg (#6001) ([3204ac3](https://github.com/swc-project/swc/commit/3204ac3e0c2d04d3e9269655ba3d4dddf3ae74af))
+
+
+- **(cargo)** Dedup `indexmap` with known version (#6060) ([fff4b9c](https://github.com/swc-project/swc/commit/fff4b9ce6550b1db3c0b9086d199090e7211f609))
+
+## [1.3.4] - 2022-09-30
+
+### Bug Fixes
+
+
+
 - **(es/codegen)** Align sourcemap with terser (#5657) ([2ba8815](https://github.com/swc-project/swc/commit/2ba88154fced01cb6ad0428207cf88ad7ddee75c))
+
+
+- **(es/codegen)** Fix codegen of a negative number (#5980) ([bc2c0f4](https://github.com/swc-project/swc/commit/bc2c0f413396cc5ab436b1e87e5462f5c2475e4e))
 
 
 - **(es/compat)** Fix the order of initialization for decorators on computed keys (#5964) ([e410102](https://github.com/swc-project/swc/commit/e41010263379fc9a7676925f089aa9913c8f0f04))
@@ -23,6 +449,18 @@
 - **(es/minifier)** Fix analysis of nested function-like properties (#5963) ([0fb2c1d](https://github.com/swc-project/swc/commit/0fb2c1d5a539d656f337d0ef4c9392f01817986d))
 
 
+- **(es/minifier)** Preserve exports in DCE (#5973) ([aff4ea5](https://github.com/swc-project/swc/commit/aff4ea5f4412c17c58288459a92a1d9b28ba58c4))
+
+
+- **(es/minifier)** Don't panic on jsx or ts (#5984) ([0067f71](https://github.com/swc-project/swc/commit/0067f719dd0a072ef43e51698f159506287d7f35))
+
+
+- **(es/minifier)** Remove print ([af8236d](https://github.com/swc-project/swc/commit/af8236d689e29980ef1bc8d7d05ed61e37649b28))
+
+
+- **(es/minifier)** Remove wrong variable joiner pass (#5992) ([f8358fb](https://github.com/swc-project/swc/commit/f8358fbe2bf17de6a04870c58f58768d0966ec18))
+
+
 - **(es/parser)** Allow `as` in destructuring assignment (#5948) ([cdd69d0](https://github.com/swc-project/swc/commit/cdd69d0145d22008448f394e8b39ba98291d87fe))
 
 
@@ -35,6 +473,9 @@
 
 
 
+- **(css/codegen)** Minify idents (#5972) ([b3a05a0](https://github.com/swc-project/swc/commit/b3a05a057ac39d0ceef60b4227f675a2a2c3556d))
+
+
 - **(css/minifier)** Remove duplicate `@counter-style` at-rules (#5970) ([dfdad69](https://github.com/swc-project/swc/commit/dfdad69c03d13d8950e89358f6587f2bc66d5912))
 
 
@@ -43,11 +484,59 @@
 
 - **(es/minifier)** Ignore more expressions in sequential inliner (#5961) ([dcd516d](https://github.com/swc-project/swc/commit/dcd516d2bd5e9fcdc11a96c014671958ddede1de))
 
+
+- **(es/minifier)** Evaluate more literals in comparison (#5976) ([0e69890](https://github.com/swc-project/swc/commit/0e698907641bb74f90fa0fffd157c5fffe1298b6))
+
+
+- **(es/minifier)** Ignore more return values (#5981) ([08f6e81](https://github.com/swc-project/swc/commit/08f6e81d8e9219e73ea8e312f213aa170ba7acc9))
+
+
+- **(es/minifier)** Drop more variables while invoking IIFE (#5987) ([c411e5d](https://github.com/swc-project/swc/commit/c411e5d55292c83d73f821e3a1e285cf3584b668))
+
+
+- **(es/minifier)** Improve fn-local analysis for better inlining (#5955) ([1a11cfd](https://github.com/swc-project/swc/commit/1a11cfd46fd8269934f33c1128e48a47d5de093e))
+
+
+- **(es/minifier)** Invoke sequential inliner for inlined IIFEs (#5991) ([aeb7f30](https://github.com/swc-project/swc/commit/aeb7f300a814b6303c29eda6124cf4dd333f3936))
+
+### Miscellaneous Tasks
+
+
+
+- **(ci)** Fix benchmark action (#5978) ([f7128d2](https://github.com/swc-project/swc/commit/f7128d20f08206a3d4e313af075a2cb28dfdc58b))
+
+
+- **(es/transforms)** Setup parallel benchmark (#5974) ([8066d8f](https://github.com/swc-project/swc/commit/8066d8f60ece891a555a4c24d63feee85c27da92))
+
+
+- **(html/minifier)** Typo (#5995) ([a716b40](https://github.com/swc-project/swc/commit/a716b40d05a57065e2f5dbaad5f6a17dceee7860))
+
+### Performance
+
+
+
+- **(css/minifier)** Merge all passes (#5971) ([7d7c2d3](https://github.com/swc-project/swc/commit/7d7c2d3a9c75286a4d12d5f1d1b45501f170b512))
+
+
+- **(es)** Don't share `Globals` (#5975) ([19131e1](https://github.com/swc-project/swc/commit/19131e168e65b13a4d4ddf823aec4211a2502ceb))
+
+
+- **(es/minifier)** Optimize `MultiReplacer` (#5977) ([e37bb55](https://github.com/swc-project/swc/commit/e37bb551015b68b108569015a03dc00477f621ee))
+
+
+- **(html/minifier)** Improve performance (#5983) ([6c08971](https://github.com/swc-project/swc/commit/6c08971a53b8ba87b920173539c1165640e7f2a3))
+
 ### Testing
 
 
 
 - **(es/minifier)** Categorize terser tests (#5960) ([48cddc1](https://github.com/swc-project/swc/commit/48cddc16f67ed5ac904a1e67a6ec096da5747cd2))
+
+
+- **(es/minifier)** Remove mangle-only snapshots (#5979) ([8c4873f](https://github.com/swc-project/swc/commit/8c4873f81efce53356b2eccdcdc32d5df41a89b2))
+
+
+- **(es/minifier)** Add tests for benchmark files (#5986) ([0cfc724](https://github.com/swc-project/swc/commit/0cfc724018374cef591694d5239c519aa97c1622))
 
 
 - **(es/plugin)** Reenable compat test (#5969) ([ca38a70](https://github.com/swc-project/swc/commit/ca38a7027ead28ecb9723d7e99e9123af3c6af14))

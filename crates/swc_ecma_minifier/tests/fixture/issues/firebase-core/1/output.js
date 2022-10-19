@@ -321,31 +321,13 @@
                 return -1 < h ? (b = a[h], c || (b.fa = !1)) : ((b = new Ya(b, this.src, f, !!d, e)).fa = c, a.push(b)), b;
             };
             var cb = "closure_lm_" + (1e6 * Math.random() | 0), db = {};
-            function fb(a, b, c, d, e) {
-                if (d && d.once) return function gb(a, b, c, d, e) {
-                    if (Array.isArray(b)) {
-                        for(var f = 0; f < b.length; f++)gb(a, b[f], c, d, e);
-                        return null;
-                    }
-                    return c = hb(c), a && a[B] ? a.O(b, c, p(d) ? !!d.capture : !!d, e) : ib(a, b, c, !0, d, e);
-                }(a, b, c, d, e);
-                if (Array.isArray(b)) {
-                    for(var f = 0; f < b.length; f++)fb(a, b[f], c, d, e);
-                    return null;
-                }
-                return c = hb(c), a && a[B] ? a.N(b, c, p(d) ? !!d.capture : !!d, e) : ib(a, b, c, !1, d, e);
-            }
             function ib(a, b, c, d, e, f) {
                 if (!b) throw Error("Invalid event type");
                 var h = p(e) ? !!e.capture : !!e, n = jb(a);
                 if (n || (a[cb] = n = new $a(a)), (c = n.add(b, c, d, h, f)).proxy) return c;
-                if (d = function() {
-                    function a(c) {
-                        return b.call(a.src, a.listener, c);
-                    }
-                    var b = mb;
-                    return a;
-                }(), c.proxy = d, d.src = a, d.listener = c, a.addEventListener) Va || (e = h), void 0 === e && (e = !1), a.addEventListener(b.toString(), d, e);
+                if (d = function a(c) {
+                    return mb.call(a.src, a.listener, c);
+                }, c.proxy = d, d.src = a, d.listener = c, a.addEventListener) Va || (e = h), void 0 === e && (e = !1), a.addEventListener(b.toString(), d, e);
                 else if (a.attachEvent) a.attachEvent(lb(b.toString()), d);
                 else if (a.addListener && a.removeListener) a.addListener(d);
                 else throw Error("addEventListener and attachEvent are unavailable.");
@@ -392,13 +374,13 @@
                 else if (b instanceof z) b.target = b.target || a;
                 else {
                     var e = b;
-                    b = new z(d, a), Aa(b, e);
+                    Aa(b = new z(d, a), e);
                 }
                 if (e = !0, c) for(var f = c.length - 1; 0 <= f; f--){
                     var h = b.g = c[f];
                     e = qb(h, d, !0, b) && e;
                 }
-                if (h = b.g = a, e = qb(h, d, !0, b) && e, e = qb(h, d, !1, b) && e, c) for(f = 0; f < c.length; f++)e = qb(h = b.g = c[f], d, !1, b) && e;
+                if (e = qb(h = b.g = a, d, !0, b) && e, e = qb(h, d, !1, b) && e, c) for(f = 0; f < c.length; f++)e = qb(h = b.g = c[f], d, !1, b) && e;
             }
             function qb(a, b, c, d) {
                 if (!(b = a.i.g[String(b)])) return !0;
@@ -431,13 +413,7 @@
             }, C.prototype.O = function(a, b, c, d) {
                 return this.i.add(String(a), b, !0, c, d);
             };
-            var rb = l.JSON.stringify;
-            function sb() {
-                var a = tb;
-                let b = null;
-                return a.g && (b = a.g, a.g = a.g.next, a.g || (a.h = null), b.next = null), b;
-            }
-            var vb = new class {
+            var rb = l.JSON.stringify, vb = new class {
                 constructor(a, b){
                     this.i = a, this.j = b, this.h = 0, this.g = null;
                 }
@@ -457,11 +433,6 @@
                     this.next = this.g = this.h = null;
                 }
             }
-            function yb(a) {
-                l.setTimeout(()=>{
-                    throw a;
-                }, 0);
-            }
             function zb(a, b) {
                 var a1;
                 Ab || (a1 = l.Promise.resolve(void 0), Ab = function() {
@@ -478,14 +449,19 @@
                 }
             }();
             function Db() {
-                for(var a; a = sb();){
+                let b;
+                for(; b = null, (a = tb).g && (b = a.g, a.g = a.g.next, a.g || (a.h = null), b.next = null), a1 = b;){
                     try {
-                        a.h.call(a.g);
+                        a1.h.call(a1.g);
                     } catch (c) {
-                        yb(c);
+                        !function(a) {
+                            l.setTimeout(()=>{
+                                throw a;
+                            }, 0);
+                        }(c);
                     }
-                    var b = vb;
-                    b.j(a), 100 > b.h && (b.h++, a.next = b.g, b.g = a);
+                    var a, a1, b1 = vb;
+                    b1.j(a1), 100 > b1.h && (b1.h++, a1.next = b1.g, b1.g = a1);
                 }
                 Cb = !1;
             }
@@ -536,7 +512,20 @@
             function Kb(a, b, c, d) {
                 Array.isArray(c) || (c && (Jb[0] = c.toString()), c = Jb);
                 for(var e = 0; e < c.length; e++){
-                    var f = fb(b, c[e], d || a.handleEvent, !1, a.h || a);
+                    var f = function fb(a, b, c, d, e) {
+                        if (d && d.once) return function gb(a, b, c, d, e) {
+                            if (Array.isArray(b)) {
+                                for(var f = 0; f < b.length; f++)gb(a, b[f], c, d, e);
+                                return null;
+                            }
+                            return c = hb(c), a && a[B] ? a.O(b, c, p(d) ? !!d.capture : !!d, e) : ib(a, b, c, !0, d, e);
+                        }(a, b, c, d, e);
+                        if (Array.isArray(b)) {
+                            for(var f = 0; f < b.length; f++)fb(a, b[f], c, d, e);
+                            return null;
+                        }
+                        return c = hb(c), a && a[B] ? a.N(b, c, p(d) ? !!d.capture : !!d, e) : ib(a, b, c, !1, d, e);
+                    }(b, c[e], d || a.handleEvent, !1, a.h || a);
                     if (!f) break;
                     a.g[f.key] = f;
                 }
@@ -696,7 +685,10 @@
             }
             function tc(a, b, c) {
                 let d = !0, e;
-                for(; !a.I && a.C < c.length;)if ((e = vc(a, c)) == hc) {
+                for(; !a.I && a.C < c.length;)if ((e = function(a, b) {
+                    var c = a.C, d = b.indexOf("\n", c);
+                    return -1 == d ? hc : isNaN(c = Number(b.substring(c, d))) ? gc : (d += 1) + c > b.length ? hc : (b = b.substr(d, c), a.C = d + c, b);
+                }(a, c)) == hc) {
                     4 == b && (a.o = 4, J(14), d = !1), F(a.j, a.m, null, "[Incomplete Response]");
                     break;
                 } else if (e == gc) {
@@ -704,10 +696,6 @@
                     break;
                 } else F(a.j, a.m, e, null), sc(a, e);
                 qc(a) && e != hc && e != gc && (a.h.g = "", a.C = 0), 4 != b || 0 != c.length || a.h.h || (a.o = 1, J(16), d = !1), a.i = a.i && d, d ? 0 < c.length && !a.aa && (a.aa = !0, (b = a.l).g == a && b.$ && !b.L && (b.h.info("Great, no buffering proxy detected. Bytes received: " + c.length), wc(b), b.L = !0, J(11))) : (F(a.j, a.m, c, "[Invalid Chunked Response]"), P(a), rc(a));
-            }
-            function vc(a, b) {
-                var c = a.C, d = b.indexOf("\n", c);
-                return -1 == d ? hc : isNaN(c = Number(b.substring(c, d))) ? gc : (d += 1) + c > b.length ? hc : (b = b.substr(d, c), a.C = d + c, b);
             }
             function lc(a) {
                 a.Y = Date.now() + a.P, xc(a, a.P);
@@ -1041,7 +1029,7 @@
                 }
                 return b;
             }, k.set = function(a, b) {
-                return V(this), this.i = null, a = W(this, a), ed(this, a) && (this.h -= this.g.get(a).length), this.g.set(a, [
+                return V(this), this.i = null, ed(this, a = W(this, a)) && (this.h -= this.g.get(a).length), this.g.set(a, [
                     b
                 ]), this.h += 1, this;
             }, k.get = function(a, b) {
@@ -1095,17 +1083,6 @@
             function kd() {}
             function ld() {
                 this.g = new kd();
-            }
-            function md(a, b, c) {
-                const d = c || "";
-                try {
-                    Kc(a, function(e, f) {
-                        let h = e;
-                        p(e) && (h = rb(e)), b.push(d + f + "=" + encodeURIComponent(h));
-                    });
-                } catch (e) {
-                    throw b.push(d + "type=" + encodeURIComponent("_badmap")), e;
-                }
             }
             function od(a, b, c, d, e) {
                 try {
@@ -1304,12 +1281,12 @@
                 let b1;
                 a: {
                     for(d in c){
-                        var a1, d = !1;
+                        var d = !1;
                         break a;
                     }
                     d = !0;
                 }
-                d || (a1 = c, b1 = "", xa(a1, function(c, d) {
+                d || (b1 = "", xa(c, function(c, d) {
                     b1 += d, b1 += ":", b1 += c, b1 += "\r\n";
                 }), c = b1, "string" == typeof a ? null != c && encodeURIComponent(String(c)) : R(a, b, c));
             }
@@ -1366,7 +1343,17 @@
                             const r = e[u].g;
                             if (0 > (m -= f)) f = Math.max(0, e[u].h - 100), n = !1;
                             else try {
-                                md(r, h, "req" + m + "_");
+                                !function(a, b, c) {
+                                    const d = c || "";
+                                    try {
+                                        Kc(a, function(e, f) {
+                                            let h = e;
+                                            p(e) && (h = rb(e)), b.push(d + f + "=" + encodeURIComponent(h));
+                                        });
+                                    } catch (e) {
+                                        throw b.push(d + "type=" + encodeURIComponent("_badmap")), e;
+                                    }
+                                }(r, h, "req" + m + "_");
                             } catch (G) {
                                 d && d(r);
                             }
@@ -1412,7 +1399,7 @@
                         if (1 == d) {
                             c = b.s ? b.s.length : 0, b = Date.now() - b.F;
                             var a1, b1, e = a.C;
-                            d = Sb(), D(d, new Vb(d, c, b, e)), Hc(a);
+                            D(d = Sb(), new Vb(d, c, b, e)), Hc(a);
                         } else Gc(a);
                     } else if (3 == (e = b.o) || 0 == e && 0 < a.I || !(1 == d && (a1 = a, b1 = b, !(Cc(a1.i) >= a1.i.j - (a1.m ? 1 : 0)) && (a1.m ? (a1.l = b1.D.concat(a1.l), !0) : 1 != a1.G && 2 != a1.G && !(a1.C >= (a1.Xa ? 0 : a1.Ya)) && (a1.m = K(q(a1.Ha, a1, b1), Od(a1, a1.C)), a1.C++, !0))) || 2 == d && Bc(a))) switch(c && 0 < c.length && ((b = a.i).i = b.i.concat(c)), e){
                         case 1:
@@ -1600,7 +1587,7 @@
                             this.V = Math.floor(1e5 * Math.random()), a = this.V++;
                             const e = new M(this, this.h, a, void 0);
                             let f = this.s;
-                            if (this.P && (f ? (f = ya(f), Aa(f, this.P)) : f = this.P), null === this.o && (e.H = f), this.ja) a: {
+                            if (this.P && (f ? Aa(f = ya(f), this.P) : f = this.P), null === this.o && (e.H = f), this.ja) a: {
                                 for(var b = 0, c = 0; c < this.l.length; c++){
                                     b: {
                                         var d = this.l[c];
@@ -1623,7 +1610,7 @@
                                 b = 1e3;
                             }
                             else b = 1e3;
-                            b = Pd(this, e, b), c = N(this.F), R(c, "RID", a), R(c, "CVER", 22), this.D && R(c, "X-HTTP-Session-Id", this.D), Kd(this, c), this.o && f && Gd(c, this.o, f), Dc(this.i, e), this.Ra && R(c, "TYPE", "init"), this.ja ? (R(c, "$req", b), R(c, "SID", "null"), e.$ = !0, ic(e, c, null)) : ic(e, c, b), this.G = 2;
+                            b = Pd(this, e, b), R(c = N(this.F), "RID", a), R(c, "CVER", 22), this.D && R(c, "X-HTTP-Session-Id", this.D), Kd(this, c), this.o && f && Gd(c, this.o, f), Dc(this.i, e), this.Ra && R(c, "TYPE", "init"), this.ja ? (R(c, "$req", b), R(c, "SID", "null"), e.$ = !0, ic(e, c, null)) : ic(e, c, b), this.G = 2;
                         }
                     } else 3 == this.G && (a ? Qd(this, a) : 0 == this.l.length || id(this.i) || Qd(this));
                 }
@@ -1717,7 +1704,7 @@
                 }();
             }
             exports.default = function(_param) {
-                var sizerSvg, src = _param.src, sizes = _param.sizes, _unoptimized = _param.unoptimized, unoptimized = void 0 !== _unoptimized && _unoptimized, _priority = _param.priority, priority = void 0 !== _priority && _priority, loading = _param.loading, _lazyBoundary = _param.lazyBoundary, className = _param.className, quality = _param.quality, width = _param.width, height = _param.height, objectFit = _param.objectFit, objectPosition = _param.objectPosition, onLoadingComplete = _param.onLoadingComplete, _loader = _param.loader, loader = void 0 === _loader ? defaultImageLoader : _loader, _placeholder = _param.placeholder, placeholder = void 0 === _placeholder ? "empty" : _placeholder, blurDataURL = _param.blurDataURL, all = function(source, excluded) {
+                var src, arr, sizerSvg, src1 = _param.src, sizes = _param.sizes, _unoptimized = _param.unoptimized, unoptimized = void 0 !== _unoptimized && _unoptimized, _priority = _param.priority, priority = void 0 !== _priority && _priority, loading = _param.loading, _lazyBoundary = _param.lazyBoundary, className = _param.className, quality = _param.quality, width = _param.width, height = _param.height, objectFit = _param.objectFit, objectPosition = _param.objectPosition, onLoadingComplete = _param.onLoadingComplete, _loader = _param.loader, loader = void 0 === _loader ? defaultImageLoader : _loader, _placeholder = _param.placeholder, placeholder = void 0 === _placeholder ? "empty" : _placeholder, blurDataURL = _param.blurDataURL, rest = function(source, excluded) {
                     if (null == source) return {};
                     var key, i, target = function(source, excluded) {
                         if (null == source) return {};
@@ -1748,17 +1735,17 @@
                     "placeholder",
                     "blurDataURL"
                 ]), layout = sizes ? "responsive" : "intrinsic";
-                "layout" in all && (all.layout && (layout = all.layout), delete all.layout);
-                var src1, staticSrc = "";
-                if ("object" == typeof (src1 = src) && (isStaticRequire(src1) || void 0 !== src1.src)) {
-                    var staticImageData = isStaticRequire(src) ? src.default : src;
+                "layout" in rest && (rest.layout && (layout = rest.layout), delete rest.layout);
+                var staticSrc = "";
+                if ("object" == typeof (src = src1) && (isStaticRequire(src) || void 0 !== src.src)) {
+                    var staticImageData = isStaticRequire(src1) ? src1.default : src1;
                     if (!staticImageData.src) throw Error("An object should only be passed to the image component src parameter if it comes from a static image import. It must include src. Received ".concat(JSON.stringify(staticImageData)));
                     if (blurDataURL = blurDataURL || staticImageData.blurDataURL, staticSrc = staticImageData.src, (!layout || "fill" !== layout) && (height = height || staticImageData.height, width = width || staticImageData.width, !staticImageData.height || !staticImageData.width)) throw Error("An object should only be passed to the image component src parameter if it comes from a static image import. It must include height and width. Received ".concat(JSON.stringify(staticImageData)));
                 }
-                src = "string" == typeof src ? src : staticSrc;
+                src1 = "string" == typeof src1 ? src1 : staticSrc;
                 var widthInt = getInt(width), heightInt = getInt(height), qualityInt = getInt(quality), isLazy = !priority && ("lazy" === loading || void 0 === loading);
-                (src.startsWith("data:") || src.startsWith("blob:")) && (unoptimized = !0, isLazy = !1), loadedImageURLs.has(src) && (isLazy = !1);
-                var arr, ref2 = function(arr) {
+                (src1.startsWith("data:") || src1.startsWith("blob:")) && (unoptimized = !0, isLazy = !1), loadedImageURLs.has(src1) && (isLazy = !1);
+                var ref2 = function(arr) {
                     if (Array.isArray(arr)) return arr;
                 }(arr = _useIntersection.useIntersection({
                     rootMargin: void 0 === _lazyBoundary ? "200px" : _lazyBoundary,
@@ -1836,7 +1823,7 @@
                     sizes: void 0
                 };
                 isVisible && (imgAttributes = generateImgAttrs({
-                    src: src,
+                    src: src1,
                     unoptimized: unoptimized,
                     layout: layout,
                     width: widthInt,
@@ -1844,7 +1831,7 @@
                     sizes: sizes,
                     loader: loader
                 }));
-                var srcString = src;
+                var srcString = src1;
                 return _react.default.createElement("span", {
                     style: wrapperStyle
                 }, hasSizer ? _react.default.createElement("span", {
@@ -1864,7 +1851,7 @@
                     alt: "",
                     "aria-hidden": !0,
                     src: "data:image/svg+xml;base64,".concat(_toBase64.toBase64(sizerSvg))
-                }) : null) : null, _react.default.createElement("img", Object.assign({}, all, imgAttributes, {
+                }) : null) : null, _react.default.createElement("img", Object.assign({}, rest, imgAttributes, {
                     decoding: "async",
                     "data-nimg": layout,
                     className: className,
@@ -1873,19 +1860,22 @@
                             if (img) {
                                 var handleLoad = function() {
                                     img.src !== emptyDataURL && ("decode" in img ? img.decode() : Promise.resolve()).catch(function() {}).then(function() {
-                                        "blur" === placeholder && (img.style.filter = "none", img.style.backgroundSize = "none", img.style.backgroundImage = "none"), loadedImageURLs.add(src), onLoadingComplete && onLoadingComplete({
-                                            naturalWidth: img.naturalWidth,
-                                            naturalHeight: img.naturalHeight
-                                        });
+                                        if ("blur" === placeholder && (img.style.filter = "none", img.style.backgroundSize = "none", img.style.backgroundImage = "none"), loadedImageURLs.add(src), onLoadingComplete) {
+                                            var naturalWidth = img.naturalWidth, naturalHeight = img.naturalHeight;
+                                            onLoadingComplete({
+                                                naturalWidth: naturalWidth,
+                                                naturalHeight: naturalHeight
+                                            });
+                                        }
                                     });
                                 };
                                 img.complete ? handleLoad() : img.onload = handleLoad;
                             }
-                        }(img, srcString, layout, placeholder, onLoadingComplete);
+                        }(img, srcString, 0, placeholder, onLoadingComplete);
                     },
                     style: _objectSpread({}, imgStyle, blurStyle)
-                })), _react.default.createElement("noscript", null, _react.default.createElement("img", Object.assign({}, all, generateImgAttrs({
-                    src: src,
+                })), _react.default.createElement("noscript", null, _react.default.createElement("img", Object.assign({}, rest, generateImgAttrs({
+                    src: src1,
                     unoptimized: unoptimized,
                     layout: layout,
                     width: widthInt,
@@ -2259,17 +2249,16 @@
                 "fire-js": "fire-js",
                 firebase: "fire-js-all"
             }, _apps = new Map(), _components = new Map();
-            function _addComponent(app, component) {
-                try {
-                    app.container.addComponent(component);
-                } catch (e) {
-                    logger.debug(`Component ${component.name} failed to register with FirebaseApp ${app.name}`, e);
-                }
-            }
             function _registerComponent(component) {
                 const componentName = component.name;
                 if (_components.has(componentName)) return logger.debug(`There were multiple attempts to register component ${componentName}.`), !1;
-                for (const app of (_components.set(componentName, component), _apps.values()))_addComponent(app, component);
+                for (const app of (_components.set(componentName, component), _apps.values()))!function(app, component) {
+                    try {
+                        app.container.addComponent(component);
+                    } catch (e) {
+                        logger.debug(`Component ${component.name} failed to register with FirebaseApp ${app.name}`, e);
+                    }
+                }(app, component);
                 return !0;
             }
             new _firebase_util__WEBPACK_IMPORTED_MODULE_2__.LL("app", "Firebase", {

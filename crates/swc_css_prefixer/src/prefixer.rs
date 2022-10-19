@@ -1,8 +1,11 @@
+#![allow(clippy::match_like_matches_macro)]
+
 use core::f64::consts::PI;
 use std::mem::take;
 
 use once_cell::sync::Lazy;
 use preset_env_base::{query::targets_to_versions, version::Version, BrowserData, Versions};
+use swc_atoms::js_word;
 use swc_common::{
     collections::{AHashMap, AHashSet},
     EqIgnoreSpan, DUMMY_SP,
@@ -249,7 +252,7 @@ impl VisitMut for ImageSetFunctionReplacerOnLegacyVariant<'_> {
                 span: *span,
                 name: Ident {
                     span: DUMMY_SP,
-                    value: "url".into(),
+                    value: js_word!("url"),
                     raw: None,
                 },
                 value: Some(Box::new(UrlValue::Str(Str {
@@ -386,25 +389,25 @@ impl VisitMut for LinearGradientFunctionReplacerOnLegacyVariant<'_> {
                     if angle == 0.0 {
                         n.value[0] = ComponentValue::Ident(Ident {
                             span: *span,
-                            value: "bottom".into(),
+                            value: js_word!("bottom"),
                             raw: None,
                         });
                     } else if angle == 90.0 {
                         n.value[0] = ComponentValue::Ident(Ident {
                             span: *span,
-                            value: "left".into(),
+                            value: js_word!("left"),
                             raw: None,
                         });
                     } else if angle == 180.0 {
                         n.value[0] = ComponentValue::Ident(Ident {
                             span: *span,
-                            value: "top".into(),
+                            value: js_word!("top"),
                             raw: None,
                         });
                     } else if angle == 270.0 {
                         n.value[0] = ComponentValue::Ident(Ident {
                             span: *span,
-                            value: "right".into(),
+                            value: js_word!("right"),
                             raw: None,
                         });
                     } else {
@@ -419,7 +422,7 @@ impl VisitMut for LinearGradientFunctionReplacerOnLegacyVariant<'_> {
                             },
                             unit: Ident {
                                 span: unit.span,
-                                value: "deg".into(),
+                                value: js_word!("deg"),
                                 raw: None,
                             },
                         }));
@@ -515,11 +518,21 @@ where
     node.visit_mut_with(&mut MediaFeatureResolutionReplacerOnLegacyVariant { from, to });
 }
 
-macro_rules! str_to_ident {
+macro_rules! to_ident {
     ($val:expr) => {{
         ComponentValue::Ident(Ident {
             span: DUMMY_SP,
             value: $val.into(),
+            raw: None,
+        })
+    }};
+}
+
+macro_rules! to_integer {
+    ($val:expr) => {{
+        ComponentValue::Integer(Integer {
+            span: DUMMY_SP,
+            value: $val,
             raw: None,
         })
     }};
@@ -608,7 +621,7 @@ impl VisitMut for Prefixer {
                             span: at_rule.span,
                             name: AtRuleName::Ident(Ident {
                                 span: *span,
-                                value: "-ms-viewport".into(),
+                                value: js_word!("-ms-viewport"),
                                 raw: None,
                             }),
                             prelude: at_rule.prelude.clone(),
@@ -624,7 +637,7 @@ impl VisitMut for Prefixer {
                             span: at_rule.span,
                             name: AtRuleName::Ident(Ident {
                                 span: *span,
-                                value: "-o-viewport".into(),
+                                value: js_word!("-o-viewport"),
                                 raw: None,
                             }),
                             prelude: at_rule.prelude.clone(),
@@ -643,7 +656,7 @@ impl VisitMut for Prefixer {
                             span: at_rule.span,
                             name: AtRuleName::Ident(Ident {
                                 span: *span,
-                                value: "-webkit-keyframes".into(),
+                                value: js_word!("-webkit-keyframes"),
                                 raw: None,
                             }),
                             prelude: at_rule.prelude.clone(),
@@ -659,7 +672,7 @@ impl VisitMut for Prefixer {
                             span: at_rule.span,
                             name: AtRuleName::Ident(Ident {
                                 span: *span,
-                                value: "-moz-keyframes".into(),
+                                value: js_word!("-moz-keyframes"),
                                 raw: None,
                             }),
                             prelude: at_rule.prelude.clone(),
@@ -675,7 +688,7 @@ impl VisitMut for Prefixer {
                             span: at_rule.span,
                             name: AtRuleName::Ident(Ident {
                                 span: DUMMY_SP,
-                                value: "-o-keyframes".into(),
+                                value: js_word!("-o-keyframes"),
                                 raw: None,
                             }),
                             prelude: at_rule.prelude.clone(),
@@ -1764,7 +1777,7 @@ impl VisitMut for Prefixer {
                                     },
                                     unit: Ident {
                                         span: DUMMY_SP,
-                                        value: "px".into(),
+                                        value: js_word!("px"),
                                         raw: None,
                                     },
                                 }));
@@ -1824,12 +1837,12 @@ impl VisitMut for Prefixer {
                     add_declaration!(
                         Prefix::Webkit,
                         "-webkit-box-orient",
-                        Some(Box::new(|| { vec![str_to_ident!(orient)] }))
+                        Some(Box::new(|| { vec![to_ident!(orient)] }))
                     );
                     add_declaration!(
                         Prefix::Webkit,
                         "-webkit-box-direction",
-                        Some(Box::new(|| { vec![str_to_ident!(direction)] }))
+                        Some(Box::new(|| { vec![to_ident!(direction)] }))
                     );
                 }
 
@@ -1839,12 +1852,12 @@ impl VisitMut for Prefixer {
                     add_declaration!(
                         Prefix::Moz,
                         "-moz-box-orient",
-                        Some(Box::new(|| { vec![str_to_ident!(orient)] }))
+                        Some(Box::new(|| { vec![to_ident!(orient)] }))
                     );
                     add_declaration!(
                         Prefix::Webkit,
                         "-moz-box-direction",
-                        Some(Box::new(|| { vec![str_to_ident!(direction)] }))
+                        Some(Box::new(|| { vec![to_ident!(direction)] }))
                     );
                 }
 
@@ -1857,18 +1870,11 @@ impl VisitMut for Prefixer {
             }
 
             "flex-flow" => {
-                let is_single_flex_wrap = match n.value.get(0) {
-                    Some(ComponentValue::Ident(Ident { value, .. }))
-                        if n.value.len() == 1
-                            && matches!(
-                                &*value.to_lowercase(),
-                                "wrap" | "nowrap" | "wrap-reverse"
-                            ) =>
-                    {
-                        true
-                    }
-                    _ => false,
-                };
+                let is_single_flex_wrap = matches!(n.value.get(0), Some(ComponentValue::Ident(Ident { value, .. })) if n.value.len() == 1
+                && matches!(
+                    &*value.to_lowercase(),
+                    "wrap" | "nowrap" | "wrap-reverse"
+                ));
 
                 let old_values = match is_single_flex_wrap {
                     true => None,
@@ -1905,12 +1911,12 @@ impl VisitMut for Prefixer {
                     add_declaration!(
                         Prefix::Webkit,
                         "-webkit-box-orient",
-                        Some(Box::new(|| { vec![str_to_ident!(orient)] }))
+                        Some(Box::new(|| { vec![to_ident!(orient)] }))
                     );
                     add_declaration!(
                         Prefix::Webkit,
                         "-webkit-box-direction",
-                        Some(Box::new(|| { vec![str_to_ident!(direction)] }))
+                        Some(Box::new(|| { vec![to_ident!(direction)] }))
                     );
                 }
 
@@ -1920,12 +1926,12 @@ impl VisitMut for Prefixer {
                     add_declaration!(
                         Prefix::Moz,
                         "-moz-box-orient",
-                        Some(Box::new(|| { vec![str_to_ident!(orient)] }))
+                        Some(Box::new(|| { vec![to_ident!(orient)] }))
                     );
                     add_declaration!(
                         Prefix::Moz,
                         "-moz-box-direction",
-                        Some(Box::new(|| { vec![str_to_ident!(direction)] }))
+                        Some(Box::new(|| { vec![to_ident!(direction)] }))
                     );
                 }
 
@@ -1933,14 +1939,7 @@ impl VisitMut for Prefixer {
             }
 
             "justify-content" => {
-                let need_old_spec = match n.value.get(0) {
-                    Some(ComponentValue::Ident(Ident { value, .. }))
-                        if value.as_ref().eq_ignore_ascii_case("space-around") =>
-                    {
-                        false
-                    }
-                    _ => true,
-                };
+                let need_old_spec = !matches!(n.value.get(0), Some(ComponentValue::Ident(Ident { value, .. })) if value.as_ref().eq_ignore_ascii_case("space-around"));
 
                 if need_old_spec {
                     add_declaration!(
@@ -2007,9 +2006,7 @@ impl VisitMut for Prefixer {
                         add_declaration!(
                             Prefix::Webkit,
                             "-webkit-box-ordinal-group",
-                            Some(Box::new(|| {
-                                vec![str_to_ident!(old_spec_num.to_string())]
-                            }))
+                            Some(Box::new(|| { vec![to_integer!(old_spec_num)] }))
                         );
                     }
                     _ => {
@@ -2024,9 +2021,7 @@ impl VisitMut for Prefixer {
                         add_declaration!(
                             Prefix::Moz,
                             "-moz-box-ordinal-group",
-                            Some(Box::new(|| {
-                                vec![str_to_ident!(old_spec_num.to_string())]
-                            }))
+                            Some(Box::new(|| { vec![to_integer!(old_spec_num)] }))
                         );
                     }
                     _ => {
@@ -2310,7 +2305,7 @@ impl VisitMut for Prefixer {
                             add_declaration!(
                                 Prefix::Ms,
                                 "-ms-user-select",
-                                Some(Box::new(|| { vec![str_to_ident!("element")] }))
+                                Some(Box::new(|| { vec![to_ident!("element")] }))
                             );
                         }
                         "all" => {}
@@ -2434,7 +2429,7 @@ impl VisitMut for Prefixer {
                             add_declaration!(
                                 Prefix::Webkit,
                                 "-webkit-text-decoration-skip",
-                                Some(Box::new(|| { vec![str_to_ident!("ink")] }))
+                                Some(Box::new(|| { vec![to_ident!("ink")] }))
                             );
                         }
                         _ => {
@@ -2566,14 +2561,14 @@ impl VisitMut for Prefixer {
                                     add_declaration!(
                                         Prefix::Ms,
                                         "-ms-writing-mode",
-                                        Some(Box::new(|| { vec![str_to_ident!("tb-lr")] }))
+                                        Some(Box::new(|| { vec![to_ident!("tb-lr")] }))
                                     );
                                 }
                                 Some("rtl") => {
                                     add_declaration!(
                                         Prefix::Ms,
                                         "-ms-writing-mode",
-                                        Some(Box::new(|| { vec![str_to_ident!("bt-lr")] }))
+                                        Some(Box::new(|| { vec![to_ident!("bt-lr")] }))
                                     );
                                 }
                                 _ => {}
@@ -2588,14 +2583,14 @@ impl VisitMut for Prefixer {
                                     add_declaration!(
                                         Prefix::Ms,
                                         "-ms-writing-mode",
-                                        Some(Box::new(|| { vec![str_to_ident!("tb-rl")] }))
+                                        Some(Box::new(|| { vec![to_ident!("tb-rl")] }))
                                     );
                                 }
                                 Some("rtl") => {
                                     add_declaration!(
                                         Prefix::Ms,
                                         "-ms-writing-mode",
-                                        Some(Box::new(|| { vec![str_to_ident!("bt-rl")] }))
+                                        Some(Box::new(|| { vec![to_ident!("bt-rl")] }))
                                     );
                                 }
                                 _ => {}
@@ -2610,14 +2605,14 @@ impl VisitMut for Prefixer {
                                     add_declaration!(
                                         Prefix::Ms,
                                         "-ms-writing-mode",
-                                        Some(Box::new(|| { vec![str_to_ident!("lr-tb")] }))
+                                        Some(Box::new(|| { vec![to_ident!("lr-tb")] }))
                                     );
                                 }
                                 Some("rtl") => {
                                     add_declaration!(
                                         Prefix::Ms,
                                         "-ms-writing-mode",
-                                        Some(Box::new(|| { vec![str_to_ident!("rl-tb")] }))
+                                        Some(Box::new(|| { vec![to_ident!("rl-tb")] }))
                                     );
                                 }
                                 _ => {}
@@ -2932,14 +2927,14 @@ impl VisitMut for Prefixer {
                             add_declaration!(
                                 Prefix::Ms,
                                 "-ms-scroll-chaining",
-                                Some(Box::new(|| { vec![str_to_ident!("chained")] }))
+                                Some(Box::new(|| { vec![to_ident!("chained")] }))
                             );
                         }
                         "none" | "contain" => {
                             add_declaration!(
                                 Prefix::Ms,
                                 "-ms-scroll-chaining",
-                                Some(Box::new(|| { vec![str_to_ident!("none")] }))
+                                Some(Box::new(|| { vec![to_ident!("none")] }))
                             );
                         }
                         _ => {
@@ -2981,7 +2976,7 @@ impl VisitMut for Prefixer {
                             add_declaration!(
                                 Prefix::Webkit,
                                 "-webkit-column-break-before",
-                                Some(Box::new(|| { vec![str_to_ident!("always")] }))
+                                Some(Box::new(|| { vec![to_ident!("always")] }))
                             );
                         }
                         _ => {}
@@ -2999,7 +2994,7 @@ impl VisitMut for Prefixer {
                             add_declaration!(
                                 Prefix::Webkit,
                                 "-webkit-column-break-after",
-                                Some(Box::new(|| { vec![str_to_ident!("always")] }))
+                                Some(Box::new(|| { vec![to_ident!("always")] }))
                             );
                         }
                         _ => {}

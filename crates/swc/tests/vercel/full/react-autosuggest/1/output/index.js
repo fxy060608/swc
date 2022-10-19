@@ -97,8 +97,8 @@ var ItemsList = function(_Component) {
             }
         }), superClass && _setPrototypeOf(subClass, superClass);
     }(ItemsList, _Component);
-    var Derived, Constructor, protoProps, staticProps, _super = function() {
-        var self, call, result, Super = _getPrototypeOf(ItemsList);
+    var protoProps, staticProps, _super = function() {
+        var call, result, Super = _getPrototypeOf(ItemsList);
         if (function() {
             if ("undefined" == typeof Reflect || !Reflect.construct || Reflect.construct.sham) return !1;
             if ("function" == typeof Proxy) return !0;
@@ -111,7 +111,7 @@ var ItemsList = function(_Component) {
             var NewTarget = _getPrototypeOf(this).constructor;
             result = Reflect.construct(Super, arguments, NewTarget);
         } else result = Super.apply(this, arguments);
-        return self = this, call = result, call && ("object" === _typeof(call) || "function" == typeof call) ? call : _assertThisInitialized(self);
+        return (call = result) && ("object" === _typeof(call) || "function" == typeof call) ? call : _assertThisInitialized(this);
     };
     function ItemsList() {
         var _this;
@@ -119,9 +119,9 @@ var ItemsList = function(_Component) {
             if (!_instanceof(instance, Constructor)) throw TypeError("Cannot call a class as a function");
         }(this, ItemsList);
         for(var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++)args[_key] = arguments[_key];
-        return _this = _super.call.apply(_super, [
+        return _defineProperty(_assertThisInitialized(_this = _super.call.apply(_super, [
             this
-        ].concat(args)), _defineProperty(_assertThisInitialized(_this), "storeHighlightedItemReference", function(highlightedItem) {
+        ].concat(args))), "storeHighlightedItemReference", function(highlightedItem) {
             _this.props.onHighlightedItemChange(null === highlightedItem ? null : highlightedItem.item);
         }), _this;
     }

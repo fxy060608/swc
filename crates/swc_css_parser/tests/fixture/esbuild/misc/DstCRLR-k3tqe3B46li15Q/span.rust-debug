@@ -53,7 +53,7 @@
    :  ^^
    `----
 
-  x NsPrefix
+  x NamespacePrefix
    ,-[$DIR/tests/fixture/esbuild/misc/DstCRLR-k3tqe3B46li15Q/input.css:1:1]
  1 | [|b]{}
    :  ^
@@ -69,4 +69,10 @@
    ,-[$DIR/tests/fixture/esbuild/misc/DstCRLR-k3tqe3B46li15Q/input.css:1:1]
  1 | [|b]{}
    :     ^^
+   `----
+
+  x LBrace
+   ,-[$DIR/tests/fixture/esbuild/misc/DstCRLR-k3tqe3B46li15Q/input.css:1:1]
+ 1 | [|b]{}
+   :     ^
    `----

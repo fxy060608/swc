@@ -169,7 +169,7 @@
                     return setValue;
                 }
             });
-            var HijriParser, intl_base_IntlBase, lastPageID, instances = 'ej2_instances', uid = 0;
+            var HijriParser, dateCorrection, extendStatics, extendStatics1, extendStatics2, extendStatics3, extendStatics4, extendStatics5, HijriParser1, intl_base_IntlBase, lastPageID, instances = 'ej2_instances', uid = 0;
             function createInstance(classFunction, params) {
                 return params.unshift(void 0), new (Function.prototype.bind.apply(classFunction, params));
             }
@@ -202,12 +202,13 @@
                 var result = copied && 'object' == typeof copied ? copied : {}, length = arguments.length;
                 deep && (length -= 1);
                 for(var arguments_1 = arguments, i = 1; i < length; i++)!function(i) {
-                    if (!arguments_1[i]) return "continue";
-                    var obj1 = arguments_1[i];
-                    Object.keys(obj1).forEach(function(key) {
-                        var clone, src = result[key], copy = obj1[key];
-                        Array.isArray(copy) && Array.isArray(src) && (copy.length, src.length), deep && (util_isObject(copy) || Array.isArray(copy)) ? util_isObject(copy) ? Array.isArray(clone = src || {}) && clone.hasOwnProperty('isComplexArray') ? util_extend(clone, {}, copy, deep) : result[key] = util_extend(clone, {}, copy, deep) : (clone = src || [], result[key] = util_extend([], clone, copy, clone && clone.length || copy && copy.length)) : result[key] = copy;
-                    });
+                    if (arguments_1[i]) {
+                        var obj1 = arguments_1[i];
+                        Object.keys(obj1).forEach(function(key) {
+                            var clone, src = result[key], copy = obj1[key];
+                            Array.isArray(copy) && Array.isArray(src) && (copy.length, src.length), deep && (util_isObject(copy) || Array.isArray(copy)) ? util_isObject(copy) ? Array.isArray(clone = src || {}) && clone.hasOwnProperty('isComplexArray') ? util_extend(clone, {}, copy, deep) : result[key] = util_extend(clone, {}, copy, deep) : (clone = src || [], result[key] = util_extend([], clone, copy, clone && clone.length || copy && copy.length)) : result[key] = copy;
+                        });
+                    }
                 }(i);
                 return result;
             }
@@ -266,7 +267,7 @@
                 }
                 return null;
             }
-            var HijriParser1, dateCorrection, defaultNumberingSystem = {
+            var defaultNumberingSystem = {
                 latn: {
                     _digits: '0123456789',
                     _type: 'numeric'
@@ -500,7 +501,7 @@
                 VND: '₫',
                 TWD: 'NT$'
             };
-            HijriParser1 = HijriParser || (HijriParser = {}), dateCorrection = [
+            dateCorrection = [
                 28607,
                 28636,
                 28665,
@@ -2242,7 +2243,7 @@
                 79930,
                 79960,
                 79990
-            ], HijriParser1.getHijriDate = function(gDate) {
+            ], (HijriParser = HijriParser1 || (HijriParser1 = {})).getHijriDate = function(gDate) {
                 var day = gDate.getDate(), month = gDate.getMonth(), year = gDate.getFullYear(), tMonth = month + 1, tYear = year;
                 tMonth < 3 && (tYear -= 1, tMonth += 12);
                 var yPrefix = Math.floor(tYear / 100.), julilanOffset = yPrefix - Math.floor(yPrefix / 4.) - 2, julianNumber = Math.floor(365.25 * (tYear + 4716)) + Math.floor(30.6001 * (tMonth + 1)) + day - julilanOffset - 1524;
@@ -2258,7 +2259,7 @@
                     month: hmonth,
                     date: hDate
                 };
-            }, HijriParser1.toGregorian = function(year, month, day) {
+            }, HijriParser.toGregorian = function(year, month, day) {
                 var z = Math.floor(day + dateCorrection[12 * (year - 1) + 1 + (month - 1) - 16260 - 1] - 1 + 2400000 + 0.5), a = Math.floor((z - 1867216.25) / 36524.25), b = (a = z + 1 + a - Math.floor(a / 4)) + 1524, c = Math.floor((b - 122.1) / 365.25), d = Math.floor(365.25 * c), e = Math.floor((b - d) / 30.6001), gMonth = e - (e > 13.5 ? 13 : 1), gYear = c - (gMonth > 2.5 ? 4716 : 4715);
                 return gYear <= 0 && gMonth--, new Date(gYear + '/' + gMonth + '/' + (b - d - Math.floor(30.6001 * e)));
             };
@@ -2394,7 +2395,7 @@
                     }
                     return ret;
                 }, DateFormat.getCurrentDateValue = function(value, isIslamic) {
-                    return isIslamic ? HijriParser.getHijriDate(value) : {
+                    return isIslamic ? HijriParser1.getHijriDate(value) : {
                         year: value.getFullYear(),
                         month: value.getMonth() + 1,
                         date: value.getDate()
@@ -2414,13 +2415,7 @@
                 ls: 'maximumSignificantDigits',
                 mf: 'minimumFractionDigits',
                 lf: 'maximumFractionDigits'
-            }, mapper = [
-                'infinity',
-                'nan',
-                'group',
-                'decimal',
-                'exponential'
-            ], NumberFormat = function() {
+            }, NumberFormat = function() {
                 function NumberFormat() {}
                 return NumberFormat.numberFormatter = function(culture, option, cldr) {
                     var symbolPattern, _this = this, fOptions = util_extend({}, option), cOptions = {}, dOptions = {}, dependable = intl_base_IntlBase.getDependables(cldr, culture, '', !0);
@@ -2430,7 +2425,7 @@
                     else {
                         util_extend(fOptions, intl_base_IntlBase.getProperNumericSkeleton(option.format || 'N')), fOptions.isCurrency = 'currency' === fOptions.type, fOptions.isPercent = 'percent' === fOptions.type, symbolPattern = intl_base_IntlBase.getSymbolPattern(fOptions.type, dOptions.numberMapper.numberSystem, dependable.numericObject, fOptions.isAccount), fOptions.groupOne = this.checkValueRange(fOptions.maximumSignificantDigits, fOptions.minimumSignificantDigits, !0), this.checkValueRange(fOptions.maximumFractionDigits, fOptions.minimumFractionDigits, !1, !0), util_isUndefined(fOptions.fractionDigits) || (fOptions.minimumFractionDigits = fOptions.maximumFractionDigits = fOptions.fractionDigits), util_isUndefined(fOptions.useGrouping) && (fOptions.useGrouping = !0), fOptions.isCurrency && (symbolPattern = symbolPattern.replace(/\u00A4/g, intl_base_IntlBase.defaultCurrency));
                         var split = symbolPattern.split(';');
-                        if (cOptions.nData = intl_base_IntlBase.getFormatData(split[1] || '-' + split[0], !0, dOptions.currencySymbol), cOptions.pData = intl_base_IntlBase.getFormatData(split[0], !1, dOptions.currencySymbol), fOptions.useGrouping && (fOptions.groupSeparator = symbols[mapper[2]], fOptions.groupData = this.getGroupingDetails(split[0])), util_isUndefined(fOptions.minimumFractionDigits) && (fOptions.minimumFractionDigits = cOptions.nData.minimumFraction), util_isUndefined(fOptions.maximumFractionDigits)) {
+                        if (cOptions.nData = intl_base_IntlBase.getFormatData(split[1] || '-' + split[0], !0, dOptions.currencySymbol), cOptions.pData = intl_base_IntlBase.getFormatData(split[0], !1, dOptions.currencySymbol), fOptions.useGrouping && (fOptions.groupSeparator = symbols.group, fOptions.groupData = this.getGroupingDetails(split[0])), util_isUndefined(fOptions.minimumFractionDigits) && (fOptions.minimumFractionDigits = cOptions.nData.minimumFraction), util_isUndefined(fOptions.maximumFractionDigits)) {
                             var mval = cOptions.nData.maximumFraction;
                             fOptions.maximumFractionDigits = util_isUndefined(mval) && fOptions.isPercent ? 0 : mval;
                         }
@@ -2438,7 +2433,7 @@
                         util_isUndefined(mfrac) || util_isUndefined(lfrac) || !(mfrac > lfrac) || (fOptions.maximumFractionDigits = mfrac);
                     }
                     return util_extend(cOptions.nData, fOptions), util_extend(cOptions.pData, fOptions), function(value) {
-                        return isNaN(value) ? symbols[mapper[1]] : isFinite(value) ? _this.intNumberFormatter(value, cOptions, dOptions) : symbols[mapper[0]];
+                        return isNaN(value) ? symbols.nan : isFinite(value) ? _this.intNumberFormatter(value, cOptions, dOptions) : symbols.infinity;
                     };
                 }, NumberFormat.getGroupingDetails = function(pattern) {
                     var ret = {}, match = pattern.match(intl_base_IntlBase.negativeDataRegex);
@@ -2472,7 +2467,7 @@
                     if (!util_isUndefined(fOptions.nData.type)) {
                         value < 0 ? (value *= -1, curData = fOptions.nData) : curData = 0 === value && fOptions.zeroData || fOptions.pData;
                         var curData, fValue = '';
-                        return (curData.isPercent && (value *= 100), curData.groupOne ? fValue = this.processSignificantDigits(value, curData.minimumSignificantDigits, curData.maximumSignificantDigits) : (fValue = this.processFraction(value, curData.minimumFractionDigits, curData.maximumFractionDigits), curData.minimumIntegerDigits && (fValue = this.processMinimumIntegers(fValue, curData.minimumIntegerDigits))), 'scientific' === curData.type && (fValue = (fValue = value.toExponential(curData.maximumFractionDigits)).replace('e', dOptions.numberMapper.numberSymbols[mapper[4]])), fValue = fValue.replace('.', dOptions.numberMapper.numberSymbols[mapper[3]]), curData.useGrouping && (fValue = this.groupNumbers(fValue, curData.groupData.primary, curData.groupSeparator || ',', dOptions.numberMapper.numberSymbols[mapper[3]] || '.', curData.groupData.secondary)), fValue = ParserBase.convertValueParts(fValue, intl_base_IntlBase.latnParseRegex, dOptions.numberMapper.mapper), 'N/A' === curData.nlead) ? curData.nlead : curData.nlead + fValue + curData.nend;
+                        return (curData.isPercent && (value *= 100), curData.groupOne ? fValue = this.processSignificantDigits(value, curData.minimumSignificantDigits, curData.maximumSignificantDigits) : (fValue = this.processFraction(value, curData.minimumFractionDigits, curData.maximumFractionDigits), curData.minimumIntegerDigits && (fValue = this.processMinimumIntegers(fValue, curData.minimumIntegerDigits))), 'scientific' === curData.type && (fValue = (fValue = value.toExponential(curData.maximumFractionDigits)).replace('e', dOptions.numberMapper.numberSymbols.exponential)), fValue = fValue.replace('.', dOptions.numberMapper.numberSymbols.decimal), curData.useGrouping && (fValue = this.groupNumbers(fValue, curData.groupData.primary, curData.groupSeparator || ',', dOptions.numberMapper.numberSymbols.decimal || '.', curData.groupData.secondary)), fValue = ParserBase.convertValueParts(fValue, intl_base_IntlBase.latnParseRegex, dOptions.numberMapper.mapper), 'N/A' === curData.nlead) ? curData.nlead : curData.nlead + fValue + curData.nend;
                     }
                 }, NumberFormat.processSignificantDigits = function(value, min, max) {
                     var temp = value + '';
@@ -2584,8 +2579,8 @@
                         if (util_isNullOrUndefined(parsedDateParts) || !Object.keys(parsedDateParts).length) return null;
                         if (parseOptions.isIslamic) {
                             var dobj = {}, tYear = parsedDateParts.year, tDate = parsedDateParts.day, tMonth = parsedDateParts.month, ystrig = tYear ? tYear + '' : '', is2DigitYear = 2 === ystrig.length;
-                            tYear && tMonth && tDate && !is2DigitYear || (dobj = HijriParser.getHijriDate(new Date())), is2DigitYear && (tYear = parseInt((dobj.year + '').slice(0, 2) + ystrig, 10));
-                            var dateObject = HijriParser.toGregorian(tYear || dobj.year, tMonth || dobj.month, tDate || dobj.date);
+                            tYear && tMonth && tDate && !is2DigitYear || (dobj = HijriParser1.getHijriDate(new Date())), is2DigitYear && (tYear = parseInt((dobj.year + '').slice(0, 2) + ystrig, 10));
+                            var dateObject = HijriParser1.toGregorian(tYear || dobj.year, tMonth || dobj.month, tDate || dobj.date);
                             parsedDateParts.year = dateObject.getFullYear(), parsedDateParts.month = dateObject.getMonth() + 1, parsedDateParts.day = dateObject.getDate();
                         }
                         return _this.getDateObject(parsedDateParts);
@@ -2659,16 +2654,13 @@
                     var value = this.internalNumberParser(ival, num);
                     return flag ? -value : value;
                 }, DateParser;
-            }(), parseRegex = /^([^0-9]*)(([0-9,]*[0-9]+)(\.[0-9]+)?)([Ee][+-]?[0-9]+)?([^0-9]*)$/, groupRegex = /,/g, keys = [
-                'minusSign',
-                'infinity'
-            ], NumberParser = function() {
+            }(), parseRegex = /^([^0-9]*)(([0-9,]*[0-9]+)(\.[0-9]+)?)([Ee][+-]?[0-9]+)?([^0-9]*)$/, groupRegex = /,/g, NumberParser = function() {
                 function NumberParser() {}
                 return NumberParser.numberParser = function(culture, option, cldr) {
                     var numOptions, symbolpattern, _this = this, dependable = intl_base_IntlBase.getDependables(cldr, culture, '', !0), parseOptions = {
                         custom: !0
                     };
-                    if (intl_base_IntlBase.formatRegex.test(option.format) || !option.format ? (util_extend(parseOptions, intl_base_IntlBase.getProperNumericSkeleton(option.format || 'N')), parseOptions.custom = !1, !parseOptions.fractionDigits && option.maximumFractionDigits && (parseOptions.maximumFractionDigits = option.maximumFractionDigits)) : util_extend(parseOptions, intl_base_IntlBase.customFormat(option.format, null, null)), util_getValue('numbers', dependable.parserObject), numOptions = ParserBase.getCurrentNumericOptions(dependable.parserObject, ParserBase.getNumberingSystem(cldr), !0, !1), parseOptions.symbolRegex = ParserBase.getSymbolRegex(Object.keys(numOptions.symbolMatch)), parseOptions.infinity = numOptions.symbolNumberSystem[keys[1]], symbolpattern = intl_base_IntlBase.getSymbolPattern(parseOptions.type, numOptions.numberSystem, dependable.numericObject, parseOptions.isAccount)) {
+                    if (intl_base_IntlBase.formatRegex.test(option.format) || !option.format ? (util_extend(parseOptions, intl_base_IntlBase.getProperNumericSkeleton(option.format || 'N')), parseOptions.custom = !1, !parseOptions.fractionDigits && option.maximumFractionDigits && (parseOptions.maximumFractionDigits = option.maximumFractionDigits)) : util_extend(parseOptions, intl_base_IntlBase.customFormat(option.format, null, null)), util_getValue('numbers', dependable.parserObject), numOptions = ParserBase.getCurrentNumericOptions(dependable.parserObject, ParserBase.getNumberingSystem(cldr), !0, !1), parseOptions.symbolRegex = ParserBase.getSymbolRegex(Object.keys(numOptions.symbolMatch)), parseOptions.infinity = numOptions.symbolNumberSystem.infinity, symbolpattern = intl_base_IntlBase.getSymbolPattern(parseOptions.type, numOptions.numberSystem, dependable.numericObject, parseOptions.isAccount)) {
                         var split = (symbolpattern = symbolpattern.replace(/\u00A4/g, intl_base_IntlBase.defaultCurrency)).split(';');
                         parseOptions.nData = intl_base_IntlBase.getFormatData(split[1] || '-' + split[0], !0, ''), parseOptions.pData = intl_base_IntlBase.getFormatData(split[0], !0, '');
                     }
@@ -2776,10 +2768,7 @@
                     for(var _i = 0; _i < boundedEvents.length; _i++)if (boundedEvents[_i].handler === handler) return !0;
                     return !1;
                 }, Observer;
-            }(), onIntlChange = new Observer(), cldrData = {}, defaultCulture = 'en-US', defaultCurrencyCode = 'USD', internationalization_mapper = [
-                'numericObject',
-                'dateObject'
-            ], Internationalization = function() {
+            }(), onIntlChange = new Observer(), cldrData = {}, defaultCulture = 'en-US', defaultCurrencyCode = 'USD', Internationalization = function() {
                 function Internationalization(cultureName) {
                     cultureName && (this.culture = cultureName);
                 }
@@ -2818,7 +2807,7 @@
                 }, Internationalization;
             }();
             function getNumericObject(locale, type) {
-                var numObject = intl_base_IntlBase.getDependables(cldrData, locale, '', !0)[internationalization_mapper[0]], dateObject = intl_base_IntlBase.getDependables(cldrData, locale, '')[internationalization_mapper[1]], numSystem = util_getValue('defaultNumberingSystem', numObject), symbPattern = util_getValue('symbols-numberSystem-' + numSystem, numObject), pattern = intl_base_IntlBase.getSymbolPattern(type || 'decimal', numSystem, numObject, !1);
+                var numObject = intl_base_IntlBase.getDependables(cldrData, locale, '', !0).numericObject, dateObject = intl_base_IntlBase.getDependables(cldrData, locale, '').dateObject, numSystem = util_getValue('defaultNumberingSystem', numObject), symbPattern = util_getValue('symbols-numberSystem-' + numSystem, numObject), pattern = intl_base_IntlBase.getSymbolPattern(type || 'decimal', numSystem, numObject, !1);
                 return util_extend(symbPattern, intl_base_IntlBase.getFormatData(pattern, !0, '', !0), {
                     dateSeparator: intl_base_IntlBase.getDateSeparator(dateObject)
                 });
@@ -2848,12 +2837,7 @@
                 IntlBase.negativeDataRegex = /^(('[^']+'|''|[^*#@0,.E])*)(\*.)?((([#,]*[0,]*0+)(\.0*[0-9]*#*)?)|([#,]*@+#*))(E\+?0+)?(('[^']+'|''|[^*#@0,.E])*)$/, IntlBase.customRegex = /^(('[^']+'|''|[^*#@0,.])*)(\*.)?((([0#,]*[0,]*[0#]*[0#\ ]*)(\.[0#]*)?)|([#,]*@+#*))(E\+?0+)?(('[^']+'|''|[^*#@0,.E])*)$/, IntlBase.latnParseRegex = /0|1|2|3|4|5|6|7|8|9/g;
                 var fractionRegex = /[0-9]/g;
                 IntlBase.defaultCurrency = '$';
-                var mapper = [
-                    'infinity',
-                    'nan',
-                    'group',
-                    'decimal'
-                ], patternRegex = /G|M|L|H|c|'| a|yy|y|EEEE|E/g, patternMatch = {
+                var patternRegex = /G|M|L|H|c|'| a|yy|y|EEEE|E/g, patternMatch = {
                     G: '',
                     M: 'm',
                     L: 'm',
@@ -2963,7 +2947,7 @@
                         cOptions.nend
                     ], '%', dOptions.percentSymbol))), !util_isNullOrUndefined(numObject)) {
                         var symbolPattern = getSymbolPattern(cOptions.type, dOptions.numberMapper.numberSystem, numObject, !1);
-                        cOptions.useGrouping && (cOptions.groupSeparator = spaceGrouping ? ' ' : dOptions.numberMapper.numberSymbols[mapper[2]], cOptions.groupData = NumberFormat.getGroupingDetails(symbolPattern.split(';')[0])), cOptions.nlead = cOptions.nlead.replace(/'/g, ''), cOptions.nend = spaceCapture ? ' ' + cOptions.nend.replace(/'/g, '') : cOptions.nend.replace(/'/g, '');
+                        cOptions.useGrouping && (cOptions.groupSeparator = spaceGrouping ? ' ' : dOptions.numberMapper.numberSymbols.group, cOptions.groupData = NumberFormat.getGroupingDetails(symbolPattern.split(';')[0])), cOptions.nlead = cOptions.nlead.replace(/'/g, ''), cOptions.nend = spaceCapture ? ' ' + cOptions.nend.replace(/'/g, '') : cOptions.nend.replace(/'/g, '');
                     }
                     return cOptions;
                 }
@@ -3852,7 +3836,7 @@
                         }), -1 !== index && eventData.splice(index, 1), debounceListener && element.removeEventListener(event[j], debounceListener);
                     }, j = 0; j < event.length; j++)_loop_1(j);
                 }, EventHandler.clearEvents = function(element) {
-                    eventData = EventHandler.addOrGetEventData(element), copyData = util_extend([], copyData, eventData);
+                    copyData = util_extend([], copyData, eventData = EventHandler.addOrGetEventData(element));
                     for(var eventData, copyData, i = 0; i < copyData.length; i++)element.removeEventListener(copyData[i].name, copyData[i].debounce), eventData.shift();
                 }, EventHandler.trigger = function(element, eventName, eventProp) {
                     for(var eventData = EventHandler.addOrGetEventData(element), _i = 0; _i < eventData.length; _i++){
@@ -4231,7 +4215,7 @@
                     type: type
                 }), target.propList[propertyType + 'Names'].push(key);
             }
-            var extendStatics, __extends = (extendStatics = function(d, b) {
+            var __extends = (extendStatics = function(d, b) {
                 return (extendStatics = Object.setPrototypeOf || ({
                     __proto__: []
                 }) instanceof Array && function(d, b) {
@@ -4493,25 +4477,21 @@
                 100
             ], LicenseValidator = function() {
                 function LicenseValidator(key) {
+                    var licKey;
                     this.isValidated = !1, this.version = '20.2', this.platform = /JavaScript|ASPNET|ASPNETCORE|ASPNETMVC|FileFormats/i, this.errors = {
                         noLicense: 'This application was built using a trial version of Syncfusion Essential Studio. Please include a valid license to permanently remove this license validation message. You can also obtain a free 30 day evaluation license to temporarily remove this message during the evaluation period. Please refer to this <a class="e-license"href="https://help.syncfusion.com/common/essential-studio/licensing">help topic</a> for more information.',
                         trailExpired: 'Your Syncfusion trial license has expired. Please refer to this <a class="e-license"href="https://help.syncfusion.com/common/essential-studio/licensing/licensing-errors#trial-expired">help topic</a> for more information.',
                         versionMismatched: 'The included Syncfusion license (v##LicenseVersion) is invalid for version ##Requireversion. Please refer to this <a class="e-license" href="https://help.syncfusion.com/es/licensing/version-mismatch/">help topic</a> for more information.',
                         platformMismatched: 'The included Syncfusion license is invalid (Platform mismatch). Please refer to this <a class="e-license" href="https://help.syncfusion.com/common/essential-studio/licensing/licensing-errors#platform-mismatch">help topic</a> for more information.',
                         invalidKey: 'The included Syncfusion license is invalid. Please refer to this <a class="e-license" href="https://help.syncfusion.com/common/essential-studio/licensing/licensing-errors#invalid-key">help topic</a> for more information.'
-                    }, this.manager = function() {
-                        var licKey = null;
-                        function set(key) {
+                    }, this.manager = (licKey = null, {
+                        setKey: function(key) {
                             licKey = key;
-                        }
-                        function get() {
+                        },
+                        getKey: function() {
                             return licKey;
                         }
-                        return {
-                            setKey: set,
-                            getKey: get
-                        };
-                    }(), this.npxManager = {
+                    }), this.npxManager = {
                         getKey: function() {
                             return 'npxKeyReplace';
                         }
@@ -4612,7 +4592,7 @@
                 for(var ret = '', _i = 0; _i < cArr.length; _i++)ret += String.fromCharCode(cArr[_i]);
                 return ret;
             }
-            var extendStatics1, extendStatics2, validateLicense = function(key) {
+            var validateLicense = function(key) {
                 key && (licenseValidator = new LicenseValidator(key)), licenseValidator.validate();
             }, component_extends = (extendStatics1 = function(d, b) {
                 return (extendStatics1 = Object.setPrototypeOf || ({
@@ -4730,7 +4710,7 @@
                 }, Component.prototype.addOnPersist = function(options) {
                     for(var _this = this, persistObj = {}, _i = 0; _i < options.length; _i++){
                         var key = options[_i], objValue = void 0;
-                        objValue = util_getValue(key, this), util_isUndefined(objValue) || setValue(key, this.getActualProperties(objValue), persistObj);
+                        util_isUndefined(objValue = util_getValue(key, this)) || setValue(key, this.getActualProperties(objValue), persistObj);
                     }
                     return JSON.stringify(persistObj, function(key, value) {
                         return _this.getActualProperties(value);
@@ -4768,7 +4748,7 @@
             'undefined' != typeof window && window.addEventListener('popstate', function() {
                 componentCount = 0;
             });
-            var extendStatics3, extendStatics4, draggable_extends = (extendStatics2 = function(d, b) {
+            var draggable_extends = (extendStatics2 = function(d, b) {
                 return (extendStatics2 = Object.setPrototypeOf || ({
                     __proto__: []
                 }) instanceof Array && function(d, b) {
@@ -5233,7 +5213,7 @@
                     NotifyPropertyChanges
                 ], Droppable);
             }(Base);
-            var extendStatics5, keyboard_extends = (extendStatics4 = function(d, b) {
+            var keyboard_extends = (extendStatics4 = function(d, b) {
                 return (extendStatics4 = Object.setPrototypeOf || ({
                     __proto__: []
                 }) instanceof Array && function(d, b) {
@@ -5476,17 +5456,14 @@
                     var newX = pnt.clientX, newY = pnt.clientY, newT = Date.now(), xDist = newX - this.startPoint.clientX, yDist = newY - this.startPoint.clientX;
                     return Math.sqrt(xDist * xDist + yDist * yDist) / (newT - this.tStampStart);
                 }, Touch.prototype.checkSwipe = function(ele, flag) {
-                    var keys = [
-                        'scroll',
-                        'offset'
-                    ], temp = flag ? [
+                    var temp = flag ? [
                         'Height',
                         'Top'
                     ] : [
                         'Width',
                         'Left'
                     ];
-                    return ele[keys[0] + temp[0]] <= ele[keys[1] + temp[0]] || 0 === ele[keys[0] + temp[1]] || ele[keys[1] + temp[0]] + ele[keys[0] + temp[1]] >= ele[keys[0] + temp[0]];
+                    return ele['scroll' + temp[0]] <= ele['offset' + temp[0]] || 0 === ele['scroll' + temp[1]] || ele['offset' + temp[0]] + ele['scroll' + temp[1]] >= ele['scroll' + temp[0]];
                 }, Touch.prototype.updateChangeTouches = function(evt) {
                     return evt.changedTouches && 0 !== evt.changedTouches.length ? evt.changedTouches[0] : evt;
                 }, touch_decorate([
@@ -5549,35 +5526,35 @@
                 compile: new (function() {
                     function Engine() {}
                     return Engine.prototype.compile = function(templateString, helper, ignorePrefix) {
-                        var helper1, argName, evalExpResult, str, ignorePrefix1, varCOunt, localKeys, isClass, singleSpace;
-                        return void 0 === helper && (helper = {}), helper1 = helper, argName = 'data', ignorePrefix1 = void 0, varCOunt = 0, localKeys = [], isClass = (str = templateString).match(/class="([^"]+|)\s{2}/g), singleSpace = '', isClass && isClass.forEach(function(value) {
+                        var helper1, argName, str, nameSpace, helper2, ignorePrefix1, varCOunt, localKeys, isClass, singleSpace;
+                        return void 0 === helper && (helper = {}), str = templateString, nameSpace = argName = 'data', helper2 = helper1 = helper, ignorePrefix1 = void 0, varCOunt = 0, localKeys = [], isClass = str.match(/class="([^"]+|)\s{2}/g), singleSpace = '', isClass && isClass.forEach(function(value) {
                             singleSpace = value.replace(/\s\s+/g, ' '), str = str.replace(value, singleSpace);
-                        }), evalExpResult = str.replace(LINES, '').replace(DBL_QUOTED_STR, '\'$1\'').replace(exp, function(match, cnt, offset, matchStr) {
+                        }), Function(argName, "var str=\"" + str.replace(LINES, '').replace(DBL_QUOTED_STR, '\'$1\'').replace(exp, function(match, cnt, offset, matchStr) {
                             var matches = cnt.match(CALL_FUNCTION);
                             if (matches) {
                                 var rlStr = matches[1];
                                 if (ELSEIF_STMT.test(cnt)) cnt = '";} ' + cnt.replace(matches[1], rlStr.replace(WORD, function(str) {
-                                    return addNameSpace(str = str.trim(), !QUOTES.test(str) && -1 === localKeys.indexOf(str), argName, localKeys, ignorePrefix1);
+                                    return addNameSpace(str = str.trim(), !QUOTES.test(str) && -1 === localKeys.indexOf(str), nameSpace, localKeys, ignorePrefix1);
                                 })) + '{ \n str = str + "';
                                 else if (IF_STMT.test(cnt)) cnt = '"; ' + cnt.replace(matches[1], rlStr.replace(WORDIF, function(strs) {
-                                    return HandleSpecialCharArrObj(strs, argName, localKeys, ignorePrefix1);
+                                    return HandleSpecialCharArrObj(strs, nameSpace, localKeys, ignorePrefix1);
                                 })) + '{ \n str = str + "';
                                 else if (FOR_STMT.test(cnt)) {
                                     var rlStr_1 = matches[1].split(' of ');
                                     cnt = '"; ' + cnt.replace(matches[1], function(mtc) {
-                                        return localKeys.push(rlStr_1[0]), localKeys.push(rlStr_1[0] + 'Index'), 'var i' + (varCOunt += 1) + '=0; i' + varCOunt + ' < ' + addNameSpace(rlStr_1[1], !0, argName, localKeys, ignorePrefix1) + '.length; i' + varCOunt + '++';
-                                    }) + '{ \n ' + rlStr_1[0] + '= ' + addNameSpace(rlStr_1[1], !0, argName, localKeys, ignorePrefix1) + '[i' + varCOunt + ']; \n var ' + rlStr_1[0] + 'Index=i' + varCOunt + '; \n str = str + "';
+                                        return localKeys.push(rlStr_1[0]), localKeys.push(rlStr_1[0] + 'Index'), 'var i' + (varCOunt += 1) + '=0; i' + varCOunt + ' < ' + addNameSpace(rlStr_1[1], !0, nameSpace, localKeys, ignorePrefix1) + '.length; i' + varCOunt + '++';
+                                    }) + '{ \n ' + rlStr_1[0] + '= ' + addNameSpace(rlStr_1[1], !0, nameSpace, localKeys, ignorePrefix1) + '[i' + varCOunt + ']; \n var ' + rlStr_1[0] + 'Index=i' + varCOunt + '; \n str = str + "';
                                 } else {
-                                    var fnStr = cnt.split('('), fNameSpace = helper1 && helper1.hasOwnProperty(fnStr[0]) ? 'this.' : 'global';
+                                    var fnStr = cnt.split('('), fNameSpace = helper2 && helper2.hasOwnProperty(fnStr[0]) ? 'this.' : 'global';
                                     fNameSpace = /\./.test(fnStr[0]) ? '' : fNameSpace;
                                     var ftArray = matches[1].split(',');
-                                    0 === matches[1].length || /data/.test(ftArray[0]) || /window./.test(ftArray[0]) || (matches[1] = 'global' === fNameSpace ? argName + '.' + matches[1] : matches[1]), WINDOWFUNC.test(cnt) && /\]\./gm.test(cnt) || /@|\$|#/gm.test(cnt) ? /@|\$|#|\]\./gm.test(cnt) && (cnt = '"+ ' + ('global' === fNameSpace ? '' : fNameSpace) + cnt.replace(matches[1], rlStr.replace(WORDFUNC, function(strs) {
-                                        return HandleSpecialCharArrObj(strs, argName, localKeys, ignorePrefix1);
-                                    })) + '+ "') : cnt = '" + ' + ('global' === fNameSpace ? '' : fNameSpace) + cnt.replace(rlStr, addNameSpace(matches[1].replace(/,( |)data.|,/gi, ',' + argName + '.').replace(/,( |)data.window/gi, ',window'), 'global' !== fNameSpace, argName, localKeys, ignorePrefix1)) + '+"';
+                                    0 === matches[1].length || /data/.test(ftArray[0]) || /window./.test(ftArray[0]) || (matches[1] = 'global' === fNameSpace ? nameSpace + '.' + matches[1] : matches[1]), WINDOWFUNC.test(cnt) && /\]\./gm.test(cnt) || /@|\$|#/gm.test(cnt) ? /@|\$|#|\]\./gm.test(cnt) && (cnt = '"+ ' + ('global' === fNameSpace ? '' : fNameSpace) + cnt.replace(matches[1], rlStr.replace(WORDFUNC, function(strs) {
+                                        return HandleSpecialCharArrObj(strs, nameSpace, localKeys, ignorePrefix1);
+                                    })) + '+ "') : cnt = '" + ' + ('global' === fNameSpace ? '' : fNameSpace) + cnt.replace(rlStr, addNameSpace(matches[1].replace(/,( |)data.|,/gi, ',' + nameSpace + '.').replace(/,( |)data.window/gi, ',window'), 'global' !== fNameSpace, nameSpace, localKeys, ignorePrefix1)) + '+"';
                                 }
-                            } else ELSE_STMT.test(cnt) ? cnt = '"; ' + cnt.replace(ELSE_STMT, '} else { \n str = str + "') : cnt.match(IF_OR_FOR) ? cnt = cnt.replace(IF_OR_FOR, '"; \n } \n str = str + "') : /@|#|\$/gm.test(cnt) ? (cnt.match(SINGLE_SLASH) && (cnt = SlashReplace(cnt)), cnt = '"+' + NameSpaceForspecialChar(cnt, -1 === localKeys.indexOf(cnt), argName, localKeys) + '"]+"') : cnt.match(SINGLE_SLASH) ? (cnt = SlashReplace(cnt), cnt = '"+' + NameSpaceForspecialChar(cnt, -1 === localKeys.indexOf(cnt), argName, localKeys) + '"]+"') : cnt = '"+' + addNameSpace(cnt.replace(/,/gi, '+' + argName + '.'), -1 === localKeys.indexOf(cnt), argName, localKeys, ignorePrefix1) + '+"';
+                            } else ELSE_STMT.test(cnt) ? cnt = '"; ' + cnt.replace(ELSE_STMT, '} else { \n str = str + "') : cnt.match(IF_OR_FOR) ? cnt = cnt.replace(IF_OR_FOR, '"; \n } \n str = str + "') : /@|#|\$/gm.test(cnt) ? (cnt.match(SINGLE_SLASH) && (cnt = SlashReplace(cnt)), cnt = '"+' + NameSpaceForspecialChar(cnt, -1 === localKeys.indexOf(cnt), nameSpace, localKeys) + '"]+"') : cnt = cnt.match(SINGLE_SLASH) ? '"+' + NameSpaceForspecialChar(cnt = SlashReplace(cnt), -1 === localKeys.indexOf(cnt), nameSpace, localKeys) + '"]+"' : '"+' + addNameSpace(cnt.replace(/,/gi, '+' + nameSpace + '.'), -1 === localKeys.indexOf(cnt), nameSpace, localKeys, ignorePrefix1) + '+"';
                             return cnt;
-                        }), Function(argName, "var str=\"" + evalExpResult + "\";var valueRegEx = (/value=\\'([A-Za-z0-9 _]*)((.)([\\w)(!-;?-■\\s]+)['])/g);\n    var hrefRegex = (/(?:href)([\\s='\"./]+)([\\w-./?=&\\\\#\"]+)((.)([\\w)(!-;/?-■\\s]+)['])/g);\n    if(str.match(valueRegEx)){\n        var check = str.match(valueRegEx);\n        var str1 = str;\n        for (var i=0; i < check.length; i++) {\n            var check1 = str.match(valueRegEx)[i].split('value=')[1];\n            var change = check1.match(/^'/) !== null ? check1.replace(/^'/, '\"') : check1;\n            change =change.match(/.$/)[0] === '\\'' ? change.replace(/.$/,'\"') : change;\n            str1 = str1.replace(check1, change);\n        }\n        str = str.replace(str, str1);\n    }\n    else if (str.match(/(?:href='')/) === null) {\n        if(str.match(hrefRegex)) {\n            var check = str.match(hrefRegex);\n            var str1 = str;\n            for (var i=0; i < check.length; i++) {\n                var check1 = str.match(hrefRegex)[i].split('href=')[1];\n                if (check1) {\n                    var change = check1.match(/^'/) !== null ? check1.replace(/^'/, '\"') : check1;\n                    change =change.match(/.$/)[0] === '\\'' ? change.replace(/.$/,'\"') : change;\n                    str1 = str1.replace(check1, change);\n                }\n            }\n            str = str.replace(str, str1);\n        }\n    }\n     return str;").bind(helper1);
+                        }) + "\";var valueRegEx = (/value=\\'([A-Za-z0-9 _]*)((.)([\\w)(!-;?-■\\s]+)['])/g);\n    var hrefRegex = (/(?:href)([\\s='\"./]+)([\\w-./?=&\\\\#\"]+)((.)([\\w)(!-;/?-■\\s]+)['])/g);\n    if(str.match(valueRegEx)){\n        var check = str.match(valueRegEx);\n        var str1 = str;\n        for (var i=0; i < check.length; i++) {\n            var check1 = str.match(valueRegEx)[i].split('value=')[1];\n            var change = check1.match(/^'/) !== null ? check1.replace(/^'/, '\"') : check1;\n            change =change.match(/.$/)[0] === '\\'' ? change.replace(/.$/,'\"') : change;\n            str1 = str1.replace(check1, change);\n        }\n        str = str.replace(str, str1);\n    }\n    else if (str.match(/(?:href='')/) === null) {\n        if(str.match(hrefRegex)) {\n            var check = str.match(hrefRegex);\n            var str1 = str;\n            for (var i=0; i < check.length; i++) {\n                var check1 = str.match(hrefRegex)[i].split('href=')[1];\n                if (check1) {\n                    var change = check1.match(/^'/) !== null ? check1.replace(/^'/, '\"') : check1;\n                    change =change.match(/.$/)[0] === '\\'' ? change.replace(/.$/,'\"') : change;\n                    str1 = str1.replace(check1, change);\n                }\n            }\n            str = str.replace(str, str1);\n        }\n    }\n     return str;").bind(helper1);
                     }, Engine;
                 }())().compile
             }, removeTags = [
@@ -6220,7 +6197,7 @@
                     return innerWrapper.parentNode.insertBefore(button, innerWrapper), container.classList.contains(CLASSNAMES.INPUTGROUP) || container.classList.add(CLASSNAMES.INPUTGROUP), _internalRipple(!0, container, button), button;
                 }
                 function appendSpan(iconClass, container, internalCreateElement) {
-                    var makeElement = (0, _syncfusion_ej2_base__WEBPACK_IMPORTED_MODULE_0__.le)(internalCreateElement) ? _syncfusion_ej2_base__WEBPACK_IMPORTED_MODULE_0__.az : internalCreateElement, button = createIconEle(iconClass, makeElement);
+                    var button = createIconEle(iconClass, (0, _syncfusion_ej2_base__WEBPACK_IMPORTED_MODULE_0__.le)(internalCreateElement) ? _syncfusion_ej2_base__WEBPACK_IMPORTED_MODULE_0__.az : internalCreateElement);
                     return container.classList.contains(CLASSNAMES.INPUTGROUP) || container.classList.add(CLASSNAMES.INPUTGROUP), (container.classList.contains('e-float-icon-left') ? container.querySelector('.e-input-in-wrap') : container).appendChild(button), _internalRipple(!0, container, button), button;
                 }
                 function validateInputType(containerElement, input) {
@@ -6239,7 +6216,7 @@
                     ], CLASSNAMES.INPUTGROUP)), !(0, _syncfusion_ej2_base__WEBPACK_IMPORTED_MODULE_0__.le)(args.buttons) && 'TEXTAREA' !== args.element.tagName) for(var i = 0; i < args.buttons.length; i++)inputObject.buttons.push(appendSpan(args.buttons[i], inputObject.container, makeElement));
                     return (0, _syncfusion_ej2_base__WEBPACK_IMPORTED_MODULE_0__.le)(args.element) || 'TEXTAREA' !== args.element.tagName || (0, _syncfusion_ej2_base__WEBPACK_IMPORTED_MODULE_0__.cn)([
                         inputObject.container
-                    ], CLASSNAMES.TEXTAREA), validateInputType(inputObject.container, args.element), inputObject = function(args, inputObject) {
+                    ], CLASSNAMES.TEXTAREA), validateInputType(inputObject.container, args.element), createSpanElement(inputObject = function(args, inputObject) {
                         if (!(0, _syncfusion_ej2_base__WEBPACK_IMPORTED_MODULE_0__.le)(args.properties)) for(var _i = 0, _a = Object.keys(args.properties); _i < _a.length; _i++){
                             var prop = _a[_i];
                             switch(prop){
@@ -6264,7 +6241,7 @@
                             }
                         }
                         return inputObject;
-                    }(args, inputObject), createSpanElement(inputObject, makeElement), inputObject;
+                    }(args, inputObject), makeElement), inputObject;
                 }, Input.bindInitialEvent = bindInitialEvent, Input.wireFloatingEvents = wireFloatingEvents, Input.wireClearBtnEvents = wireClearBtnEvents, Input.setValue = function(value, element, floatLabelType, clearButton) {
                     if (element.value = value, (0, _syncfusion_ej2_base__WEBPACK_IMPORTED_MODULE_0__.le)(element.getAttribute('value')) && calculateWidth(element, element.parentElement), (0, _syncfusion_ej2_base__WEBPACK_IMPORTED_MODULE_0__.le)(floatLabelType) || 'Auto' !== floatLabelType || validateLabel(element, floatLabelType), !(0, _syncfusion_ej2_base__WEBPACK_IMPORTED_MODULE_0__.le)(clearButton) && clearButton) {
                         var parentElement = getParentNode(element);
@@ -6295,12 +6272,10 @@
                 }, Input.addFloating = function(input, type, placeholder, internalCreateElement) {
                     var makeElement = (0, _syncfusion_ej2_base__WEBPACK_IMPORTED_MODULE_0__.le)(internalCreateElement) ? _syncfusion_ej2_base__WEBPACK_IMPORTED_MODULE_0__.az : internalCreateElement, container = (0, _syncfusion_ej2_base__WEBPACK_IMPORTED_MODULE_0__.oq)(input, '.' + CLASSNAMES.INPUTGROUP);
                     if (floatType = type, 'Never' !== type) {
-                        var customTag = container.tagName;
-                        customTag = 'DIV' !== customTag && 'SPAN' !== customTag ? customTag : null;
-                        var args = {
+                        var customTag = container.tagName, args = {
                             element: input,
                             floatLabelType: type,
-                            customTag: customTag,
+                            customTag: customTag = 'DIV' !== customTag && 'SPAN' !== customTag ? customTag : null,
                             properties: {
                                 placeholder: placeholder
                             }
@@ -7108,7 +7083,7 @@
                     X: !0,
                     Y: !0
                 }), target && element && positionX && positionY && (axis.X || axis.Y)) {
-                    var elementRect, tEdge = {
+                    var edge, pos, elementRect, elementRect1, tEdge = {
                         TL: null,
                         TR: null,
                         BL: null,
@@ -7121,9 +7096,9 @@
                     };
                     if ('none' === window.getComputedStyle(element).display) {
                         var oldVisibility = element.style.visibility;
-                        element.style.visibility = 'hidden', element.style.display = 'block', elementRect = element.getBoundingClientRect(), element.style.removeProperty('display'), element.style.visibility = oldVisibility;
-                    } else elementRect = element.getBoundingClientRect();
-                    var edge, pos, elementRect1, pos1 = {
+                        element.style.visibility = 'hidden', element.style.display = 'block', elementRect1 = element.getBoundingClientRect(), element.style.removeProperty('display'), element.style.visibility = oldVisibility;
+                    } else elementRect1 = element.getBoundingClientRect();
+                    var pos1 = {
                         posX: positionX,
                         posY: positionY,
                         offsetX: offsetX,
@@ -7133,20 +7108,20 @@
                             top: 0
                         }
                     };
-                    targetContainer = viewPortElement, parentDocument = target.ownerDocument, edge = tEdge, pos = pos1, elementRect1 = elementRect, pos.position = (0, _position__WEBPACK_IMPORTED_MODULE_1__.k)(target, pos.posX, pos.posY, fixedParent, elementRect1), edge.TL = (0, _position__WEBPACK_IMPORTED_MODULE_1__.k)(target, 'left', 'top', fixedParent, elementRect1), edge.TR = (0, _position__WEBPACK_IMPORTED_MODULE_1__.k)(target, 'right', 'top', fixedParent, elementRect1), edge.BR = (0, _position__WEBPACK_IMPORTED_MODULE_1__.k)(target, 'left', 'bottom', fixedParent, elementRect1), edge.BL = (0, _position__WEBPACK_IMPORTED_MODULE_1__.k)(target, 'right', 'bottom', fixedParent, elementRect1), setPosition(eEdge, pos1, elementRect), axis.X && function leftFlip(target, edge, tEdge, pos, elementRect, deepCheck) {
+                    targetContainer = viewPortElement, parentDocument = target.ownerDocument, edge = tEdge, pos = pos1, elementRect = elementRect1, pos.position = (0, _position__WEBPACK_IMPORTED_MODULE_1__.k)(target, pos.posX, pos.posY, fixedParent, elementRect), edge.TL = (0, _position__WEBPACK_IMPORTED_MODULE_1__.k)(target, 'left', 'top', fixedParent, elementRect), edge.TR = (0, _position__WEBPACK_IMPORTED_MODULE_1__.k)(target, 'right', 'top', fixedParent, elementRect), edge.BR = (0, _position__WEBPACK_IMPORTED_MODULE_1__.k)(target, 'left', 'bottom', fixedParent, elementRect), edge.BL = (0, _position__WEBPACK_IMPORTED_MODULE_1__.k)(target, 'right', 'bottom', fixedParent, elementRect), setPosition(eEdge, pos1, elementRect1), axis.X && function leftFlip(target, edge, tEdge, pos, elementRect, deepCheck) {
                         var collideSide = leftCollideCheck(edge.TL.left, edge.TR.left);
                         tEdge.TL.left - getBodyScrollLeft() <= ContainerLeft() && (collideSide.leftSide = !1), tEdge.TR.left > ContainerRight() && (collideSide.rightSide = !1), (collideSide.leftSide && !collideSide.rightSide || !collideSide.leftSide && collideSide.rightSide) && ('right' === pos.posX ? pos.posX = 'left' : pos.posX = 'right', pos.offsetX = pos.offsetX + elementRect.width, pos.offsetX = -1 * pos.offsetX, pos.position = (0, _position__WEBPACK_IMPORTED_MODULE_1__.k)(target, pos.posX, pos.posY, !1), setPosition(edge, pos, elementRect), deepCheck && leftFlip(target, edge, tEdge, pos, elementRect, !1));
-                    }(target, eEdge, tEdge, pos1, elementRect, !0), axis.Y && tEdge.TL.top > -1 && function topFlip(target, edge, tEdge, pos, elementRect, deepCheck) {
+                    }(target, eEdge, tEdge, pos1, elementRect1, !0), axis.Y && tEdge.TL.top > -1 && function topFlip(target, edge, tEdge, pos, elementRect, deepCheck) {
                         var collideSide = topCollideCheck(edge.TL.top, edge.BL.top);
                         tEdge.TL.top - getBodyScrollTop() <= ContainerTop() && (collideSide.topSide = !1), tEdge.BL.top >= ContainerBottom() && target.getBoundingClientRect().bottom < window.innerHeight && (collideSide.bottomSide = !1), (collideSide.topSide && !collideSide.bottomSide || !collideSide.topSide && collideSide.bottomSide) && ('top' === pos.posY ? pos.posY = 'bottom' : pos.posY = 'top', pos.offsetY = pos.offsetY + elementRect.height, pos.offsetY = -1 * pos.offsetY, pos.position = (0, _position__WEBPACK_IMPORTED_MODULE_1__.k)(target, pos.posX, pos.posY, !1, elementRect), setPosition(edge, pos, elementRect), deepCheck && topFlip(target, edge, tEdge, pos, elementRect, !1));
-                    }(target, eEdge, tEdge, pos1, elementRect, !0), function(element, pos, elementRect) {
+                    }(target, eEdge, tEdge, pos1, elementRect1, !0), function(element, pos, elementRect) {
                         var left = 0, top1 = 0;
                         if (null != element.offsetParent && ('absolute' === getComputedStyle(element.offsetParent).position || 'relative' === getComputedStyle(element.offsetParent).position)) {
                             var data = (0, _position__WEBPACK_IMPORTED_MODULE_1__.k)(element.offsetParent, 'left', 'top', !1, elementRect);
                             left = data.left, top1 = data.top;
                         }
                         element.style.top = pos.position.top + pos.offsetY - top1 + 'px', element.style.left = pos.position.left + pos.offsetX - left + 'px';
-                    }(element, pos1, elementRect);
+                    }(element, pos1, elementRect1);
                 }
             }
             function setPosition(eStatus, pos, elementRect) {
@@ -7239,33 +7214,34 @@
             }
             function calculatePosition(currentElement, positionX, positionY, parentElement, targetValues) {
                 return (popupRect = void 0, popupRect = targetValues, fixedParent = !!parentElement, currentElement) ? (positionX || (positionX = 'left'), positionY || (positionY = 'top'), parentDocument = currentElement.ownerDocument, element = currentElement, function(posX, posY, pos) {
+                    var value, value1, value2, value3, value4, value5, value6, value7, value8;
                     switch(elementRect = element.getBoundingClientRect(), posY + posX){
                         case 'topcenter':
-                            setPosx(getElementHCenter(), pos), setPosy(getElementTop(), pos);
+                            setPosx(getElementHCenter(), pos), value = getElementTop(), pos.top = value;
                             break;
                         case 'topright':
-                            setPosx(getElementRight(), pos), setPosy(getElementTop(), pos);
+                            setPosx(getElementRight(), pos), value1 = getElementTop(), pos.top = value1;
                             break;
                         case 'centercenter':
-                            setPosx(getElementHCenter(), pos), setPosy(getElementVCenter(), pos);
+                            setPosx(getElementHCenter(), pos), value2 = getElementVCenter(), pos.top = value2;
                             break;
                         case 'centerright':
-                            setPosx(getElementRight(), pos), setPosy(getElementVCenter(), pos);
+                            setPosx(getElementRight(), pos), value3 = getElementVCenter(), pos.top = value3;
                             break;
                         case 'centerleft':
-                            setPosx(getElementLeft(), pos), setPosy(getElementVCenter(), pos);
+                            setPosx(getElementLeft(), pos), value4 = getElementVCenter(), pos.top = value4;
                             break;
                         case 'bottomcenter':
-                            setPosx(getElementHCenter(), pos), setPosy(getElementBottom(), pos);
+                            setPosx(getElementHCenter(), pos), value5 = getElementBottom(), pos.top = value5;
                             break;
                         case 'bottomright':
-                            setPosx(getElementRight(), pos), setPosy(getElementBottom(), pos);
+                            setPosx(getElementRight(), pos), value6 = getElementBottom(), pos.top = value6;
                             break;
                         case 'bottomleft':
-                            setPosx(getElementLeft(), pos), setPosy(getElementBottom(), pos);
+                            setPosx(getElementLeft(), pos), value7 = getElementBottom(), pos.top = value7;
                             break;
                         default:
-                            setPosx(getElementLeft(), pos), setPosy(getElementTop(), pos);
+                            setPosx(getElementLeft(), pos), value8 = getElementTop(), pos.top = value8;
                     }
                     return pos;
                 }(positionX.toLowerCase(), positionY.toLowerCase(), {
@@ -7278,9 +7254,6 @@
             }
             function setPosx(value, pos) {
                 pos.left = value;
-            }
-            function setPosy(value, pos) {
-                pos.top = value;
             }
             function getBodyScrollTop() {
                 return parentDocument.documentElement.scrollTop || parentDocument.body.scrollTop;
@@ -7706,7 +7679,7 @@
                     return applyMixins;
                 }
             });
-            var extendStatics, react = __webpack_require__(7294), react_dom = __webpack_require__(3935), ej2_base = __webpack_require__(1807), __extends = (extendStatics = function(d, b) {
+            var extendStatics, extendStatics1, extendStatics2, react = __webpack_require__(7294), react_dom = __webpack_require__(3935), ej2_base = __webpack_require__(1807), __extends = (extendStatics = function(d, b) {
                 return (extendStatics = Object.setPrototypeOf || ({
                     __proto__: []
                 }) instanceof Array && function(d, b) {
@@ -7984,7 +7957,7 @@
                     });
                 });
             }
-            var extendStatics1, extendStatics2, complex_base_extends = (extendStatics1 = function(d, b) {
+            var complex_base_extends = (extendStatics1 = function(d, b) {
                 return (extendStatics1 = Object.setPrototypeOf || ({
                     __proto__: []
                 }) instanceof Array && function(d, b) {
@@ -8049,7 +8022,7 @@
                     return RichTextEditorComponent;
                 }
             });
-            var targetElement, selectedHandler, minHeight, maxHeight, minWidth, maxWidth, containerElement, resizeWestWidth, proxy, DialogUtility, extendStatics, extendStatics1, extendStatics2, extendStatics3, extendStatics4, extendStatics5, extendStatics6, extendStatics7, extendStatics8, extendStatics9, extendStatics10, react = __webpack_require__(7294), ej2_base = __webpack_require__(1807), popup = __webpack_require__(9486), constant = __webpack_require__(3386), classes = __webpack_require__(9805), base_enum = __webpack_require__(809), Render = function() {
+            var extendStatics, extendStatics1, extendStatics2, extendStatics3, extendStatics4, extendStatics5, extendStatics6, extendStatics7, extendStatics8, extendStatics9, extendStatics10, extendStatics11, extendStatics12, extendStatics13, targetElement, selectedHandler, minHeight, maxHeight, minWidth, maxWidth, containerElement, resizeWestWidth, proxy, DialogUtility, react = __webpack_require__(7294), ej2_base = __webpack_require__(1807), popup = __webpack_require__(9486), constant = __webpack_require__(3386), classes = __webpack_require__(9805), base_enum = __webpack_require__(809), Render = function() {
                 function Render(parent, locator) {
                     this.parent = parent, this.locator = locator, this.renderer = this.locator.getService('rendererFactory'), this.addEventListener();
                 }
@@ -9487,16 +9460,6 @@
                 'east',
                 'south'
             ], originalWidth = 0, originalHeight = 0, originalX = 0, originalY = 0, originalMouseX = 0, originalMouseY = 0, resizeStart = null, resize = null, resizeEnd = null, setLeft = !0, previousWidth = 0, setWidth = !0;
-            function setBorderResizeElm(direction) {
-                calculateValues();
-                var borderBottom = (0, ej2_base.az)('span', {
-                    attrs: {
-                        unselectable: 'on',
-                        contenteditable: 'false'
-                    }
-                });
-                borderBottom.setAttribute('class', 'e-dialog-border-resize e-' + direction), 'south' === direction && (borderBottom.style.height = '2px', borderBottom.style.width = '100%', borderBottom.style.bottom = '0px', borderBottom.style.left = '0px'), 'north' === direction && (borderBottom.style.height = '2px', borderBottom.style.width = '100%', borderBottom.style.top = '0px', borderBottom.style.left = '0px'), 'east' === direction && (borderBottom.style.height = '100%', borderBottom.style.width = '2px', borderBottom.style.right = '0px', borderBottom.style.top = '0px'), 'west' === direction && (borderBottom.style.height = '100%', borderBottom.style.width = '2px', borderBottom.style.left = '0px', borderBottom.style.top = '0px'), targetElement.appendChild(borderBottom);
-            }
             function getDOMElement(element) {
                 var domElement;
                 return (0, ej2_base.le)(element) || (domElement = 'string' == typeof element ? document.querySelector(element) : element), domElement;
@@ -9636,7 +9599,7 @@
                 var borderResizers = targetElement.querySelectorAll('.e-dialog-border-resize');
                 if (!(0, ej2_base.le)(borderResizers)) for(var i = 0; i < borderResizers.length; i++)(0, ej2_base.og)(borderResizers[i]);
             }
-            var extendStatics11, dialog_extends = (extendStatics11 = function(d, b) {
+            var dialog_extends = (extendStatics11 = function(d, b) {
                 return (extendStatics11 = Object.setPrototypeOf || ({
                     __proto__: []
                 }) instanceof Array && function(d, b) {
@@ -9768,7 +9731,16 @@
                             }
                             this.enableRtl && 'south-east' === direction.trim() ? direction = 'south-west' : this.enableRtl && 'south-west' === direction.trim() && (direction = 'south-east'), this.isModal && this.enableRtl ? this.element.classList.add(DLG_RESTRICT_LEFT_VALUE) : this.isModal && this.target === document.body && this.element.classList.add(DLG_RESTRICT_WIDTH_VALUE), function(args) {
                                 resizeStart = args.resizeBegin, resize = args.resizing, resizeEnd = args.resizeComplete, targetElement = getDOMElement(args.element), containerElement = getDOMElement(args.boundary);
-                                for(var directions = args.direction.split(' '), i = 0; i < directions.length; i++)if (dialogBorderResize.indexOf(directions[i]) >= 0 && directions[i]) setBorderResizeElm(directions[i]);
+                                for(var directions = args.direction.split(' '), i = 0; i < directions.length; i++)if (dialogBorderResize.indexOf(directions[i]) >= 0 && directions[i]) (function(direction) {
+                                    calculateValues();
+                                    var borderBottom = (0, ej2_base.az)('span', {
+                                        attrs: {
+                                            unselectable: 'on',
+                                            contenteditable: 'false'
+                                        }
+                                    });
+                                    borderBottom.setAttribute('class', 'e-dialog-border-resize e-' + direction), 'south' === direction && (borderBottom.style.height = '2px', borderBottom.style.width = '100%', borderBottom.style.bottom = '0px', borderBottom.style.left = '0px'), 'north' === direction && (borderBottom.style.height = '2px', borderBottom.style.width = '100%', borderBottom.style.top = '0px', borderBottom.style.left = '0px'), 'east' === direction && (borderBottom.style.height = '100%', borderBottom.style.width = '2px', borderBottom.style.right = '0px', borderBottom.style.top = '0px'), 'west' === direction && (borderBottom.style.height = '100%', borderBottom.style.width = '2px', borderBottom.style.left = '0px', borderBottom.style.top = '0px'), targetElement.appendChild(borderBottom);
+                                })(directions[i]);
                                 else if ('' !== directions[i].trim()) {
                                     var resizeHandler = (0, ej2_base.az)('div', {
                                         className: 'e-icons ' + RESIZE_HANDLER + " e-" + directions[i]
@@ -10412,7 +10384,7 @@
                     return (0, ej2_base.le)(option.text) || (buttonProps.buttonModel.content = option.text), (0, ej2_base.le)(option.icon) || (buttonProps.buttonModel.iconCss = option.icon), (0, ej2_base.le)(option.cssClass) || (buttonProps.buttonModel.cssClass = option.cssClass), (0, ej2_base.le)(option.click) || (buttonProps.click = option.click), buttonProps;
                 }
                 DialogUtility.alert = function(args) {
-                    var alertDialogObj, options, options1, alertButtonModel, dialogElement = (0, ej2_base.az)('div', {
+                    var options, options1, alertButtonModel, alertDialogObj, dialogElement = (0, ej2_base.az)('div', {
                         className: DLG_UTIL_ALERT
                     });
                     return document.body.appendChild(dialogElement), (alertDialogObj = 'string' == typeof args ? createDialog({
@@ -10448,7 +10420,7 @@
                         args && args.close && args.close.apply(alertDialogObj), alertDialogObj.destroy(), alertDialogObj.element.classList.contains('e-dlg-modal') ? (alertDialogObj.element.parentElement.remove(), alertDialogObj.target.classList.remove(DLG_UTIL_ROOT)) : alertDialogObj.element.remove();
                     }, alertDialogObj;
                 }, DialogUtility.confirm = function(args) {
-                    var confirmDialogObj, options, options1, okButtonModel, cancelButtonModel, dialogElement = (0, ej2_base.az)('div', {
+                    var options, options1, okButtonModel, cancelButtonModel, confirmDialogObj, dialogElement = (0, ej2_base.az)('div', {
                         className: DLG_UTIL_CONFIRM
                     });
                     return document.body.appendChild(dialogElement), (confirmDialogObj = 'string' == typeof args ? createDialog({
@@ -10498,7 +10470,7 @@
                     }, confirmDialogObj;
                 };
             }(DialogUtility || (DialogUtility = {}));
-            var extendStatics12, extendStatics13, DialogRenderer = function() {
+            var DialogRenderer = function() {
                 function DialogRenderer(parent) {
                     this.parent = parent, this.addEventListener();
                 }
@@ -10797,7 +10769,7 @@
                     }), this.restrict(e), 'HTML' === this.editorMode && this.cleanList(e), 'HTML' === this.editorMode && (8 === e.which && 'Backspace' === e.code || 46 === e.which && 'Delete' === e.code)) {
                         var range = this.getRange(), startNode = '#text' === range.startContainer.nodeName ? range.startContainer.parentElement : range.startContainer;
                         if ((0, ej2_base.oq)(startNode, 'pre') && 8 === e.which && 8203 === range.startContainer.textContent.charCodeAt(range.startOffset - 1) || 46 === e.which && 8203 === range.startContainer.textContent.charCodeAt(range.startOffset)) {
-                            var regEx = RegExp("​", 'g'), pointer = 8 === e.which ? range.startOffset - 1 : range.startOffset;
+                            var regEx = RegExp(String.fromCharCode(8203), 'g'), pointer = 8 === e.which ? range.startOffset - 1 : range.startOffset;
                             range.startContainer.textContent = range.startContainer.textContent.replace(regEx, ''), this.formatter.editorManager.nodeSelection.setCursorPoint(this.contentModule.getDocument(), range.startContainer, pointer);
                         } else if ('Backspace' === e.code && 8 === e.which && 8203 === range.startContainer.textContent.charCodeAt(0) && range.collapsed) {
                             var parentEle = range.startContainer.parentElement, index = void 0, i = void 0;
@@ -12787,7 +12759,7 @@
                         }
                     }
                 }, Formats.prototype.removeCodeContent = function(range) {
-                    var regEx = RegExp("\uFEFF", 'g');
+                    var regEx = RegExp(String.fromCharCode(65279), 'g');
                     if (!(0, ej2_base.le)(range.endContainer.textContent.match(regEx))) {
                         var pointer = 65279 === range.endContainer.textContent.charCodeAt(range.endOffset - 1) ? range.endOffset - 2 : range.endOffset;
                         range.endContainer.textContent = range.endContainer.textContent.replace(regEx, ''), '' === range.endContainer.textContent ? this.parent.nodeSelection.setCursorPoint(this.parent.currentDocument, range.endContainer.parentElement, 0) : this.parent.nodeSelection.setCursorPoint(this.parent.currentDocument, range.endContainer, pointer);
@@ -13168,7 +13140,7 @@
                         finalinlineNodes[j_1 + 1] = inlineNodes[i + 1], j_1++;
                     }
                     var j = 0;
-                    anchorNodes[j] = this.createAchorNode(e);
+                    anchorNodes[0] = this.createAchorNode(e);
                     for(var i = 0; i < finalinlineNodes.length; i++)if (0 === i && (cloneNode = finalinlineNodes[i].cloneNode(!0), anchorNodes[i].appendChild(cloneNode)), i < finalinlineNodes.length - 1) {
                         if (finalinlineNodes[i].parentNode === finalinlineNodes[i + 1].parentNode) {
                             var cln = finalinlineNodes[i + 1].cloneNode(!0);
@@ -14027,7 +13999,7 @@
                         if (range.collapsed) {
                             var currentFormatNode = isFormatted.getFormattedNode(range.startContainer, format, endNode), currentSelector = (0, ej2_base.le)(currentFormatNode) ? null : null === currentFormatNode.getAttribute('style') ? currentFormatNode.nodeName : currentFormatNode.nodeName + "[style='" + currentFormatNode.getAttribute('style') + "']";
                             if (nodes.length > 0) isCollapsed = !0, range = nodeCutter.GetCursorRange(docElement, range, nodes[0]);
-                            else if (3 === range.startContainer.nodeType && (range.startContainer.parentElement.childElementCount > 0 && range.startOffset > 0 && 'br' !== range.startContainer.parentElement.firstElementChild.tagName.toLowerCase() || !(0, ej2_base.le)(currentFormatNode) && currentFormatNode === range.startContainer.parentElement.closest(currentSelector) && 0 != range.startContainer.parentElement.closest(currentSelector).textContent.replace(RegExp("​", 'g'), '').trim().length)) isCollapsed = !0, range = nodeCutter.GetCursorRange(docElement, range, range.startContainer), nodes.push(range.startContainer);
+                            else if (3 === range.startContainer.nodeType && (range.startContainer.parentElement.childElementCount > 0 && range.startOffset > 0 && 'br' !== range.startContainer.parentElement.firstElementChild.tagName.toLowerCase() || !(0, ej2_base.le)(currentFormatNode) && currentFormatNode === range.startContainer.parentElement.closest(currentSelector) && 0 != range.startContainer.parentElement.closest(currentSelector).textContent.replace(RegExp(String.fromCharCode(8203), 'g'), '').trim().length)) isCollapsed = !0, range = nodeCutter.GetCursorRange(docElement, range, range.startContainer), nodes.push(range.startContainer);
                             else {
                                 var cursorNode = this.insertCursorNode(docElement, domSelection, range, isFormatted, nodeCutter, format, value, endNode);
                                 domSelection.endContainer = domSelection.startContainer = domSelection.getNodeArray(cursorNode, !0);
@@ -14046,7 +14018,7 @@
                     var cursorNodes = domSelection.getNodeCollection(range), domNode = new DOMNode(endNode, docElement), cursorFormat = cursorNodes.length > 0 ? cursorNodes.length > 1 && range.startContainer === range.endContainer ? this.getCursorFormat(isFormatted, cursorNodes, format, endNode) : isFormatted.getFormattedNode(cursorNodes[0], format, endNode) : null, cursorNode = null;
                     if (cursorFormat) {
                         if (cursorNode = cursorNodes[0], 8203 === cursorFormat.firstChild.textContent.charCodeAt(0) && 3 === cursorFormat.firstChild.nodeType) {
-                            var regEx = RegExp("​", 'g'), emptySpaceNode = void 0;
+                            var regEx = RegExp(String.fromCharCode(8203), 'g'), emptySpaceNode = void 0;
                             cursorFormat.firstChild === cursorNode ? (cursorNode.textContent = cursorFormat.parentElement && (domNode.isBlockNode(cursorFormat.parentElement) && cursorFormat.parentElement.textContent.length <= 1 ? cursorFormat.parentElement.childElementCount > 1 : 0 === cursorFormat.childElementCount) && (cursorFormat.parentElement.textContent.length > 1 || cursorFormat.parentElement.firstChild && 1 === cursorFormat.parentElement.firstChild.nodeType) ? cursorNode.textContent : cursorNode.textContent.replace(regEx, ''), emptySpaceNode = cursorNode) : (cursorFormat.firstChild.textContent = cursorFormat.firstChild.textContent.replace(regEx, ''), emptySpaceNode = cursorFormat.firstChild);
                             var pointer = void 0;
                             if (0 === emptySpaceNode.textContent.length) {
@@ -15521,7 +15493,7 @@
                 }, HtmlEditor.prototype.onSelectionRestore = function(e) {
                     this.parent.isBlur = !1, this.contentRenderer.getEditPanel().focus(), ((0, ej2_base.le)(e.items) || e.items) && this.saveSelection.restore();
                 }, HtmlEditor.prototype.onKeyUp = function(e) {
-                    var pointer, args = e.args, range = this.parent.getRange(), regEx = RegExp("​", 'g');
+                    var pointer, args = e.args, range = this.parent.getRange(), regEx = RegExp(String.fromCharCode(8203), 'g');
                     !(0 > [
                         8,
                         9,
@@ -15696,10 +15668,10 @@
                     urlText = urlText.slice(0, urlTextRange);
                     var regex = RegExp(/([^\S]|^)(((https?\:\/\/)|(www\.))(\S+))/gi);
                     if ('A' !== selectNodeEle[0].nodeName && urlText.match(regex)) {
-                        var selection = this.nodeSelectionObj.save(range, this.parent.contentModule.getDocument()), url = urlText.indexOf('http') > -1 ? urlText : 'http://' + urlText, selectParent = this.parent.formatter.editorManager.nodeSelection.getParentNodeCollection(range), value = {
-                            url: url,
+                        var selection = this.nodeSelectionObj.save(range, this.parent.contentModule.getDocument()), value = {
+                            url: urlText.indexOf('http') > -1 ? urlText : 'http://' + urlText,
                             selection: selection,
-                            selectParent: selectParent,
+                            selectParent: this.parent.formatter.editorManager.nodeSelection.getParentNodeCollection(range),
                             text: urlText,
                             title: '',
                             target: '_blank'
@@ -15870,7 +15842,7 @@
                     return PasteCleanup;
                 }
             });
-            var extendStatics, constant = __webpack_require__(3386), popup = __webpack_require__(9486), ej2_base = __webpack_require__(1807), common = __webpack_require__(759), __extends = (extendStatics = function(d, b) {
+            var extendStatics, extendStatics1, constant = __webpack_require__(3386), popup = __webpack_require__(9486), ej2_base = __webpack_require__(1807), common = __webpack_require__(759), __extends = (extendStatics = function(d, b) {
                 return (extendStatics = Object.setPrototypeOf || ({
                     __proto__: []
                 }) instanceof Array && function(d, b) {
@@ -16142,7 +16114,7 @@
                                             var bootCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                                             bootCircle.setAttribute('class', CLS_SPINCIRCLE + '_' + item), bootCircle.setAttribute('r', "2"), bootCircle.setAttribute('transform', "translate(32,32)"), svgBoot.appendChild(bootCircle);
                                         }
-                                    }(innerContainer, uniqueID, makeElement), function(innerContainer, radius) {
+                                    }(innerContainer, uniqueID, 0), function(innerContainer, radius) {
                                         var svg = innerContainer.querySelector('svg.e-spin-bootstrap');
                                         svg.style.width = svg.style.height = radius + 'px';
                                         for(var startArc = 90, item = 0; item <= 7; item++){
@@ -16188,12 +16160,6 @@
                     container.wrap.classList.add(CLS_HIDESPIN), container = null;
                 }
             }
-            function generateSeries(begin, stop) {
-                var series = [], increment = !1, count = 1;
-                return function formSeries(i) {
-                    series.push(i), (i !== stop || 1 === count) && (i <= begin && i > 1 && !increment ? i = parseFloat((i - 0.2).toFixed(2)) : 1 === i ? (i = parseFloat(((i = 7) + 0.2).toFixed(2)), increment = !0) : i < 8 && increment ? 8 === (i = parseFloat((i + 0.2).toFixed(2))) && (increment = !1) : i <= 8 && !increment && (i = parseFloat((i - 0.2).toFixed(2))), ++count, formSeries(i));
-                }(begin), series;
-            }
             function random_generator() {
                 for(var random = '', combine = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789', i = 0; i < 5; i++)random += combine.charAt(Math.floor(Math.random() * combine.length));
                 return random;
@@ -16211,11 +16177,8 @@
                 svgMaterial.setAttribute('class', cls), svgMaterial.setAttribute('id', uniqueID), matCirclePath.setAttribute('class', CLS_SPINCIRCLE), innerContainer.insertBefore(svgMaterial, innerContainer.firstChild), svgMaterial.appendChild(matCirclePath);
             }
             function mat_calculate_attributes(radius, container, type, cls) {
-                var radius1, offset, diameter = 2 * radius, svg = container.querySelector('svg.' + cls), path = svg.querySelector('path.e-path-circle'), strokeSize = getStrokeSize(diameter), transformOrigin = diameter / 2 + 'px';
+                var radius1, offset, diameter = 2 * radius, svg = container.querySelector('svg.' + cls), path = svg.querySelector('path.e-path-circle'), strokeSize = 0.1 * diameter, transformOrigin = diameter / 2 + 'px';
                 svg.setAttribute('viewBox', '0 0 ' + diameter + ' ' + diameter), svg.style.width = svg.style.height = diameter + 'px', svg.style.transformOrigin = transformOrigin + ' ' + transformOrigin + ' ' + transformOrigin, path.setAttribute('d', 'M' + (radius1 = diameter / 2) + ',' + (offset = strokeSize / 2) + 'A' + (radius1 - offset) + ',' + (radius1 - offset) + ' 0 1 1 ' + offset + ',' + radius1), 'Material' === type && (path.setAttribute('stroke-width', strokeSize + ''), path.setAttribute('stroke-dasharray', (diameter - strokeSize) * Math.PI * 0.75 + ''), path.setAttribute('stroke-dashoffset', getDashOffset(diameter, strokeSize, 1, 75) + ''));
-            }
-            function getStrokeSize(diameter) {
-                return 0.1 * diameter;
             }
             function getDashOffset(diameter, strokeSize, value, max) {
                 return (diameter - strokeSize) * Math.PI * (3 * max / 100 - value / 100);
@@ -16289,7 +16252,7 @@
                                     previousId: 0
                                 }, function animateMaterial(spinnerInfo) {
                                     (function(start, end, easing, duration, count, max, spinnerInfo) {
-                                        var id = ++spinnerInfo.globalInfo[spinnerInfo.uniqueID].previousId, startTime = new Date().getTime(), change = 149 - start, diameter = parseFloat(2 * spinnerInfo.globalInfo[spinnerInfo.uniqueID].radius + ''), strokeSize = getStrokeSize(diameter), rotate = -90 * (spinnerInfo.globalInfo[spinnerInfo.uniqueID].count || 0);
+                                        var id = ++spinnerInfo.globalInfo[spinnerInfo.uniqueID].previousId, startTime = new Date().getTime(), change = 149 - start, diameter = parseFloat(2 * spinnerInfo.globalInfo[spinnerInfo.uniqueID].radius + ''), strokeSize = 0.1 * diameter, rotate = -90 * (spinnerInfo.globalInfo[spinnerInfo.uniqueID].count || 0);
                                         (function mat_animation(spinnerInfo) {
                                             var currentTime = Math.max(0, Math.min(new Date().getTime() - startTime, duration));
                                             (function(value, container) {
@@ -16299,7 +16262,7 @@
                                                 }
                                             })(easing(currentTime, start, change, duration), spinnerInfo.container), id === spinnerInfo.globalInfo[spinnerInfo.uniqueID].previousId && currentTime < duration ? globalTimeOut[spinnerInfo.uniqueID].timeOut = setTimeout(mat_animation.bind(null, spinnerInfo), 1) : animateMaterial(spinnerInfo);
                                         })(spinnerInfo);
-                                    })(1, 149, easeAnimation, 1333, spinnerInfo.globalInfo[spinnerInfo.uniqueID].count, 75, spinnerInfo), spinnerInfo.globalInfo[spinnerInfo.uniqueID].count = ++spinnerInfo.globalInfo[spinnerInfo.uniqueID].count % 4;
+                                    })(1, 0, easeAnimation, 1333, spinnerInfo.globalInfo[spinnerInfo.uniqueID].count, 0, spinnerInfo), spinnerInfo.globalInfo[spinnerInfo.uniqueID].count = ++spinnerInfo.globalInfo[spinnerInfo.uniqueID].count % 4;
                                 }({
                                     uniqueID: id,
                                     container: inner,
@@ -16309,13 +16272,17 @@
                                 break;
                             case 'Bootstrap':
                                 isHide ? clearTimeout(globalTimeOut[id].timeOut) : function(innerContainer) {
-                                    for(var id = innerContainer.querySelector('svg.e-spin-bootstrap').getAttribute('id'), i = 1; i <= 8; i++)rotation(innerContainer.getElementsByClassName('e-path-circle_' + (8 === i ? 0 : i))[0], i, i, generateSeries(i, i), id);
-                                    function rotation(circle, start, end, series, id) {
+                                    for(var id = innerContainer.querySelector('svg.e-spin-bootstrap').getAttribute('id'), i = 1; i <= 8; i++)!function(circle, start, end, series, id) {
                                         var count = 0;
                                         !function boot_animate(radius) {
                                             globalTimeOut[id].isAnimate && (++count, circle.setAttribute('r', radius + ''), count >= series.length && (count = 0), globalTimeOut[id].timeOut = setTimeout(boot_animate.bind(null, series[count]), 18));
                                         }(start);
-                                    }
+                                    }(innerContainer.getElementsByClassName('e-path-circle_' + (8 === i ? 0 : i))[0], i, 0, function(begin, stop) {
+                                        var series = [], increment = !1, count = 1;
+                                        return function formSeries(i) {
+                                            series.push(i), (i !== stop || 1 === count) && (i <= begin && i > 1 && !increment ? i = parseFloat((i - 0.2).toFixed(2)) : 1 === i ? (i = parseFloat(((i = 7) + 0.2).toFixed(2)), increment = !0) : i < 8 && increment ? 8 === (i = parseFloat((i + 0.2).toFixed(2))) && (increment = !1) : i <= 8 && !increment && (i = parseFloat((i - 0.2).toFixed(2))), ++count, formSeries(i));
+                                        }(begin), series;
+                                    }(i, i), id);
                                 }(inner);
                         }
                     }
@@ -16333,7 +16300,7 @@
             function hideSpinner(container) {
                 showHideSpinner(container, !0), container = null;
             }
-            var extendStatics1, uploader_extends = (extendStatics1 = function(d, b) {
+            var uploader_extends = (extendStatics1 = function(d, b) {
                 return (extendStatics1 = Object.setPrototypeOf || ({
                     __proto__: []
                 }) instanceof Array && function(d, b) {
@@ -16962,8 +16929,8 @@
                             previousListClone.appendChild(liElement.cloneNode(!0));
                         }
                         removedList = this.listParent.querySelectorAll('li');
-                        for(var _i = 0, removedList_1 = removedList; _i < removedList_1.length; _i++){
-                            var item = removedList_1[_i];
+                        for(var _i = 0; _i < removedList.length; _i++){
+                            var item = removedList[_i];
                             (0, ej2_base.og)(item);
                         }
                         this.removeActionButtons();
@@ -18109,7 +18076,7 @@
                 }, PasteCleanup.prototype.removeEventListener = function() {
                     this.parent.isDestroyed || (this.parent.off(constant.dI, this.pasteClean), this.parent.off(constant._8, this.setCssClass), this.parent.off(constant.ob, this.destroy));
                 }, PasteCleanup.prototype.pasteClean = function(e) {
-                    var imageproperties, _this = this, args = {
+                    var _this = this, args = {
                         requestType: 'Paste',
                         editorMode: this.parent.editorMode,
                         event: e
@@ -18126,7 +18093,7 @@
                                 args: e.args,
                                 text: value,
                                 callBack: function(b) {
-                                    'object' == typeof (imageproperties = b) ? _this.parent.formatter.editorManager.execCommand('Images', 'Image', e.args, _this.imageFormatting.bind(_this, args), 'pasteCleanup', imageproperties, 'pasteCleanupModule') : value = imageproperties;
+                                    'object' == typeof b ? _this.parent.formatter.editorManager.execCommand('Images', 'Image', e.args, _this.imageFormatting.bind(_this, args), 'pasteCleanup', b, 'pasteCleanupModule') : value = b;
                                 }
                             }), !htmlRegex.test(value)) {
                                 var divElement = this.parent.createElement('div');
@@ -18505,7 +18472,7 @@
                     return toolbar_Toolbar;
                 }
             });
-            var extendStatics, extendStatics1, extendStatics2, extendStatics3, ej2_base = __webpack_require__(1807), constant = __webpack_require__(3386), classes = __webpack_require__(9805), base_enum = __webpack_require__(809), util = __webpack_require__(5932), items = __webpack_require__(3276), popup_popup = __webpack_require__(9486), position = __webpack_require__(6216), button_button = __webpack_require__(78), __extends = (extendStatics = function(d, b) {
+            var extendStatics, extendStatics1, extendStatics2, extendStatics3, extendStatics4, extendStatics5, extendStatics6, extendStatics7, extendStatics8, ej2_base = __webpack_require__(1807), constant = __webpack_require__(3386), classes = __webpack_require__(9805), base_enum = __webpack_require__(809), util = __webpack_require__(5932), items = __webpack_require__(3276), popup_popup = __webpack_require__(9486), position = __webpack_require__(6216), button_button = __webpack_require__(78), __extends = (extendStatics = function(d, b) {
                 return (extendStatics = Object.setPrototypeOf || ({
                     __proto__: []
                 }) instanceof Array && function(d, b) {
@@ -19546,7 +19513,7 @@
                     }
                     return elWidth;
                 }, Toolbar.prototype.popupEleRefresh = function(width, popupEle, destroy) {
-                    for(var priEleCnt, index, popPriority = this.popupPriCount > 0, eleSplice = this.tbarEle, innerEle = this.element.querySelector('.' + CLS_ITEMS), ignoreCount = 0, _loop_1 = function(el) {
+                    for(var priEleCnt, index, popPriority = this.popupPriCount > 0, eleSplice = this.tbarEle, innerEle = this.element.querySelector('.' + CLS_ITEMS), ignoreCount = 0, this_1 = this, _i = 0, _a = [].slice.call(popupEle.children); _i < _a.length && "break" !== function(el) {
                         if (el.classList.contains(CLS_POPPRI) && popPriority && !destroy) return "continue";
                         var elWidth = this_1.popupEleWidth(el);
                         if (el === this_1.tbarEle[0] && (elWidth += this_1.tbarEleMrgn), el.style.position = '', !(elWidth < width) && !destroy) return "break";
@@ -19562,7 +19529,7 @@
                         'Extended' !== this_1.overflowMode && eleSplice.slice(0, index).forEach(function(el) {
                             (el.classList.contains(CLS_TBAROVERFLOW) || el.classList.contains(CLS_SEPARATOR)) && (el.classList.contains(CLS_SEPARATOR) && (el.style.display = '', width -= el.offsetWidth), sepBeforePri_1++);
                         }), ignoreCount = this_1.ignoreEleFetch(index, innerEle), el.classList.contains(CLS_TBAROVERFLOW) ? (this_1.tbarPriRef(innerEle, index, sepBeforePri_1, el, destroy, elWidth, width, ignoreCount), width -= el.offsetWidth) : 0 === index ? (innerEle.insertBefore(el, innerEle.firstChild), width -= el.offsetWidth) : (priEleCnt = (0, ej2_base.td)('.' + CLS_TBAROVERFLOW, this_1.popObj.element).length, innerEle.insertBefore(el, innerEle.children[index + ignoreCount - priEleCnt]), width -= el.offsetWidth), el.style.height = '';
-                    }, this_1 = this, _i = 0, _a = [].slice.call(popupEle.children); _i < _a.length && "break" !== _loop_1(_a[_i]); _i++);
+                    }(_a[_i]); _i++);
                     this.checkOverflow(this.element, this.element.getElementsByClassName(CLS_ITEMS)[0]) && !destroy && this.renderOverflowMode();
                 }, Toolbar.prototype.removePositioning = function() {
                     var item = this.element.querySelector('.' + CLS_ITEMS);
@@ -19943,7 +19910,7 @@
                 }
                 return obj;
             }
-            var extendStatics4, extendStatics5, extendStatics6, extendStatics7, extendStatics8, common_Item = function(_super) {
+            var common_Item = function(_super) {
                 function Item() {
                     return null !== _super && _super.apply(this, arguments) || this;
                 }
@@ -28336,11 +28303,11 @@
                     return this.getSelectionNodesBr(this.getNodeCollection(range));
                 }, NodeSelection.prototype.getSelectionNodes = function(nodeCollection) {
                     nodeCollection = nodeCollection.reverse();
-                    for(var regEx = RegExp("​", 'g'), index = 0; index < nodeCollection.length; index++)(3 !== nodeCollection[index].nodeType || '' === nodeCollection[index].textContent.trim() || 1 === nodeCollection[index].textContent.length && nodeCollection[index].textContent.match(regEx)) && (nodeCollection.splice(index, 1), index--);
+                    for(var regEx = RegExp(String.fromCharCode(8203), 'g'), index = 0; index < nodeCollection.length; index++)(3 !== nodeCollection[index].nodeType || '' === nodeCollection[index].textContent.trim() || 1 === nodeCollection[index].textContent.length && nodeCollection[index].textContent.match(regEx)) && (nodeCollection.splice(index, 1), index--);
                     return nodeCollection.reverse();
                 }, NodeSelection.prototype.getSelectionNodesBr = function(nodeCollection) {
                     nodeCollection = nodeCollection.reverse();
-                    for(var regEx = RegExp("​", 'g'), index = 0; index < nodeCollection.length; index++)'BR' !== nodeCollection[index].nodeName && (3 !== nodeCollection[index].nodeType || '' === nodeCollection[index].textContent.trim() || 1 === nodeCollection[index].textContent.length && nodeCollection[index].textContent.match(regEx)) && (nodeCollection.splice(index, 1), index--);
+                    for(var regEx = RegExp(String.fromCharCode(8203), 'g'), index = 0; index < nodeCollection.length; index++)'BR' !== nodeCollection[index].nodeName && (3 !== nodeCollection[index].nodeType || '' === nodeCollection[index].textContent.trim() || 1 === nodeCollection[index].textContent.length && nodeCollection[index].textContent.match(regEx)) && (nodeCollection.splice(index, 1), index--);
                     return nodeCollection.reverse();
                 }, NodeSelection.prototype.getInsertNodeCollection = function(range) {
                     return this.getInsertNodes(this.getNodeCollection(range));

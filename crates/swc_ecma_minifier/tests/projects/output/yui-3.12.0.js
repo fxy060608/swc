@@ -226,7 +226,7 @@ var YUI = function() {
             this.Array || this._attach([
                 "yui-base"
             ]);
-            var len, loader, handleBoot, i, Y = this, G_ENV = YUI.Env, mods = G_ENV.mods, Env = Y.Env, used = Env._used, aliases = G_ENV.aliases, queue = G_ENV._loaderQueue, firstArg = args[0], YArray = Y.Array, config = Y.config, boot = config.bootstrap, missing = [], r = [], fetchCSS = config.fetchCSS, process1 = function(names, skip) {
+            var len, loader, handleBoot, i, Y = this, G_ENV = YUI.Env, mods = G_ENV.mods, Env = Y.Env, used = Env._used, aliases = G_ENV.aliases, queue = G_ENV._loaderQueue, firstArg = args[0], YArray = Y.Array, config = Y.config, boot = config.bootstrap, missing = [], r = [], ret = !0, fetchCSS = config.fetchCSS, process1 = function(names, skip) {
                 var name, len, m, req, use, i = 0, a = [];
                 if (names.length) {
                     if (aliases) {
@@ -1062,7 +1062,7 @@ var YUI = function() {
     }), add("load", "3", {
         name: "dom-style-ie",
         test: function(Y) {
-            var testFeature = Y.Features.test, addFeature = Y.Features.add, WINDOW = Y.config.win, DOCUMENT = Y.config.doc;
+            var testFeature = Y.Features.test, addFeature = Y.Features.add, WINDOW = Y.config.win, DOCUMENT = Y.config.doc, ret = !1;
             return addFeature("style", "computedStyle", {
                 test: function() {
                     return WINDOW && "getComputedStyle" in WINDOW;
@@ -1214,12 +1214,11 @@ var YUI = function() {
     Y.mix(Y.namespace("Intl"), {
         lookupBestLang: function(preferredLanguages, availableLanguages) {
             var i, language, result, index;
-            function scan(language) {
-                var i;
-                for(i = 0; i < availableLanguages.length; i += 1)if (language.toLowerCase() === availableLanguages[i].toLowerCase()) return availableLanguages[i];
-            }
             for(Y.Lang.isString(preferredLanguages) && (preferredLanguages = preferredLanguages.split(SPLIT_REGEX)), i = 0; i < preferredLanguages.length; i += 1)if ((language = preferredLanguages[i]) && "*" !== language) for(; language.length > 0;){
-                if (result = scan(language)) return result;
+                if (result = function(language) {
+                    var i;
+                    for(i = 0; i < availableLanguages.length; i += 1)if (language.toLowerCase() === availableLanguages[i].toLowerCase()) return availableLanguages[i];
+                }(language)) return result;
                 if ((index = language.lastIndexOf("-")) >= 0) language = language.substring(0, index), index >= 2 && "-" === language.charAt(index - 2) && (language = language.substring(0, index - 2));
                 else break;
             }
@@ -3018,7 +3017,7 @@ var YUI = function() {
             condition: {
                 name: "dom-style-ie",
                 test: function(Y) {
-                    var testFeature = Y.Features.test, addFeature = Y.Features.add, WINDOW = Y.config.win, DOCUMENT = Y.config.doc;
+                    var testFeature = Y.Features.test, addFeature = Y.Features.add, WINDOW = Y.config.win, DOCUMENT = Y.config.doc, ret = !1;
                     return addFeature("style", "computedStyle", {
                         test: function() {
                             return WINDOW && "getComputedStyle" in WINDOW;

@@ -103,7 +103,7 @@ impl Compressor {
                         {
                             declaration.value = vec![ComponentValue::Ident(Ident {
                                 span: *span,
-                                value: "inline-block".into(),
+                                value: js_word!("inline-block"),
                                 raw: None,
                             })];
                         }
@@ -383,14 +383,14 @@ impl Compressor {
                             (js_word!("repeat"), js_word!("no-repeat")) => {
                                 declaration.value = vec![ComponentValue::Ident(Ident {
                                     span: *span,
-                                    value: "repeat-x".into(),
+                                    value: js_word!("repeat-x"),
                                     raw: None,
                                 })];
                             }
                             (js_word!("no-repeat"), js_word!("repeat")) => {
                                 declaration.value = vec![ComponentValue::Ident(Ident {
                                     span: *span,
-                                    value: "repeat-y".into(),
+                                    value: js_word!("repeat-y"),
                                     raw: None,
                                 })];
                             }
@@ -435,12 +435,10 @@ impl Compressor {
                             to_be_identify => {
                                 declaration.value.insert(
                                     0,
-                                    if let Some(escaped) =
-                                        crate::escape::try_escape_if_shorter(to_be_identify)
-                                    {
+                                    if self.is_ident_shorter_than_str(to_be_identify) {
                                         ComponentValue::Ident(Ident {
                                             span: ident.span,
-                                            value: escaped.into(),
+                                            value: to_be_identify.into(),
                                             raw: None,
                                         })
                                     } else {
@@ -470,12 +468,10 @@ impl Compressor {
                                         node
                                     }
                                     to_be_identify => {
-                                        if let Some(escaped) =
-                                            crate::escape::try_escape_if_shorter(to_be_identify)
-                                        {
+                                        if self.is_ident_shorter_than_str(to_be_identify) {
                                             ComponentValue::Ident(Ident {
                                                 span: ident.span,
-                                                value: escaped.into(),
+                                                value: to_be_identify.into(),
                                                 raw: None,
                                             })
                                         } else {

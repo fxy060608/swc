@@ -3,6 +3,7 @@ use swc_common::SyntaxContext;
 use swc_ecma_ast::*;
 
 use super::{ctx::Ctx, ScopeKind};
+use crate::alias::Access;
 
 pub mod normal;
 
@@ -48,6 +49,8 @@ pub(crate) trait VarDataLike: Sized {
     /// See `declared_as_fn_param` of [crate::analyzer::VarUsageInfo].
     fn mark_declared_as_fn_param(&mut self);
 
+    fn mark_declared_as_fn_decl(&mut self);
+
     fn mark_declared_as_fn_expr(&mut self);
 
     fn mark_has_property_access(&mut self);
@@ -65,7 +68,7 @@ pub(crate) trait VarDataLike: Sized {
     fn mark_mutated(&mut self);
     fn mark_reassigned_with_assign(&mut self);
 
-    fn add_infects_to(&mut self, other: Id);
+    fn add_infects_to(&mut self, other: Access);
 
     fn prevent_inline(&mut self);
 
@@ -74,4 +77,6 @@ pub(crate) trait VarDataLike: Sized {
     fn mark_as_pure_fn(&mut self);
 
     fn mark_used_above_decl(&mut self);
+
+    fn mark_used_recursively(&mut self);
 }

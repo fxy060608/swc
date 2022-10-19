@@ -55,11 +55,10 @@
                 }
             }
             function M(t) {
-                var e;
                 if ("string" == typeof t) return t;
                 try {
-                    return e = t, JSON.stringify(e);
-                } catch (e1) {
+                    return JSON.stringify(t);
+                } catch (e) {
                     return t;
                 }
             }
@@ -192,19 +191,18 @@
                     return this.p && this.p(t), t;
                 }
             }
-            function Z(t) {
-                const e = "undefined" != typeof self && (self.crypto || self.msCrypto), n = new Uint8Array(t);
-                if (e && "function" == typeof e.getRandomValues) e.getRandomValues(n);
-                else for(let e1 = 0; e1 < t; e1++)n[e1] = Math.floor(256 * Math.random());
-                return n;
-            }
             X.T = -1;
             class tt {
                 static I() {
                     const t = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", e = Math.floor(256 / t.length) * t.length;
                     let n = "";
                     for(; n.length < 20;){
-                        const s = Z(40);
+                        const s = function(t) {
+                            const e = "undefined" != typeof self && (self.crypto || self.msCrypto), n = new Uint8Array(t);
+                            if (e && "function" == typeof e.getRandomValues) e.getRandomValues(n);
+                            else for(let e1 = 0; e1 < t; e1++)n[e1] = Math.floor(256 * Math.random());
+                            return n;
+                        }(40);
                         for(let i = 0; i < s.length; ++i)n.length < 20 && s[i] < e && (n += t.charAt(s[i] % t.length));
                     }
                     return n;
@@ -845,9 +843,9 @@
                 return e.A;
             }
             function zt(t, e) {
-                var n, s;
+                var n, s, t1, e1;
                 if (t.limit !== e.limit || t.orderBy.length !== e.orderBy.length) return !1;
-                for(let n1 = 0; n1 < t.orderBy.length; n1++)if (!ue(t.orderBy[n1], e.orderBy[n1])) return !1;
+                for(let n1 = 0; n1 < t.orderBy.length; n1++)if (t1 = t.orderBy[n1], e1 = e.orderBy[n1], !(t1.dir === e1.dir && t1.field.isEqual(e1.field))) return !1;
                 if (t.filters.length !== e.filters.length) return !1;
                 for(let i = 0; i < t.filters.length; i++)if (n = t.filters[i], s = e.filters[i], n.op !== s.op || !n.field.isEqual(s.field) || !Vt(n.value, s.value)) return !1;
                 return t.collectionGroup === e.collectionGroup && !!t.path.isEqual(e.path) && !!le(t.startAt, e.startAt) && le(t.endAt, e.endAt);
@@ -980,9 +978,6 @@
                     this.field = t, this.dir = e;
                 }
             }
-            function ue(t, e) {
-                return t.dir === e.dir && t.field.isEqual(e.field);
-            }
             function he(t, e, n) {
                 let s = 0;
                 for(let i = 0; i < t.position.length; i++){
@@ -1002,9 +997,6 @@
                     this.path = t, this.collectionGroup = e, this.explicitOrderBy = n, this.filters = s, this.limit = i, this.limitType = r, this.startAt = o, this.endAt = c, this.V = null, this.S = null, this.startAt, this.endAt;
                 }
             }
-            function we(t) {
-                return new fe(t);
-            }
             function _e(t) {
                 return !At(t.limit) && "F" === t.limitType;
             }
@@ -1012,21 +1004,20 @@
                 return !At(t.limit) && "L" === t.limitType;
             }
             function Te(t) {
-                var t1;
                 const e = t;
                 if (null === e.V) {
                     e.V = [];
-                    const t2 = function(t) {
+                    const t1 = function(t) {
                         for (const e of t.filters)if (e.v()) return e.field;
                         return null;
-                    }(e), n = (t1 = e).explicitOrderBy.length > 0 ? t1.explicitOrderBy[0].field : null;
-                    if (null !== t2 && null === n) t2.isKeyField() || e.V.push(new ae(t2)), e.V.push(new ae(ft.keyField(), "asc"));
+                    }(e), n = e.explicitOrderBy.length > 0 ? e.explicitOrderBy[0].field : null;
+                    if (null !== t1 && null === n) t1.isKeyField() || e.V.push(new ae(t1)), e.V.push(new ae(ft.keyField(), "asc"));
                     else {
-                        let t3 = !1;
-                        for (const n1 of e.explicitOrderBy)e.V.push(n1), n1.field.isKeyField() && (t3 = !0);
-                        if (!t3) {
-                            const t4 = e.explicitOrderBy.length > 0 ? e.explicitOrderBy[e.explicitOrderBy.length - 1].dir : "asc";
-                            e.V.push(new ae(ft.keyField(), t4));
+                        let t2 = !1;
+                        for (const n1 of e.explicitOrderBy)e.V.push(n1), n1.field.isKeyField() && (t2 = !0);
+                        if (!t2) {
+                            const t3 = e.explicitOrderBy.length > 0 ? e.explicitOrderBy[e.explicitOrderBy.length - 1].dir : "asc";
+                            e.V.push(new ae(ft.keyField(), t3));
                         }
                     }
                 }
@@ -1075,76 +1066,30 @@
                 return (e, n)=>{
                     let s = !1;
                     for (const i of Te(t)){
-                        const t1 = Ve(i, e, n);
+                        const t1 = function(t, e, n) {
+                            const s = t.field.isKeyField() ? Pt.comparator(e.key, n.key) : function(t, e, n) {
+                                const s = e.data.field(t), i = n.data.field(t);
+                                return null !== s && null !== i ? Dt(s, i) : L();
+                            }(t.field, e, n);
+                            switch(t.dir){
+                                case "asc":
+                                    return s;
+                                case "desc":
+                                    return -1 * s;
+                                default:
+                                    return L();
+                            }
+                        }(i, e, n);
                         if (0 !== t1) return t1;
                         s = s || i.field.isKeyField();
                     }
                     return 0;
                 };
             }
-            function Ve(t, e, n) {
-                const s = t.field.isKeyField() ? Pt.comparator(e.key, n.key) : function(t, e, n) {
-                    const s = e.data.field(t), i = n.data.field(t);
-                    return null !== s && null !== i ? Dt(s, i) : L();
-                }(t.field, e, n);
-                switch(t.dir){
-                    case "asc":
-                        return s;
-                    case "desc":
-                        return -1 * s;
-                    default:
-                        return L();
-                }
-            }
             class Ne {
                 constructor(){
                     this._ = void 0;
                 }
-            }
-            function xe(t, e, n) {
-                return t instanceof Oe ? function(t, e) {
-                    const n = {
-                        fields: {
-                            __type__: {
-                                stringValue: "server_timestamp"
-                            },
-                            __local_write_time__: {
-                                timestampValue: {
-                                    seconds: t.seconds,
-                                    nanos: t.nanoseconds
-                                }
-                            }
-                        }
-                    };
-                    return e && (n.fields.__previous_value__ = e), {
-                        mapValue: n
-                    };
-                }(n, e) : t instanceof Fe ? Me(t, e) : t instanceof Le ? Be(t, e) : function(t, e) {
-                    const n = t instanceof Ue ? $t(e) || e && "doubleValue" in e ? e : {
-                        integerValue: 0
-                    } : null, s = qe(n) + qe(t.C);
-                    return $t(n) && $t(t.C) ? {
-                        integerValue: "" + s
-                    } : function(t, e) {
-                        if (t.D) {
-                            if (isNaN(e)) return {
-                                doubleValue: "NaN"
-                            };
-                            if (e === 1 / 0) return {
-                                doubleValue: "Infinity"
-                            };
-                            if (e === -1 / 0) return {
-                                doubleValue: "-Infinity"
-                            };
-                        }
-                        return {
-                            doubleValue: Rt(e) ? "-0" : e
-                        };
-                    }(t.N, s);
-                }(t, e);
-            }
-            function ke(t, e, n) {
-                return t instanceof Fe ? Me(t, e) : t instanceof Le ? Be(t, e) : n;
             }
             class Oe extends Ne {
             }
@@ -1192,18 +1137,6 @@
             }
             class He {
             }
-            function Je(t, e, n) {
-                t instanceof en ? function(t, e, n) {
-                    const s = t.value.clone(), i = rn(t.fieldTransforms, e, n.transformResults);
-                    s.setAll(i), e.convertToFoundDocument(n.version, s).setHasCommittedMutations();
-                }(t, e, n) : t instanceof nn ? function(t, e, n) {
-                    if (!ze(t.precondition, e)) return void e.convertToUnknownDocument(n.version);
-                    const s = rn(t.fieldTransforms, e, n.transformResults), i = e.data;
-                    i.setAll(sn(t)), i.setAll(s), e.convertToFoundDocument(n.version, i).setHasCommittedMutations();
-                }(t, e, n) : function(t, e, n) {
-                    e.convertToNoDocument(n.version).setHasCommittedMutations();
-                }(0, e, n);
-            }
             function Ye(t, e, n) {
                 t instanceof en ? function(t, e, n) {
                     if (!ze(t.precondition, e)) return;
@@ -1245,11 +1178,12 @@
                 }), e;
             }
             function rn(t, e, n) {
+                var n1;
                 const s = new Map();
                 t.length === n.length || L();
                 for(let i = 0; i < n.length; i++){
                     const r = t[i], o = r.transform, c = e.data.field(r.field);
-                    s.set(r.field, ke(o, c, n[i]));
+                    s.set(r.field, (n1 = n[i], o instanceof Fe ? Me(o, c) : o instanceof Le ? Be(o, c) : n1));
                 }
                 return s;
             }
@@ -1257,7 +1191,46 @@
                 const s = new Map();
                 for (const i of t){
                     const t1 = i.transform, r = n.data.field(i.field);
-                    s.set(i.field, xe(t1, r, e));
+                    s.set(i.field, t1 instanceof Oe ? function(t, e) {
+                        const n = {
+                            fields: {
+                                __type__: {
+                                    stringValue: "server_timestamp"
+                                },
+                                __local_write_time__: {
+                                    timestampValue: {
+                                        seconds: t.seconds,
+                                        nanos: t.nanoseconds
+                                    }
+                                }
+                            }
+                        };
+                        return e && (n.fields.__previous_value__ = e), {
+                            mapValue: n
+                        };
+                    }(e, r) : t1 instanceof Fe ? Me(t1, r) : t1 instanceof Le ? Be(t1, r) : function(t, e) {
+                        const n = t instanceof Ue ? $t(e) || e && "doubleValue" in e ? e : {
+                            integerValue: 0
+                        } : null, s = qe(n) + qe(t.C);
+                        return $t(n) && $t(t.C) ? {
+                            integerValue: "" + s
+                        } : function(t, e) {
+                            if (t.D) {
+                                if (isNaN(e)) return {
+                                    doubleValue: "NaN"
+                                };
+                                if (e === 1 / 0) return {
+                                    doubleValue: "Infinity"
+                                };
+                                if (e === -1 / 0) return {
+                                    doubleValue: "-Infinity"
+                                };
+                            }
+                            return {
+                                doubleValue: Rt(e) ? "-0" : e
+                            };
+                        }(t.N, s);
+                    }(t1, r));
                 }
                 return s;
             }
@@ -1940,29 +1913,25 @@
             }
             function Es(t) {
                 let e = "";
-                for(let n = 0; n < t.length; n++)e.length > 0 && (e = As(e)), e = Is(t.get(n), e);
-                return As(e);
-            }
-            function Is(t, e) {
-                let n = e;
-                const s = t.length;
-                for(let e1 = 0; e1 < s; e1++){
-                    const s1 = t.charAt(e1);
-                    switch(s1){
-                        case "\0":
-                            n += "";
-                            break;
-                        case "":
-                            n += "";
-                            break;
-                        default:
-                            n += s1;
+                for(let n = 0; n < t.length; n++)e.length > 0 && (e += ""), e = function(t, e) {
+                    let n = e;
+                    const s = t.length;
+                    for(let e1 = 0; e1 < s; e1++){
+                        const s1 = t.charAt(e1);
+                        switch(s1){
+                            case "\0":
+                                n += "";
+                                break;
+                            case "":
+                                n += "";
+                                break;
+                            default:
+                                n += s1;
+                        }
                     }
-                }
-                return n;
-            }
-            function As(t) {
-                return t + "";
+                    return n;
+                }(t.get(n), e);
+                return e + "";
             }
             class Ps {
                 constructor(t, e, n){
@@ -2169,7 +2138,19 @@
                     const n = e.mutationResults;
                     for(let e1 = 0; e1 < this.mutations.length; e1++){
                         const s = this.mutations[e1];
-                        s.key.isEqual(t.key) && Je(s, t, n[e1]);
+                        if (s.key.isEqual(t.key)) {
+                            var n1;
+                            n1 = n[e1], s instanceof en ? function(t, e, n) {
+                                const s = t.value.clone(), i = rn(t.fieldTransforms, e, n.transformResults);
+                                s.setAll(i), e.convertToFoundDocument(n.version, s).setHasCommittedMutations();
+                            }(s, t, n1) : s instanceof nn ? function(t, e, n) {
+                                if (!ze(t.precondition, e)) return void e.convertToUnknownDocument(n.version);
+                                const s = rn(t.fieldTransforms, e, n.transformResults), i = e.data;
+                                i.setAll(sn(t)), i.setAll(s), e.convertToFoundDocument(n.version, i).setHasCommittedMutations();
+                            }(s, t, n1) : function(t, e, n) {
+                                e.convertToNoDocument(n.version).setHasCommittedMutations();
+                            }(0, t, n1);
+                        }
                     }
                 }
                 applyToLocalView(t) {
@@ -2391,14 +2372,14 @@
                         }).next(()=>i));
                 }
                 Dn(t, e, n) {
-                    let s, i;
-                    return this.He.getDocumentsMatchingQuery(t, e, n).next((n)=>(s = n, this.In.getAllMutationBatchesAffectingQuery(t, e))).next((e)=>(i = e, this.Cn(t, i, s).next((t)=>{
-                            for (const t1 of (s = t, i))for (const e of t1.mutations){
-                                const n = e.key;
-                                let i1 = s.get(n);
-                                null == i1 && (i1 = Kt.newInvalidDocument(n), s = s.insert(n, i1)), Ye(e, i1, t1.localWriteTime), i1.isFoundDocument() || (s = s.remove(n));
+                    let s;
+                    return this.He.getDocumentsMatchingQuery(t, e, n).next((n)=>(s = n, this.In.getAllMutationBatchesAffectingQuery(t, e))).next((e)=>this.Cn(t, e, s).next((t)=>{
+                            for (const t1 of (s = t, e))for (const e1 of t1.mutations){
+                                const n = e1.key;
+                                let i = s.get(n);
+                                null == i && (i = Kt.newInvalidDocument(n), s = s.insert(n, i)), Ye(e1, i, t1.localWriteTime), i.isFoundDocument() || (s = s.remove(n));
                             }
-                        }))).next(()=>(s.forEach((t, n)=>{
+                        })).next(()=>(s.forEach((t, n)=>{
                             Pe(e, n) || (s = s.remove(t));
                         }), s));
                 }
@@ -2816,7 +2797,7 @@
                     let s = pn;
                     const i = new Pt(e.path.child("")), r = this.docs.getIteratorFrom(i);
                     for(; r.hasNext();){
-                        const { key: t1 , value: { document: i1 , readTime: o  } ,  } = r.getNext();
+                        const { key: t1 , value: { document: i1 , readTime: o  }  } = r.getNext();
                         if (!e.path.isPrefixOf(t1.path)) break;
                         0 >= o.compareTo(n) || Pe(e, i1) && (s = s.insert(i1.key, i1.clone()));
                     }
@@ -3273,9 +3254,6 @@
             function Jr() {
                 return "undefined" != typeof document ? document : null;
             }
-            function Yr(t) {
-                return new Bn(t, !0);
-            }
             class Xr {
                 constructor(t, e, n = 1e3, s = 1.5, i = 6e4){
                     this.Oe = t, this.timerId = e, this.Qi = n, this.Wi = s, this.Gi = i, this.zi = 0, this.Hi = null, this.Ji = Date.now(), this.reset();
@@ -3637,16 +3615,13 @@
             function wo(t) {
                 return 0 === t.Wr.size;
             }
-            function _o(t) {
-                t.Jr = void 0;
-            }
             async function mo(t) {
                 t.Qr.forEach((e, n)=>{
                     uo(t, e);
                 });
             }
             async function go(t, e) {
-                _o(t), fo(t) ? (t.Hr.qr(e), lo(t)) : t.Hr.set("Unknown");
+                t.Jr = void 0, fo(t) ? (t.Hr.qr(e), lo(t)) : t.Hr.set("Unknown");
             }
             async function yo(t, e, n) {
                 if (t.Hr.set("Online"), e instanceof xn && 2 === e.state && e.cause) try {
@@ -3694,7 +3669,7 @@
                     Ci: go.bind(null, t),
                     Rr: yo.bind(null, t)
                 }, t1.$r(), new to(e, t1.sr, t1.credentials, t1.N, n)), t.Gr.push(async (e)=>{
-                    e ? (t.Yr.dr(), fo(t) ? lo(t) : t.Hr.set("Unknown")) : (await t.Yr.stop(), _o(t));
+                    e ? (t.Yr.dr(), fo(t) ? lo(t) : t.Hr.set("Unknown")) : (await t.Yr.stop(), t.Jr = void 0);
                 })), t.Yr;
             }
             class xo {
@@ -4194,18 +4169,18 @@
                 null !== n && (ao(t.remoteStore, n), t.Lo = t.Lo.remove(e), t.Bo.delete(n), yc(t));
             }
             function mc(t, e, n) {
-                for (const s of n)s instanceof Jo ? (t.Uo.addReference(s.key, e), gc(t, s)) : s instanceof Yo ? ($("SyncEngine", "Document no longer in limbo: " + s.key), t.Uo.removeReference(s.key, e), t.Uo.containsKey(s.key) || _c(t, s.key)) : L();
-            }
-            function gc(t, e) {
-                const n = e.key, s = n.path.canonicalString();
-                t.Lo.get(n) || t.Mo.has(s) || ($("SyncEngine", "New document in limbo: " + n), t.Mo.add(s), yc(t));
+                for (const s of n)s instanceof Jo ? (t.Uo.addReference(s.key, e), function(t, e) {
+                    const n = e.key, s = n.path.canonicalString();
+                    t.Lo.get(n) || t.Mo.has(s) || ($("SyncEngine", "New document in limbo: " + n), t.Mo.add(s), yc(t));
+                }(t, s)) : s instanceof Yo ? ($("SyncEngine", "Document no longer in limbo: " + s.key), t.Uo.removeReference(s.key, e), t.Uo.containsKey(s.key) || _c(t, s.key)) : L();
             }
             function yc(t) {
                 for(; t.Mo.size > 0 && t.Lo.size < t.maxConcurrentLimboResolutions;){
+                    var t1;
                     const e = t.Mo.values().next().value;
                     t.Mo.delete(e);
                     const n = new Pt(ht.fromString(e)), s = t.jo.next();
-                    t.Bo.set(s, new tc(n)), t.Lo = t.Lo.insert(n, s), co(t.remoteStore, new ii(Ee(we(n.path)), s, 2, X.T));
+                    t.Bo.set(s, new tc(n)), t.Lo = t.Lo.insert(n, s), co(t.remoteStore, new ii(Ee((t1 = n.path, new fe(t1))), s, 2, X.T));
                 }
             }
             async function pc(t, e, n) {
@@ -4236,16 +4211,15 @@
                 }(t.localStore, r));
             }
             async function Tc(t, e) {
-                var t1, e1;
                 const n = t;
                 if (!n.currentUser.isEqual(e)) {
                     $("SyncEngine", "User change. New user:", e.toKey());
-                    const t2 = await hr(n.localStore, e);
-                    n.currentUser = e, t1 = n, e1 = "'waitForPendingWrites' promise is rejected due to a user change.", t1.Ko.forEach((t)=>{
+                    const t1 = await hr(n.localStore, e);
+                    n.currentUser = e, n.Ko.forEach((t)=>{
                         t.forEach((t)=>{
-                            t.reject(new j(K.CANCELLED, e1));
+                            t.reject(new j(K.CANCELLED, "'waitForPendingWrites' promise is rejected due to a user change."));
                         });
-                    }), t1.Ko.clear(), n.sharedClientState.handleUserChange(e, t2.removedBatchIds, t2.addedBatchIds), await pc(n, t2.Wn);
+                    }), n.Ko.clear(), n.sharedClientState.handleUserChange(e, t1.removedBatchIds, t1.addedBatchIds), await pc(n, t1.Wn);
                 }
             }
             function Ec(t, e) {
@@ -4267,7 +4241,8 @@
                     this.synchronizeTabs = !1;
                 }
                 async initialize(t) {
-                    this.N = Yr(t.databaseInfo.databaseId), this.sharedClientState = this.Ho(t), this.persistence = this.Jo(t), await this.persistence.start(), this.gcScheduler = this.Yo(t), this.localStore = this.Xo(t);
+                    var t1;
+                    this.N = (t1 = t.databaseInfo.databaseId, new Bn(t1, !0)), this.sharedClientState = this.Ho(t), this.persistence = this.Jo(t), await this.persistence.start(), this.gcScheduler = this.Yo(t), this.localStore = this.Xo(t);
                 }
                 Yo(t) {
                     return null;
@@ -4294,9 +4269,9 @@
                     return new Lo();
                 }
                 createDatastore(t) {
-                    var s, t1;
-                    const e = Yr(t.databaseInfo.databaseId), n = (s = t.databaseInfo, new zr(s));
-                    return t1 = t.credentials, new no(t1, n, e);
+                    var s, t1, t2;
+                    const e = (t1 = t.databaseInfo.databaseId, new Bn(t1, !0)), n = (s = t.databaseInfo, new zr(s));
+                    return t2 = t.credentials, new no(t2, n, e);
                 }
                 createRemoteStore(t) {
                     var e, n, s, i, r;
@@ -4549,7 +4524,7 @@
             }
             class Ra extends Aa {
                 constructor(t, e, n){
-                    super(t, e, we(n)), this._path = n, this.type = "collection";
+                    super(t, e, new fe(n)), this._path = n, this.type = "collection";
                 }
                 get id() {
                     return this._query.path.lastSegment();

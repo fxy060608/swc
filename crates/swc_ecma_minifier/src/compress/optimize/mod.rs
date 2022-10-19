@@ -2,7 +2,7 @@ use std::{iter::once, mem::take};
 
 #[allow(unused_imports)]
 use retain_mut::RetainMut;
-use rustc_hash::FxHashMap;
+use rustc_hash::{FxHashMap, FxHashSet};
 use swc_atoms::{js_word, JsWord};
 use swc_common::{
     collections::AHashMap, iter::IdentifyLast, pass::Repeated, util::take::Take, Spanned,
@@ -20,7 +20,7 @@ use Value::Known;
 
 use self::{
     unused::PropertyAccessOpts,
-    util::{extract_class_side_effect, MultiReplacer, MultiReplacerMode},
+    util::{extract_class_side_effect, Finalizer, NormalMultiReplacer},
 };
 use super::util::{drop_invalid_stmts, is_fine_for_if_cons};
 #[cfg(feature = "debug")]
@@ -34,8 +34,7 @@ use crate::{
     mode::Mode,
     option::CompressOptions,
     util::{
-        contains_eval, contains_leaping_continue_with_label, contains_leaping_yield, make_number,
-        ExprOptExt, ModuleItemExt,
+        contains_eval, contains_leaping_continue_with_label, make_number, ExprOptExt, ModuleItemExt,
     },
 };
 
@@ -241,11 +240,24 @@ struct Vars {
     /// Used for inlining.
     lits: FxHashMap<Id, Box<Expr>>,
 
+    /// Literals which are cheap to clone, but not sure if we can inline without
+    /// making output bigger.
+    ///
+    /// https://github.com/swc-project/swc/issues/4415
+    lits_for_cmp: FxHashMap<Id, Box<Expr>>,
+
+    /// This stores [Expr::Array] if all elements are literals.
+    lits_for_array_access: FxHashMap<Id, Box<Expr>>,
+
     /// Used for copying functions.
     ///
     /// We use this to distinguish [Callee::Expr] from other [Expr]s.
     simple_functions: FxHashMap<Id, Box<Expr>>,
     vars_for_inlining: FxHashMap<Id, Box<Expr>>,
+
+    /// Variables which should be removed by [Finalizer] because of the order of
+    /// visit.
+    removed: FxHashSet<Id>,
 }
 
 impl Vars {
@@ -256,25 +268,30 @@ impl Vars {
     /// Returns true if something is changed.
     fn inline_with_multi_replacer<N>(&mut self, n: &mut N) -> bool
     where
-        N: for<'aa> VisitMutWith<MultiReplacer<'aa>>,
+        N: for<'aa> VisitMutWith<NormalMultiReplacer<'aa>>,
+        N: for<'aa> VisitMutWith<Finalizer<'aa>>,
     {
         let mut changed = false;
-        if !self.simple_functions.is_empty() {
-            n.visit_mut_with(&mut MultiReplacer::new(
-                &mut self.simple_functions,
-                true,
-                MultiReplacerMode::OnlyCallee,
-                &mut changed,
-            ));
+        if !self.simple_functions.is_empty()
+            || !self.lits_for_cmp.is_empty()
+            || !self.lits_for_array_access.is_empty()
+            || !self.removed.is_empty()
+        {
+            let mut v = Finalizer {
+                simple_functions: &self.simple_functions,
+                lits_for_cmp: &self.lits_for_cmp,
+                lits_for_array_access: &self.lits_for_array_access,
+                vars_to_remove: &self.removed,
+                changed: false,
+            };
+            n.visit_mut_with(&mut v);
+            changed |= v.changed;
         }
 
         if !self.vars_for_inlining.is_empty() {
-            n.visit_mut_with(&mut MultiReplacer::new(
-                &mut self.vars_for_inlining,
-                false,
-                MultiReplacerMode::Normal,
-                &mut changed,
-            ));
+            let mut v = NormalMultiReplacer::new(&mut self.vars_for_inlining);
+            n.visit_mut_with(&mut v);
+            changed |= v.changed;
         }
 
         changed
@@ -606,7 +623,8 @@ where
                     "ignore_return_value: Dropping unused expr: {}",
                     dump(&*e, false)
                 );
-                self.changed = true;
+                // We don't need to run this again
+                // self.changed = true;
                 return None;
             }
 
@@ -679,35 +697,50 @@ where
 
             // We optimize binary expressions if operation is side-effect-free and lhs and rhs is
             // evaluated regardless of value of lhs.
-            //
-            // Div is excluded because of zero.
-            // TODO: Handle
-            Expr::Bin(BinExpr {
-                op:
-                    BinaryOp::EqEq
-                    | BinaryOp::NotEq
-                    | BinaryOp::EqEqEq
-                    | BinaryOp::NotEqEq
-                    | BinaryOp::Lt
-                    | BinaryOp::LtEq
-                    | BinaryOp::Gt
-                    | BinaryOp::GtEq
-                    | BinaryOp::LShift
-                    | BinaryOp::RShift
-                    | BinaryOp::ZeroFillRShift
-                    | BinaryOp::Add
-                    | BinaryOp::Sub
-                    | BinaryOp::Mul
-                    | BinaryOp::Div
-                    | BinaryOp::Mod
-                    | BinaryOp::BitOr
-                    | BinaryOp::BitXor
-                    | BinaryOp::BitAnd
-                    | BinaryOp::In
-                    | BinaryOp::InstanceOf
-                    | BinaryOp::Exp,
-                ..
-            }) => return Some(e.take()),
+            Expr::Bin(
+                bin @ BinExpr {
+                    op:
+                        op!(bin, "+")
+                        | op!(bin, "-")
+                        | op!("*")
+                        | op!("%")
+                        | op!("**")
+                        | op!("^")
+                        | op!("&")
+                        | op!("|")
+                        | op!(">>")
+                        | op!("<<")
+                        | op!(">>>")
+                        | op!("===")
+                        | op!("!==")
+                        | op!("==")
+                        | op!("!=")
+                        | op!("<")
+                        | op!("<=")
+                        | op!(">")
+                        | op!(">="),
+                    ..
+                },
+            ) => {
+                let left = self.ignore_return_value(&mut bin.left);
+                let right = self.ignore_return_value(&mut bin.right);
+                let span = bin.span;
+
+                if left.is_none() && right.is_none() {
+                    return None;
+                } else if right.is_none() {
+                    return left;
+                } else if left.is_none() {
+                    return right;
+                }
+
+                self.changed = true;
+                report_change!("ignore_return_value: Compressing binary as seq");
+                return Some(Expr::Seq(SeqExpr {
+                    span,
+                    exprs: vec![Box::new(left.unwrap()), Box::new(right.unwrap())],
+                }));
+            }
 
             // Pure calls can be removed
             Expr::Call(CallExpr {
@@ -766,6 +799,31 @@ where
                             if !usage.reassigned() && usage.pure_fn {
                                 self.changed = true;
                                 report_change!("Reducing function call to a variable");
+
+                                if args.iter().any(|arg| arg.spread.is_some()) {
+                                    let elems = args
+                                        .take()
+                                        .into_iter()
+                                        .filter_map(|mut arg| {
+                                            if arg.spread.is_some() {
+                                                return Some(arg);
+                                            }
+                                            self.ignore_return_value(&mut arg.expr)
+                                                .map(Box::new)
+                                                .map(|expr| ExprOrSpread { expr, spread: None })
+                                        })
+                                        .map(Some)
+                                        .collect::<Vec<_>>();
+
+                                    if elems.is_empty() {
+                                        return None;
+                                    }
+
+                                    return Some(Expr::Array(ArrayLit {
+                                        span: callee.span,
+                                        elems,
+                                    }));
+                                }
 
                                 let args = args
                                     .take()
@@ -829,7 +887,13 @@ where
                 ..
             }) => {
                 if let Pat::Ident(i) = &mut **pat {
+                    let old = i.id.to_id();
                     self.store_var_for_inlining(&mut i.id, right, false, true);
+
+                    if i.is_dummy() && self.options.unused {
+                        report_change!("inline: Removed variable ({}{:?})", old.0, old.1);
+                        self.vars.removed.insert(old);
+                    }
 
                     if right.is_invalid() {
                         return None;
@@ -883,6 +947,33 @@ where
             | Expr::TsAs(_) => return Some(e.take()),
 
             Expr::Array(arr) => {
+                if arr.elems.iter().any(|e| match e {
+                    Some(ExprOrSpread {
+                        spread: Some(..), ..
+                    }) => true,
+                    _ => false,
+                }) {
+                    return Some(Expr::Array(ArrayLit {
+                        elems: arr
+                            .elems
+                            .take()
+                            .into_iter()
+                            .flatten()
+                            .filter_map(|mut e| {
+                                if e.spread.is_some() {
+                                    return Some(e);
+                                }
+
+                                self.ignore_return_value(&mut e.expr)
+                                    .map(Box::new)
+                                    .map(|expr| ExprOrSpread { expr, spread: None })
+                            })
+                            .map(Some)
+                            .collect(),
+                        ..*arr
+                    }));
+                }
+
                 let mut exprs = vec![];
                 self.changed = true;
                 report_change!("ignore_return_value: Inverting an array literal");
@@ -891,7 +982,7 @@ where
                         .take()
                         .into_iter()
                         .flatten()
-                        .map(|v| v.expr)
+                        .map(|e| e.expr)
                         .filter_map(|mut e| self.ignore_return_value(&mut e))
                         .map(Box::new),
                 );
@@ -1132,81 +1223,6 @@ where
         }
 
         Some(e.take())
-    }
-
-    fn merge_var_decls(&mut self, stmts: &mut Vec<Stmt>) {
-        if !self.options.join_vars && !self.options.hoist_vars {
-            return;
-        }
-        if self.ctx.in_asm {
-            return;
-        }
-
-        // Merge var declarations fully, if possible.
-        if stmts.windows(2).any(|stmts| match (&stmts[0], &stmts[1]) {
-            (Stmt::Decl(Decl::Var(a)), Stmt::Decl(Decl::Var(b))) => {
-                a.kind == b.kind && !contains_leaping_yield(a) && !contains_leaping_yield(b)
-            }
-            _ => false,
-        }) {
-            self.changed = true;
-
-            report_change!("Merging variable declarations");
-            dump_change_detail!(
-                "[Before]: {}",
-                dump(
-                    &BlockStmt {
-                        span: DUMMY_SP,
-                        stmts: stmts.clone()
-                    },
-                    false
-                )
-            );
-
-            let orig = take(stmts);
-            let mut new = Vec::with_capacity(orig.len());
-
-            let mut var_decl: Option<Box<VarDecl>> = None;
-
-            for stmt in orig {
-                match stmt {
-                    Stmt::Decl(Decl::Var(below)) => {
-                        //
-                        match var_decl.take() {
-                            Some(mut upper) if upper.kind == below.kind => {
-                                upper.decls.extend(below.decls);
-                                var_decl = Some(upper);
-                            }
-                            d => {
-                                new.extend(d.map(Decl::Var).map(Stmt::Decl));
-                                var_decl = Some(below);
-                            }
-                        }
-                    }
-                    _ => {
-                        // If it's not a var decl,
-
-                        new.extend(var_decl.take().map(Decl::Var).map(Stmt::Decl));
-                        new.push(stmt);
-                    }
-                }
-            }
-
-            new.extend(var_decl.take().map(Decl::Var).map(Stmt::Decl));
-
-            dump_change_detail!(
-                "[Change] merged: {}",
-                dump(
-                    &BlockStmt {
-                        span: DUMMY_SP,
-                        stmts: new.clone()
-                    },
-                    false
-                )
-            );
-
-            *stmts = new
-        }
     }
 
     fn try_removing_block(&mut self, s: &mut Stmt, unwrap_more: bool, allow_fn_decl: bool) {
@@ -1560,6 +1576,7 @@ where
             e.args.visit_mut_with(&mut *self.with_ctx(ctx));
         }
 
+        self.ignore_unused_args_of_iife(e);
         self.inline_args_of_iife(e);
     }
 
@@ -1699,6 +1716,11 @@ where
                     let old = i.to_id();
 
                     self.store_var_for_inlining(i, right, false, false);
+
+                    if i.is_dummy() && self.options.unused {
+                        report_change!("inline: Removed variable ({}, {:?})", old.0, old.1);
+                        self.vars.removed.insert(old.clone());
+                    }
 
                     if right.is_invalid() {
                         if let Some(lit) = self
@@ -2241,11 +2263,18 @@ where
             .enumerate()
             .identify_last()
             .filter_map(|(last, (idx, expr))| {
+                #[cfg(feature = "debug")]
+                let _span =
+                    tracing::span!(tracing::Level::ERROR, "seq_expr_with_children").entered();
+
                 expr.visit_mut_with(&mut *self.with_ctx(ctx));
                 let is_injected_zero = match &**expr {
                     Expr::Lit(Lit::Num(v)) => v.span.is_dummy(),
                     _ => false,
                 };
+
+                #[cfg(feature = "debug")]
+                let _span = tracing::span!(tracing::Level::ERROR, "seq_expr").entered();
 
                 let can_remove = !last
                     && (idx != 0
@@ -2507,8 +2536,6 @@ where
 
         self.with_ctx(ctx).handle_stmt_likes(stmts);
 
-        self.with_ctx(ctx).merge_var_decls(stmts);
-
         drop_invalid_stmts(stmts);
 
         if stmts.len() == 1 {
@@ -2560,7 +2587,10 @@ where
     /// We don't optimize [Tpl] contained in [TaggedTpl].
     #[cfg_attr(feature = "debug", tracing::instrument(skip_all))]
     fn visit_mut_tagged_tpl(&mut self, n: &mut TaggedTpl) {
-        n.tag.visit_mut_with(self);
+        n.tag.visit_mut_with(&mut *self.with_ctx(Ctx {
+            is_this_aware_callee: true,
+            ..self.ctx
+        }));
 
         n.tpl.exprs.visit_mut_with(self);
     }

@@ -334,6 +334,7 @@ define_helpers!(Helpers {
         set_prototype_of,
         is_native_function
     ),
+    write_only_error: (),
 
     class_private_field_destructure: (
         class_extract_field_descriptor,
@@ -355,6 +356,8 @@ define_helpers!(Helpers {
         is_native_reflect_construct,
         possible_constructor_return
     ),
+
+    create_for_of_iterator_helper_loose: (unsupported_iterable_to_array),
 
     ts_decorate: (),
     ts_generator: (),

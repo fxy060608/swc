@@ -13,18 +13,18 @@ impl Compressor {
                     && string.value.to_ascii_lowercase() != js_word!("none") =>
             {
                 at_rule.prelude = Some(Box::new(AtRulePrelude::KeyframesPrelude(
-                    if let Some(escaped) = crate::escape::try_escape_if_shorter(&string.value) {
-                        KeyframesName::CustomIdent(CustomIdent {
-                            span: string.span,
-                            value: escaped.into(),
-                            raw: None,
-                        })
-                    } else {
-                        KeyframesName::Str(Str {
+                    if self.is_ident_shorter_than_str(&string.value) {
+                        KeyframesName::CustomIdent(Box::new(CustomIdent {
                             span: string.span,
                             value: string.value.clone(),
                             raw: None,
-                        })
+                        }))
+                    } else {
+                        KeyframesName::Str(Box::new(Str {
+                            span: string.span,
+                            value: string.value.clone(),
+                            raw: None,
+                        }))
                     },
                 )));
             }
@@ -47,7 +47,7 @@ impl Compressor {
             KeyframeSelector::Percentage(i) if i.value.value == 100.0 => {
                 *keyframe_selector = KeyframeSelector::Ident(Ident {
                     span: i.span,
-                    value: "to".into(),
+                    value: js_word!("to"),
                     raw: None,
                 })
             }

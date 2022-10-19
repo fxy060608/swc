@@ -56,11 +56,13 @@ tracing-chrome = "0.5.0"
 tracing-futures = "0.2.5"
 tracing-subscriber = { version = "0.3.9", features = ["env-filter"] }
 
-swc_core = { version = "0.26.0", features = [
+swc_core = { version = "0.38.22", features = [
   "ecma_ast",
   "common_concurrent",
   "bundler",
   "ecma_loader",
+  "ecma_transforms",
+  "ecma_visit",
   "base_node",
   "base_concurrent",
-] }
+  ] }

@@ -231,10 +231,7 @@ pub(crate) fn is_ok_to_negate_rhs(expr_ctx: &ExprCtx, rhs: &Expr) -> bool {
 
             #[cfg(feature = "debug")]
             {
-                tracing::warn!(
-                    "unimplemented: is_ok_to_negate_rhs: `{}`",
-                    dump(&*rhs, false)
-                );
+                tracing::warn!("unimplemented: is_ok_to_negate_rhs: `{}`", dump(rhs, false));
             }
 
             false
@@ -347,20 +344,10 @@ pub(crate) fn negate_cost(
                         return cost(expr_ctx, last, in_bool_ctx, bin_op, is_ret_val_ignored);
                     }
 
-                    if is_ret_val_ignored {
-                        0
-                    } else {
-                        1
-                    }
+                    isize::from(!is_ret_val_ignored)
                 }
 
-                _ => {
-                    if is_ret_val_ignored {
-                        0
-                    } else {
-                        1
-                    }
-                }
+                _ => isize::from(!is_ret_val_ignored),
             }
         })();
 
@@ -743,48 +730,6 @@ impl VisitMut for UnreachableHandler {
         self.in_var_name = false;
         n.init.visit_mut_with(self);
     }
-}
-
-pub(super) fn is_global_var_with_pure_property_access(s: &str) -> bool {
-    matches!(
-        s,
-        "console"
-            | "clearInterval"
-            | "clearTimeout"
-            | "setInterval"
-            | "setTimeout"
-            | "Boolean"
-            | "Date"
-            | "decodeURI"
-            | "decodeURIComponent"
-            | "encodeURI"
-            | "encodeURIComponent"
-            | "escape"
-            | "eval"
-            | "EvalError"
-            | "isFinite"
-            | "isNaN"
-            | "JSON"
-            | "parseFloat"
-            | "parseInt"
-            | "RegExp"
-            | "RangeError"
-            | "ReferenceError"
-            | "SyntaxError"
-            | "TypeError"
-            | "unescape"
-            | "URIError"
-            | "atob"
-            | "globalThis"
-            | "String"
-            | "Object"
-            | "Array"
-            | "Number"
-            | "NaN"
-            | "Symbol"
-            | "Promise"
-            | "Math"
-    )
 }
 
 // TODO: remove

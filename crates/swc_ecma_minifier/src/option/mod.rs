@@ -257,10 +257,10 @@ pub struct CompressOptions {
     #[serde(alias = "pure_funcs")]
     pub pure_funcs: Vec<Box<Expr>>,
 
-    #[serde(default)]
+    #[serde(default = "true_by_default")]
     #[serde(alias = "reduce_funcs")]
     pub reduce_fns: bool,
-    #[serde(default)]
+    #[serde(default = "true_by_default")]
     #[serde(alias = "reduce_vars")]
     pub reduce_vars: bool,
 
@@ -354,7 +354,7 @@ const fn true_by_default() -> bool {
 }
 
 const fn default_passes() -> usize {
-    2
+    3
 }
 
 const fn three_by_default() -> u8 {
