@@ -1,9 +1,14 @@
 use std::ops::{Deref, DerefMut};
 
-use swc_common::DUMMY_SP;
+use swc_atoms::js_word;
+use swc_common::{Span, Spanned, SyntaxContext, DUMMY_SP};
 use swc_css_ast::*;
 
-use super::{input::ParserInput, Ctx, PResult, Parse, Parser};
+use super::{
+    input::{Input, InputType, ParserInput},
+    Ctx, Error, PResult, Parse, Parser,
+};
+use crate::{error::ErrorKind, parser::BlockContentsGrammar};
 
 impl<I> Parser<I>
 where
@@ -13,7 +18,9 @@ where
     #[inline]
     pub(super) fn with_ctx(&mut self, ctx: Ctx) -> WithCtx<I> {
         let orig_ctx = self.ctx;
+
         self.ctx = ctx;
+
         WithCtx {
             orig_ctx,
             inner: self,
@@ -28,82 +35,343 @@ where
         self.parse()
     }
 
-    pub(super) fn legacy_nested_selector_list_to_modern_selector_list(
+    pub(super) fn try_parse<Ret>(
         &mut self,
-        mut selector_list: SelectorList,
-    ) -> PResult<SelectorList> {
-        for s in selector_list.children.iter_mut() {
-            if s.children.iter().any(|s| match s {
-                ComplexSelectorChildren::CompoundSelector(s) => s.nesting_selector.is_some(),
-                _ => false,
-            }) {
-                continue;
+        op: impl FnOnce(&mut Parser<I>) -> PResult<Ret>,
+    ) -> Option<Ret> {
+        let mut parser = self.clone();
+
+        match op(&mut parser) {
+            Ok(v) => {
+                *self = parser;
+                Some(v)
             }
-
-            s.children.insert(
-                0,
-                ComplexSelectorChildren::CompoundSelector(CompoundSelector {
-                    span: DUMMY_SP,
-                    nesting_selector: Some(NestingSelector { span: DUMMY_SP }),
-                    type_selector: Default::default(),
-                    subclass_selectors: Default::default(),
-                }),
-            );
-            s.children.insert(
-                1,
-                ComplexSelectorChildren::Combinator(Combinator {
-                    span: DUMMY_SP,
-                    value: CombinatorValue::Descendant,
-                }),
-            );
+            Err(..) => None,
         }
-
-        Ok(selector_list)
     }
 
-    pub(super) fn legacy_relative_selector_list_to_modern_selector_list(
-        &mut self,
-        relative_selector_list: RelativeSelectorList,
-    ) -> PResult<SelectorList> {
-        let mut selector_list = SelectorList {
-            span: relative_selector_list.span,
-            children: Vec::with_capacity(relative_selector_list.children.len()),
+    pub(super) fn create_locv(&self, children: Vec<ComponentValue>) -> ListOfComponentValues {
+        let span = match (children.first(), children.last()) {
+            (Some(first), Some(last)) => {
+                Span::new(first.span_lo(), last.span_hi(), SyntaxContext::empty())
+            }
+            _ => DUMMY_SP,
         };
 
-        for relative_selector in relative_selector_list.children.into_iter() {
-            let mut complex_selector = relative_selector.selector.clone();
+        ListOfComponentValues { span, children }
+    }
 
-            complex_selector.children.insert(
-                0,
-                ComplexSelectorChildren::CompoundSelector(CompoundSelector {
-                    span: DUMMY_SP,
-                    nesting_selector: Some(NestingSelector { span: DUMMY_SP }),
-                    type_selector: Default::default(),
-                    subclass_selectors: Default::default(),
-                }),
-            );
+    pub(super) fn parse_according_to_grammar<T>(
+        &mut self,
+        list_of_component_values: &ListOfComponentValues,
+        op: impl FnOnce(&mut Parser<Input>) -> PResult<T>,
+    ) -> PResult<T> {
+        let lexer = Input::new(InputType::ListOfComponentValues(list_of_component_values));
+        let mut parser = Parser::new(lexer, self.config);
+        let res = op(&mut parser.with_ctx(self.ctx));
 
-            match relative_selector.combinator {
-                Some(combinator) => {
-                    complex_selector
-                        .children
-                        .insert(1, ComplexSelectorChildren::Combinator(combinator));
+        self.errors.extend(parser.take_errors());
+
+        res
+    }
+
+    pub(super) fn canonicalize_at_rule_prelude(&mut self, mut at_rule: AtRule) -> PResult<AtRule> {
+        let normalized_at_rule_name = match &at_rule.name {
+            AtRuleName::Ident(Ident { value, .. }) => value.to_ascii_lowercase(),
+            AtRuleName::DashedIdent(_) => return Ok(at_rule),
+        };
+
+        let list_of_component_values = match at_rule.prelude {
+            Some(at_rule_prelude) => match *at_rule_prelude {
+                AtRulePrelude::ListOfComponentValues(list_of_component_values) => {
+                    list_of_component_values
                 }
                 _ => {
-                    complex_selector.children.insert(
-                        1,
-                        ComplexSelectorChildren::Combinator(Combinator {
-                            span: DUMMY_SP,
-                            value: CombinatorValue::Descendant,
-                        }),
-                    );
+                    unreachable!();
+                }
+            },
+            _ => {
+                unreachable!();
+            }
+        };
+
+        at_rule.prelude = match self
+            .parse_according_to_grammar(&list_of_component_values, |parser| {
+                parser.parse_at_rule_prelude(&normalized_at_rule_name)
+            }) {
+            Ok(at_rule_prelude) => match at_rule_prelude {
+                Some(AtRulePrelude::LayerPrelude(LayerPrelude::NameList(name_list)))
+                    if name_list.name_list.len() > 1 && at_rule.block.is_some() =>
+                {
+                    self.errors.push(Error::new(
+                        name_list.span,
+                        ErrorKind::Expected("only one name"),
+                    ));
+
+                    Some(Box::new(AtRulePrelude::ListOfComponentValues(
+                        list_of_component_values,
+                    )))
+                }
+                None if *normalized_at_rule_name == js_word!("layer")
+                    && at_rule.block.is_none() =>
+                {
+                    self.errors.push(Error::new(
+                        at_rule.span,
+                        ErrorKind::Expected("at least one name"),
+                    ));
+
+                    Some(Box::new(AtRulePrelude::ListOfComponentValues(
+                        list_of_component_values,
+                    )))
+                }
+                _ => at_rule_prelude.map(Box::new),
+            },
+            Err(err) => {
+                if *err.kind() != ErrorKind::Ignore {
+                    self.errors.push(err);
+                }
+
+                if !list_of_component_values.children.is_empty() {
+                    Some(Box::new(AtRulePrelude::ListOfComponentValues(
+                        list_of_component_values,
+                    )))
+                } else {
+                    None
                 }
             }
+        };
 
-            selector_list.children.push(complex_selector);
+        Ok(at_rule)
+    }
+
+    pub(super) fn canonicalize_at_rule_block(&mut self, mut at_rule: AtRule) -> PResult<AtRule> {
+        let normalized_at_rule_name = match &at_rule.name {
+            AtRuleName::Ident(Ident { value, .. }) => value.to_ascii_lowercase(),
+            AtRuleName::DashedIdent(_) => return Ok(at_rule),
+        };
+
+        let mut block = match at_rule.block {
+            Some(simple_block) => simple_block,
+            _ => {
+                unreachable!();
+            }
+        };
+
+        let list_of_component_values = self.create_locv(block.value);
+
+        block.value = match self.parse_according_to_grammar(&list_of_component_values, |parser| {
+            parser.parse_at_rule_block(&normalized_at_rule_name)
+        }) {
+            Ok(block_contents) => block_contents,
+            Err(err) => {
+                if *err.kind() != ErrorKind::Ignore {
+                    self.errors.push(err);
+                }
+
+                list_of_component_values.children
+            }
+        };
+
+        at_rule.block = Some(block);
+
+        Ok(at_rule)
+    }
+
+    pub(super) fn canonicalize_qualified_rule_prelude(
+        &mut self,
+        mut qualified_rule: QualifiedRule,
+    ) -> PResult<QualifiedRule> {
+        let list_of_component_values = match qualified_rule.prelude {
+            QualifiedRulePrelude::ListOfComponentValues(list_of_component_values) => {
+                list_of_component_values
+            }
+            _ => {
+                unreachable!();
+            }
+        };
+
+        qualified_rule.prelude = if self.ctx.in_keyframes_at_rule {
+            QualifiedRulePrelude::ListOfComponentValues(list_of_component_values)
+        } else if self.ctx.mixed_with_declarations {
+            match self.parse_according_to_grammar::<RelativeSelectorList>(
+                &list_of_component_values,
+                |parser| parser.parse(),
+            ) {
+                Ok(relative_selector_list) => {
+                    QualifiedRulePrelude::RelativeSelectorList(relative_selector_list)
+                }
+                Err(err) => {
+                    self.errors.push(err);
+
+                    QualifiedRulePrelude::ListOfComponentValues(list_of_component_values)
+                }
+            }
+        } else {
+            match self
+                .parse_according_to_grammar::<SelectorList>(&list_of_component_values, |parser| {
+                    parser.parse()
+                }) {
+                Ok(selector_list) => QualifiedRulePrelude::SelectorList(selector_list),
+                Err(err) => {
+                    self.errors.push(err);
+
+                    QualifiedRulePrelude::ListOfComponentValues(list_of_component_values)
+                }
+            }
+        };
+
+        Ok(qualified_rule)
+    }
+
+    pub(super) fn canonicalize_qualified_rule_block(
+        &mut self,
+        mut qualified_rule: QualifiedRule,
+    ) -> PResult<QualifiedRule> {
+        qualified_rule.block.value = match self.ctx.block_contents_grammar {
+            BlockContentsGrammar::RuleList if self.ctx.in_keyframes_at_rule => self
+                .parse_according_to_grammar(
+                    &self.create_locv(qualified_rule.block.value),
+                    |parser| {
+                        parser
+                            .with_ctx(Ctx {
+                                block_contents_grammar: BlockContentsGrammar::DeclarationList,
+                                ..parser.ctx
+                            })
+                            .parse_as::<Vec<DeclarationOrAtRule>>()
+                    },
+                )?
+                .into_iter()
+                .map(ComponentValue::DeclarationOrAtRule)
+                .collect(),
+            _ => self
+                .parse_according_to_grammar(
+                    &self.create_locv(qualified_rule.block.value),
+                    |parser| {
+                        parser
+                            .with_ctx(Ctx {
+                                block_contents_grammar: BlockContentsGrammar::StyleBlock,
+                                ..parser.ctx
+                            })
+                            .parse_as::<Vec<StyleBlock>>()
+                    },
+                )?
+                .into_iter()
+                .map(ComponentValue::StyleBlock)
+                .collect(),
+        };
+
+        Ok(qualified_rule)
+    }
+
+    pub(super) fn canonicalize_function_value(
+        &mut self,
+        mut function: Function,
+    ) -> PResult<Function> {
+        match self.ctx.block_contents_grammar {
+            BlockContentsGrammar::DeclarationList => {}
+            _ => {
+                let function_name = function.name.value.to_ascii_lowercase();
+
+                let locv = self.create_locv(function.value);
+
+                function.value = match self.parse_according_to_grammar(&locv, |parser| {
+                    parser.parse_function_values(&function_name)
+                }) {
+                    Ok(values) => values,
+                    Err(err) => {
+                        if *err.kind() != ErrorKind::Ignore {
+                            self.errors.push(err);
+                        }
+
+                        locv.children
+                    }
+                };
+            }
         }
 
-        Ok(selector_list)
+        Ok(function)
+    }
+
+    pub(super) fn canonicalize_declaration_value(
+        &mut self,
+        mut declaration: Declaration,
+    ) -> PResult<Declaration> {
+        let locv = self.create_locv(declaration.value);
+
+        declaration.value = match self.parse_according_to_grammar(&locv, |parser| {
+            let mut values = vec![];
+
+            loop {
+                if is!(parser, EOF) {
+                    break;
+                }
+
+                values.push(parser.parse_generic_value()?);
+            }
+
+            Ok(values)
+        }) {
+            Ok(values) => values,
+            Err(err) => {
+                if *err.kind() != ErrorKind::Ignore {
+                    self.errors.push(err);
+                }
+
+                locv.children
+            }
+        };
+
+        Ok(declaration)
+    }
+
+    pub(super) fn try_to_parse_legacy_nesting(&mut self) -> Option<QualifiedRule> {
+        let state = self.input.state();
+        let qualified_rule = self
+            .with_ctx(Ctx {
+                block_contents_grammar: BlockContentsGrammar::StyleBlock,
+                mixed_with_declarations: true,
+                ..self.ctx
+            })
+            .parse_as::<QualifiedRule>();
+
+        match qualified_rule {
+            Ok(qualified_rule) => Some(qualified_rule),
+            _ => {
+                self.input.reset(&state);
+
+                None
+            }
+        }
+    }
+
+    pub(super) fn try_to_parse_declaration_in_parens(&mut self) -> Option<Declaration> {
+        let mut temporary_list = ListOfComponentValues {
+            span: Default::default(),
+            children: vec![],
+        };
+
+        while !is_one_of!(self, ")", EOF) {
+            let component_value = match self.parse_as::<ComponentValue>() {
+                Ok(component_value) => component_value,
+                Err(_) => return None,
+            };
+
+            temporary_list.children.push(component_value);
+        }
+
+        match self
+            .parse_according_to_grammar::<Declaration>(&temporary_list, |parser| parser.parse_as())
+        {
+            Ok(decl) => Some(decl),
+            Err(_) => None,
+        }
+    }
+
+    pub(super) fn parse_declaration_from_temporary_list(
+        &mut self,
+        temporary_list: &ListOfComponentValues,
+    ) -> PResult<Declaration> {
+        self.parse_according_to_grammar::<Declaration>(temporary_list, |parser| parser.parse_as())
     }
 }
 

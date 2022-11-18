@@ -806,30 +806,15 @@ impl VisitMut for TreeShaker {
                 *n = *a.right.take();
             }
         }
-    }
 
-    fn visit_mut_import_specifiers(&mut self, ss: &mut Vec<ImportSpecifier>) {
-        ss.retain(|s| {
-            let local = match s {
-                ImportSpecifier::Named(l) => &l.local,
-                ImportSpecifier::Default(l) => &l.local,
-                ImportSpecifier::Namespace(l) => &l.local,
-            };
-
-            if self.can_drop_binding(local.to_id(), false) {
-                debug!(
-                    "Dropping import specifier `{}` because it's not used",
-                    local
-                );
-                self.changed = true;
-                return false;
-            }
-
-            true
-        });
+        if !n.is_invalid() {
+            debug_assert_valid(n);
+        }
     }
 
     fn visit_mut_module(&mut self, m: &mut Module) {
+        debug_assert_valid(m);
+
         let _tracing = span!(Level::ERROR, "tree-shaker", pass = self.pass).entered();
 
         if self.bindings.is_empty() {
@@ -890,23 +875,7 @@ impl VisitMut for TreeShaker {
     }
 
     fn visit_mut_module_item(&mut self, n: &mut ModuleItem) {
-        match n {
-            ModuleItem::ModuleDecl(ModuleDecl::Import(i)) => {
-                let is_for_side_effect = i.specifiers.is_empty();
-
-                i.visit_mut_with(self);
-
-                if !is_for_side_effect && i.specifiers.is_empty() {
-                    debug!("Dropping an import because it's not used");
-                    self.changed = true;
-                    *n = ModuleItem::Stmt(Stmt::Empty(EmptyStmt { span: DUMMY_SP }));
-                }
-            }
-            _ => {
-                n.visit_mut_children_with(self);
-            }
-        }
-
+        n.visit_mut_children_with(self);
         debug_assert_valid(n);
     }
 
@@ -923,6 +892,8 @@ impl VisitMut for TreeShaker {
                 return;
             }
         }
+
+        debug_assert_valid(s);
 
         if let Stmt::Decl(Decl::Var(v)) = s {
             let span = v.span;
@@ -951,18 +922,10 @@ impl VisitMut for TreeShaker {
                 if exprs.is_empty() {
                     *s = Stmt::Empty(EmptyStmt { span: DUMMY_SP });
                     return;
-                } else if exprs.len() == 1 {
-                    *s = Stmt::Expr(ExprStmt {
-                        span,
-                        expr: exprs.into_iter().next().unwrap(),
-                    });
                 } else {
                     *s = Stmt::Expr(ExprStmt {
                         span,
-                        expr: Box::new(Expr::Seq(SeqExpr {
-                            span: DUMMY_SP,
-                            exprs,
-                        })),
+                        expr: Expr::from_exprs(exprs),
                     });
                 }
             }
@@ -973,6 +936,8 @@ impl VisitMut for TreeShaker {
                 *s = Stmt::Empty(EmptyStmt { span: DUMMY_SP });
             }
         }
+
+        debug_assert_valid(s);
     }
 
     fn visit_mut_stmts(&mut self, s: &mut Vec<Stmt>) {

@@ -29,24 +29,6 @@
    :  ^^^^^^^^
    `----
 
-  x ComponentValue
-   ,-[$DIR/tests/recovery/at-rule/document/input.css:1:1]
- 1 | @document domain(http://www.example.com/) {}
-   :          ^
-   `----
-
-  x WhiteSpace { value: Atom(' ' type=inline) }
-   ,-[$DIR/tests/recovery/at-rule/document/input.css:1:1]
- 1 | @document domain(http://www.example.com/) {}
-   :          ^
-   `----
-
-  x ComponentValue
-   ,-[$DIR/tests/recovery/at-rule/document/input.css:1:1]
- 1 | @document domain(http://www.example.com/) {}
-   :           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-   `----
-
   x Function
    ,-[$DIR/tests/recovery/at-rule/document/input.css:1:1]
  1 | @document domain(http://www.example.com/) {}
@@ -65,7 +47,7 @@
    :                  ^^^^
    `----
 
-  x Ident { value: Atom('http' type=inline), raw: Atom('http' type=inline) }
+  x Ident { value: Atom('http' type=inline), raw: "http" }
    ,-[$DIR/tests/recovery/at-rule/document/input.css:1:1]
  1 | @document domain(http://www.example.com/) {}
    :                  ^^^^
@@ -113,7 +95,7 @@
    :                         ^^^
    `----
 
-  x Ident { value: Atom('www' type=inline), raw: Atom('www' type=inline) }
+  x Ident { value: Atom('www' type=inline), raw: "www" }
    ,-[$DIR/tests/recovery/at-rule/document/input.css:1:1]
  1 | @document domain(http://www.example.com/) {}
    :                         ^^^
@@ -137,7 +119,7 @@
    :                             ^^^^^^^
    `----
 
-  x Ident { value: Atom('example' type=inline), raw: Atom('example' type=inline) }
+  x Ident { value: Atom('example' type=inline), raw: "example" }
    ,-[$DIR/tests/recovery/at-rule/document/input.css:1:1]
  1 | @document domain(http://www.example.com/) {}
    :                             ^^^^^^^
@@ -161,7 +143,7 @@
    :                                     ^^^
    `----
 
-  x Ident { value: Atom('com' type=inline), raw: Atom('com' type=inline) }
+  x Ident { value: Atom('com' type=inline), raw: "com" }
    ,-[$DIR/tests/recovery/at-rule/document/input.css:1:1]
  1 | @document domain(http://www.example.com/) {}
    :                                     ^^^
@@ -177,18 +159,6 @@
    ,-[$DIR/tests/recovery/at-rule/document/input.css:1:1]
  1 | @document domain(http://www.example.com/) {}
    :                                        ^
-   `----
-
-  x ComponentValue
-   ,-[$DIR/tests/recovery/at-rule/document/input.css:1:1]
- 1 | @document domain(http://www.example.com/) {}
-   :                                          ^
-   `----
-
-  x WhiteSpace { value: Atom(' ' type=inline) }
-   ,-[$DIR/tests/recovery/at-rule/document/input.css:1:1]
- 1 | @document domain(http://www.example.com/) {}
-   :                                          ^
    `----
 
   x SimpleBlock

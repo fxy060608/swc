@@ -111,7 +111,7 @@
             "type": "Declaration",
             "span": {
               "start": 17,
-              "end": 38,
+              "end": 39,
               "ctxt": 0
             },
             "name": {
@@ -134,20 +134,36 @@
                 },
                 "token": {
                   "BadString": {
-                    "value": "tes",
-                    "raw": "\"tes"
+                    "raw_value": "\"tes"
                   }
                 }
               },
               {
-                "type": "Ident",
+                "type": "PreservedToken",
+                "span": {
+                  "start": 30,
+                  "end": 35,
+                  "ctxt": 0
+                },
+                "token": {
+                  "WhiteSpace": {
+                    "value": "\n    "
+                  }
+                }
+              },
+              {
+                "type": "PreservedToken",
                 "span": {
                   "start": 35,
                   "end": 36,
                   "ctxt": 0
                 },
-                "value": "t",
-                "raw": "t"
+                "token": {
+                  "Ident": {
+                    "value": "t",
+                    "raw": "t"
+                  }
+                }
               },
               {
                 "type": "PreservedToken",
@@ -158,8 +174,7 @@
                 },
                 "token": {
                   "BadString": {
-                    "value": ";",
-                    "raw": "\";"
+                    "raw_value": "\";"
                   }
                 }
               }

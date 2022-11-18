@@ -10,27 +10,19 @@ var Private = function Private() {
     "use strict";
     for(var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++)args[_key] = arguments[_key];
     _class_call_check(this, Protected);
-}, Protected2 = function Protected2() {
-    "use strict";
-    for(var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++)args[_key] = arguments[_key];
-    _class_call_check(this, Protected2);
 }, Public = function Public() {
     "use strict";
     for(var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++)args[_key] = arguments[_key];
     _class_call_check(this, Public);
-}, Public2 = function Public2() {
-    "use strict";
-    for(var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++)args[_key] = arguments[_key];
-    _class_call_check(this, Public2);
 };
 Mix(Private, function Private2() {
     "use strict";
     for(var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++)args[_key] = arguments[_key];
     _class_call_check(this, Private2);
 }), Mix(Private, Protected), Mix(Private, Public);
-var C4 = function(_superClass) {
+var C4 = function(_Mix) {
     "use strict";
-    _inherits(C4, _superClass);
+    _inherits(C4, _Mix);
     var _super = _create_super(C4);
     function C4() {
         return _class_call_check(this, C4), _super.apply(this, arguments);
@@ -40,9 +32,13 @@ var C4 = function(_superClass) {
     }, C4.g = function() {
         C4.s, C5.s, C6.s;
     }, C4;
-}(Mix(Protected, Protected2)), C5 = function(_superClass) {
+}(Mix(Protected, function Protected2() {
     "use strict";
-    _inherits(C5, _superClass);
+    for(var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++)args[_key] = arguments[_key];
+    _class_call_check(this, Protected2);
+})), C5 = function(_Mix) {
+    "use strict";
+    _inherits(C5, _Mix);
     var _super = _create_super(C5);
     function C5() {
         return _class_call_check(this, C5), _super.apply(this, arguments);
@@ -52,9 +48,9 @@ var C4 = function(_superClass) {
     }, C5.g = function() {
         C4.s, C5.s, C6.s;
     }, C5;
-}(Mix(Protected, Public)), C6 = function(_superClass) {
+}(Mix(Protected, Public)), C6 = function(_Mix) {
     "use strict";
-    _inherits(C6, _superClass);
+    _inherits(C6, _Mix);
     var _super = _create_super(C6);
     function C6() {
         return _class_call_check(this, C6), _super.apply(this, arguments);
@@ -64,4 +60,8 @@ var C4 = function(_superClass) {
     }, C6.g = function() {
         C4.s, C5.s, C6.s;
     }, C6;
-}(Mix(Public, Public2));
+}(Mix(Public, function Public2() {
+    "use strict";
+    for(var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++)args[_key] = arguments[_key];
+    _class_call_check(this, Public2);
+}));

@@ -35,28 +35,76 @@
    :  ^^^^
    `----
 
-  x PageSelectorList
+  x ComponentValue
+   ,-[$DIR/tests/recovery/at-rule/page/no-space/input.css:1:1]
+ 1 | @page Page: blank {
+   :      ^
+   `----
+
+  x WhiteSpace { value: " " }
+   ,-[$DIR/tests/recovery/at-rule/page/no-space/input.css:1:1]
+ 1 | @page Page: blank {
+   :      ^
+   `----
+
+  x ComponentValue
+   ,-[$DIR/tests/recovery/at-rule/page/no-space/input.css:1:1]
+ 1 | @page Page: blank {
+   :       ^^^^
+   `----
+
+  x Ident { value: Atom('Page' type=inline), raw: "Page" }
+   ,-[$DIR/tests/recovery/at-rule/page/no-space/input.css:1:1]
+ 1 | @page Page: blank {
+   :       ^^^^
+   `----
+
+  x ComponentValue
+   ,-[$DIR/tests/recovery/at-rule/page/no-space/input.css:1:1]
+ 1 | @page Page: blank {
+   :           ^
+   `----
+
+  x Colon
+   ,-[$DIR/tests/recovery/at-rule/page/no-space/input.css:1:1]
+ 1 | @page Page: blank {
+   :           ^
+   `----
+
+  x ComponentValue
+   ,-[$DIR/tests/recovery/at-rule/page/no-space/input.css:1:1]
+ 1 | @page Page: blank {
+   :            ^
+   `----
+
+  x WhiteSpace { value: " " }
+   ,-[$DIR/tests/recovery/at-rule/page/no-space/input.css:1:1]
+ 1 | @page Page: blank {
+   :            ^
+   `----
+
+  x ComponentValue
    ,-[$DIR/tests/recovery/at-rule/page/no-space/input.css:1:1]
  1 | @page Page: blank {
    :             ^^^^^
    `----
 
-  x PageSelector
+  x Ident { value: Atom('blank' type=inline), raw: "blank" }
    ,-[$DIR/tests/recovery/at-rule/page/no-space/input.css:1:1]
  1 | @page Page: blank {
    :             ^^^^^
    `----
 
-  x PageSelectorType
+  x ComponentValue
    ,-[$DIR/tests/recovery/at-rule/page/no-space/input.css:1:1]
  1 | @page Page: blank {
-   :             ^^^^^
+   :                  ^
    `----
 
-  x Ident
+  x WhiteSpace { value: " " }
    ,-[$DIR/tests/recovery/at-rule/page/no-space/input.css:1:1]
  1 | @page Page: blank {
-   :             ^^^^^
+   :                  ^
    `----
 
   x SimpleBlock
@@ -112,13 +160,13 @@
   x ComponentValue
    ,-[$DIR/tests/recovery/at-rule/page/no-space/input.css:2:5]
  2 | @top-center { content: none }
-   :               ^^^^^^^^^^^^^
+   :               ^^^^^^^^^^^^^^
    `----
 
   x Declaration
    ,-[$DIR/tests/recovery/at-rule/page/no-space/input.css:2:5]
  2 | @top-center { content: none }
-   :               ^^^^^^^^^^^^^
+   :               ^^^^^^^^^^^^^^
    `----
 
   x DeclarationName

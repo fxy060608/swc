@@ -497,19 +497,19 @@
   x ComponentValue
    ,-[$DIR/tests/fixture/function/calc/input.css:6:5]
  6 | --width: calc(10% + 30px);
-   : ^^^^^^^^^^^^^^
+   : ^^^^^^^^^^^^^^^^^^^^^^^^^
    `----
 
   x StyleBlock
    ,-[$DIR/tests/fixture/function/calc/input.css:6:5]
  6 | --width: calc(10% + 30px);
-   : ^^^^^^^^^^^^^^
+   : ^^^^^^^^^^^^^^^^^^^^^^^^^
    `----
 
   x Declaration
    ,-[$DIR/tests/fixture/function/calc/input.css:6:5]
  6 | --width: calc(10% + 30px);
-   : ^^^^^^^^^^^^^^
+   : ^^^^^^^^^^^^^^^^^^^^^^^^^
    `----
 
   x DeclarationName
@@ -527,13 +527,19 @@
   x ComponentValue
    ,-[$DIR/tests/fixture/function/calc/input.css:6:5]
  6 | --width: calc(10% + 30px);
-   :          ^^^^^
+   :          ^^^^^^^^^^^^^^^^
    `----
 
-  x Function { value: Atom('calc' type=static), raw: Atom('calc' type=static) }
+  x Function
    ,-[$DIR/tests/fixture/function/calc/input.css:6:5]
  6 | --width: calc(10% + 30px);
-   :          ^^^^^
+   :          ^^^^^^^^^^^^^^^^
+   `----
+
+  x Ident
+   ,-[$DIR/tests/fixture/function/calc/input.css:6:5]
+ 6 | --width: calc(10% + 30px);
+   :          ^^^^
    `----
 
   x ComponentValue
@@ -542,7 +548,7 @@
    :               ^^^
    `----
 
-  x Percentage { value: 10.0, raw: Atom('10' type=inline) }
+  x Percentage { value: 10.0, raw: "10" }
    ,-[$DIR/tests/fixture/function/calc/input.css:6:5]
  6 | --width: calc(10% + 30px);
    :               ^^^
@@ -554,7 +560,7 @@
    :                  ^
    `----
 
-  x WhiteSpace { value: Atom(' ' type=inline) }
+  x WhiteSpace { value: " " }
    ,-[$DIR/tests/fixture/function/calc/input.css:6:5]
  6 | --width: calc(10% + 30px);
    :                  ^
@@ -578,7 +584,7 @@
    :                    ^
    `----
 
-  x WhiteSpace { value: Atom(' ' type=inline) }
+  x WhiteSpace { value: " " }
    ,-[$DIR/tests/fixture/function/calc/input.css:6:5]
  6 | --width: calc(10% + 30px);
    :                    ^
@@ -590,22 +596,10 @@
    :                     ^^^^
    `----
 
-  x Dimension { value: 30.0, raw_value: Atom('30' type=inline), unit: Atom('px' type=static), raw_unit: Atom('px' type=static), type_flag: Integer }
+  x Dimension { value: 30.0, raw_value: "30", unit: Atom('px' type=static), raw_unit: "px", type_flag: Integer }
    ,-[$DIR/tests/fixture/function/calc/input.css:6:5]
  6 | --width: calc(10% + 30px);
    :                     ^^^^
-   `----
-
-  x ComponentValue
-   ,-[$DIR/tests/fixture/function/calc/input.css:6:5]
- 6 | --width: calc(10% + 30px);
-   :                         ^
-   `----
-
-  x RParen
-   ,-[$DIR/tests/fixture/function/calc/input.css:6:5]
- 6 | --width: calc(10% + 30px);
-   :                         ^
    `----
 
   x ComponentValue

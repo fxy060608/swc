@@ -201,6 +201,16 @@ impl VarUsageInfo {
                 + self.assign_count)
                 > 1
     }
+
+    pub fn can_inline_var(&self) -> bool {
+        !self.mutated
+            || (self.assign_count == 0 && !self.reassigned() && !self.has_property_mutation)
+    }
+
+    pub fn can_inline_fn_once(&self) -> bool {
+        self.callee_count > 0
+            || !self.executed_multiple_time && (self.is_fn_local || !self.used_in_non_child_fn)
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -1133,6 +1143,14 @@ where
     }
 
     fn visit_module(&mut self, n: &Module) {
+        let ctx = Ctx {
+            skip_standalone: true,
+            ..self.ctx
+        };
+        n.visit_children_with(&mut *self.with_ctx(ctx))
+    }
+
+    fn visit_script(&mut self, n: &Script) {
         let ctx = Ctx {
             skip_standalone: true,
             ..self.ctx

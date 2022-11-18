@@ -101,7 +101,7 @@
                 "end": 16,
                 "ctxt": 0
               },
-              "value": "--foo",
+              "value": "foo",
               "raw": "--foo"
             },
             "value": [
@@ -126,7 +126,7 @@
             "type": "Declaration",
             "span": {
               "start": 60,
-              "end": 86,
+              "end": 87,
               "ctxt": 0
             },
             "name": {
@@ -151,22 +151,10 @@
                   "BadUrl": {
                     "name": "url",
                     "raw_name": "url",
-                    "value": "var(--foo",
                     "raw_value": "var(--foo"
                   }
                 }
-              }
-            ],
-            "important": null
-          },
-          {
-            "type": "ListOfComponentValues",
-            "span": {
-              "start": 86,
-              "end": 88,
-              "ctxt": 0
-            },
-            "children": [
+              },
               {
                 "type": "PreservedToken",
                 "span": {
@@ -175,17 +163,9 @@
                   "ctxt": 0
                 },
                 "token": "RParen"
-              },
-              {
-                "type": "PreservedToken",
-                "span": {
-                  "start": 87,
-                  "end": 88,
-                  "ctxt": 0
-                },
-                "token": "Semi"
               }
-            ]
+            ],
+            "important": null
           },
           {
             "type": "Declaration",
@@ -230,9 +210,7 @@
                     "ctxt": 0
                   },
                   "value": "image.png�",
-                  "before": "",
-                  "raw": "image.png\\999999",
-                  "after": ""
+                  "raw": "image.png\\999999"
                 },
                 "modifiers": null
               }
@@ -282,9 +260,7 @@
                     "ctxt": 0
                   },
                   "value": "image.png�",
-                  "before": "",
-                  "raw": "image.png\\0",
-                  "after": ""
+                  "raw": "image.png\\0"
                 },
                 "modifiers": null
               }
@@ -334,9 +310,7 @@
                     "ctxt": 0
                   },
                   "value": "image.png�",
-                  "before": "",
-                  "raw": "image.png\\D800",
-                  "after": ""
+                  "raw": "image.png\\D800"
                 },
                 "modifiers": null
               }
@@ -386,9 +360,7 @@
                     "ctxt": 0
                   },
                   "value": "image.png�",
-                  "before": "",
-                  "raw": "image.png\\DFFF",
-                  "after": ""
+                  "raw": "image.png\\DFFF"
                 },
                 "modifiers": null
               }
@@ -438,9 +410,7 @@
                     "ctxt": 0
                   },
                   "value": "image.png�",
-                  "before": "",
-                  "raw": "image.png\\11FFFF",
-                  "after": ""
+                  "raw": "image.png\\11FFFF"
                 },
                 "modifiers": null
               }
@@ -559,7 +529,7 @@
             "type": "Declaration",
             "span": {
               "start": 305,
-              "end": 347,
+              "end": 349,
               "ctxt": 0
             },
             "name": {
@@ -584,22 +554,10 @@
                   "BadUrl": {
                     "name": "url",
                     "raw_name": "url",
-                    "value": "image.png param(var(--url",
                     "raw_value": "image.png param(var(--url"
                   }
                 }
-              }
-            ],
-            "important": null
-          },
-          {
-            "type": "ListOfComponentValues",
-            "span": {
-              "start": 347,
-              "end": 350,
-              "ctxt": 0
-            },
-            "children": [
+              },
               {
                 "type": "PreservedToken",
                 "span": {
@@ -617,17 +575,9 @@
                   "ctxt": 0
                 },
                 "token": "RParen"
-              },
-              {
-                "type": "PreservedToken",
-                "span": {
-                  "start": 349,
-                  "end": 350,
-                  "ctxt": 0
-                },
-                "token": "Semi"
               }
-            ]
+            ],
+            "important": null
           }
         ]
       }

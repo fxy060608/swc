@@ -8,7 +8,7 @@ use serde::{
     Deserialize, Deserializer, Serialize,
 };
 use string_enum::StringEnum;
-use swc_atoms::Atom;
+use swc_atoms::{js_word, Atom};
 use swc_common::{ast_node, util::take::Take, BytePos, EqIgnoreSpan, Span, Spanned, DUMMY_SP};
 
 use crate::{
@@ -22,7 +22,7 @@ use crate::{
     prop::Prop,
     stmt::BlockStmt,
     typescript::{
-        TsAsExpr, TsConstAssertion, TsInstantiation, TsNonNullExpr, TsSatisfactionExpr, TsTypeAnn,
+        TsAsExpr, TsConstAssertion, TsInstantiation, TsNonNullExpr, TsSatisfiesExpr, TsTypeAnn,
         TsTypeAssertion, TsTypeParamDecl, TsTypeParamInstantiation,
     },
     ComputedPropName, Id, Invalid,
@@ -157,8 +157,8 @@ pub enum Expr {
     #[tag("TsInstantiation")]
     TsInstantiation(TsInstantiation),
 
-    #[tag("TsSatisfactionExpr")]
-    TsSatisfaction(TsSatisfactionExpr),
+    #[tag("TsSatisfiesExpression")]
+    TsSatisfies(TsSatisfiesExpr),
 
     #[tag("PrivateName")]
     PrivateName(PrivateName),
@@ -215,6 +215,17 @@ impl Expr {
             }))
         }
     }
+
+    /// Returns true for `eval` and member expressions.
+    pub fn directness_maters(&self) -> bool {
+        matches!(
+            self,
+            Expr::Ident(Ident {
+                sym: js_word!("eval"),
+                ..
+            }) | Expr::Member(..)
+        )
+    }
 }
 
 // Implement Clone without inline to avoid multiple copies of the
@@ -260,7 +271,7 @@ impl Clone for Expr {
             PrivateName(e) => PrivateName(e.clone()),
             OptChain(e) => OptChain(e.clone()),
             Invalid(e) => Invalid(e.clone()),
-            TsSatisfaction(e) => TsSatisfaction(e.clone()),
+            TsSatisfies(e) => TsSatisfies(e.clone()),
         }
     }
 }

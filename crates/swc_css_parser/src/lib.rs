@@ -5,13 +5,13 @@
 #![allow(clippy::nonminimal_bool)]
 #![allow(clippy::wrong_self_convention)]
 
-use swc_common::{input::StringInput, BytePos, SourceFile};
+use swc_common::{input::StringInput, SourceFile};
 
 use crate::{
     error::Error,
     lexer::Lexer,
     parser::{
-        input::{Tokens, TokensInput},
+        input::{Input, InputType},
         PResult, Parser, ParserConfig,
     },
 };
@@ -37,28 +37,6 @@ where
     }
 }
 
-/// Parse a given string as `T`.
-///
-/// If there are syntax errors but if it was recoverable, it will be appended
-/// to `errors`.
-pub fn parse_str<'a, T>(
-    src: &'a str,
-    start_pos: BytePos,
-    end_pos: BytePos,
-    config: ParserConfig,
-    errors: &mut Vec<Error>,
-) -> PResult<T>
-where
-    Parser<Lexer<StringInput<'a>>>: Parse<T>,
-{
-    let lexer = Lexer::new(StringInput::new(src, start_pos, end_pos), config);
-    let mut parser = Parser::new(lexer, config);
-
-    let res = parser.parse();
-    errors.extend(parser.take_errors());
-    res
-}
-
 /// Parse a given file as `T`.
 ///
 /// If there are syntax errors but if it was recoverable, it will be appended
@@ -71,11 +49,28 @@ pub fn parse_file<'a, T>(
 where
     Parser<Lexer<StringInput<'a>>>: Parse<T>,
 {
-    let lexer = Lexer::new(StringInput::from(fm), config);
+    parse_string_input(StringInput::from(fm), config, errors)
+}
+
+/// Parse a given [StringInput] as `T`.
+///
+/// If there are syntax errors but if it was recoverable, it will be appended
+/// to `errors`.
+pub fn parse_string_input<'a, T>(
+    input: StringInput<'a>,
+    config: ParserConfig,
+    errors: &mut Vec<Error>,
+) -> PResult<T>
+where
+    Parser<Lexer<StringInput<'a>>>: Parse<T>,
+{
+    let lexer = Lexer::new(input, config);
     let mut parser = Parser::new(lexer, config);
 
     let res = parser.parse();
+
     errors.extend(parser.take_errors());
+
     res
 }
 
@@ -83,18 +78,20 @@ where
 ///
 /// If there are syntax errors but if it was recoverable, it will be appended
 /// to `errors`.
-pub fn parse_tokens<'a, T>(
-    tokens: &'a Tokens,
+pub fn parse_input<'a, T>(
+    input: InputType<'a>,
     config: ParserConfig,
     errors: &mut Vec<Error>,
 ) -> PResult<T>
 where
-    Parser<TokensInput<'a>>: Parse<T>,
+    Parser<Input<'a>>: Parse<T>,
 {
-    let lexer = TokensInput::new(tokens);
+    let lexer = Input::new(input);
     let mut parser = Parser::new(lexer, config);
 
     let res = parser.parse();
+
     errors.extend(parser.take_errors());
+
     res
 }

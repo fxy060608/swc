@@ -112,49 +112,25 @@ where
     R: Resolve,
 {
     fn resolve_import(&self, base: &FileName, module_specifier: &str) -> Result<JsWord, Error> {
-        fn to_specifier(
-            target_path: &str,
-            is_file: Option<bool>,
-            orig_ext: Option<&str>,
-        ) -> JsWord {
+        fn to_specifier(target_path: &str, orig_ext: Option<&str>) -> JsWord {
             let mut p = PathBuf::from(target_path);
 
             if cfg!(debug_assertions) {
                 trace!("to_specifier: orig_ext={:?}", orig_ext);
             }
 
-            let dot_count = p
-                .file_name()
-                .map(|s| s.to_string_lossy())
-                .map(|v| v.as_bytes().iter().filter(|&&c| c == b'.').count())
-                .unwrap_or(0);
+            if let Some(orig_ext) = orig_ext {
+                let use_orig = if let Some(ext) = p.extension() {
+                    (ext == "ts" || ext == "tsx") && p.is_file()
+                } else {
+                    false
+                };
 
-            match orig_ext {
-                Some(orig_ext) => {
-                    if is_file.unwrap_or_else(|| p.is_file()) {
-                        if let Some(..) = p.extension() {
-                            if orig_ext == "ts"
-                                || orig_ext == "tsx"
-                                || orig_ext == "js"
-                                || orig_ext == "jsx"
-                                || dot_count == 1
-                            {
-                                p.set_extension(orig_ext);
-                            } else {
-                                p.set_extension("");
-                            }
-                        }
-                    }
+                if use_orig {
+                    p.set_extension(orig_ext);
                 }
-                _ => {
-                    if is_file.unwrap_or_else(|| p.is_file()) {
-                        if let Some(v) = p.extension() {
-                            if v == "ts" || v == "tsx" || v == "js" || v == "jsx" {
-                                p.set_extension("");
-                            }
-                        }
-                    }
-                }
+            } else {
+                p.set_extension("");
             }
 
             p.display().to_string().into()
@@ -197,7 +173,7 @@ where
 
         let mut target = match target {
             FileName::Real(v) => v,
-            FileName::Custom(s) => return Ok(to_specifier(&s, None, orig_ext)),
+            FileName::Custom(s) => return Ok(to_specifier(&s, orig_ext)),
             _ => {
                 unreachable!(
                     "Node path provider does not support using `{:?}` as a target file name",
@@ -222,8 +198,6 @@ where
             }
         };
 
-        let is_file = target.is_file();
-
         if base.is_absolute() != target.is_absolute() {
             base = Cow::Owned(absolute_path(&base)?);
             target = absolute_path(&target)?;
@@ -239,13 +213,7 @@ where
 
         let rel_path = match rel_path {
             Some(v) => v,
-            None => {
-                return Ok(to_specifier(
-                    &target.display().to_string(),
-                    Some(is_file),
-                    orig_ext,
-                ))
-            }
+            None => return Ok(to_specifier(&target.display().to_string(), orig_ext)),
         };
 
         {
@@ -273,9 +241,9 @@ where
             Cow::Owned(format!("./{}", s))
         };
         if cfg!(target_os = "windows") {
-            Ok(to_specifier(&s.replace('\\', "/"), Some(is_file), orig_ext))
+            Ok(to_specifier(&s.replace('\\', "/"), orig_ext))
         } else {
-            Ok(to_specifier(&s, Some(is_file), orig_ext))
+            Ok(to_specifier(&s, orig_ext))
         }
     }
 }

@@ -81,6 +81,7 @@ impl Error {
                 "Missing whitespace between doctype public and system identifiers".into()
             }
             ErrorKind::NestedComment => "Nested comment".into(),
+            ErrorKind::DoubleHyphenWithInComment => "Double hyper within comment".into(),
             ErrorKind::NoncharacterInInputStream => "Noncharacter in input stream".into(),
             ErrorKind::SurrogateInInputStream => "Surrogate in input stream".into(),
             ErrorKind::SurrogateCharacterReference => "Surrogate character reference".into(),
@@ -91,6 +92,10 @@ impl Error {
                 "Unexpected colon before attribute name".into()
             }
             ErrorKind::UnexpectedSolidusInTag => "Unexpected solidus in tag".into(),
+            ErrorKind::NoTargetNameInProcessingInstruction => "No target name".into(),
+            ErrorKind::MissingWhitespaceBeforeQuestionInProcessingInstruction => {
+                "Missing whitespace before '?'".into()
+            }
 
             // Parser errors
             ErrorKind::UnexpectedTokenInStartPhase => "Unexpected token in start phase".into(),
@@ -146,12 +151,15 @@ pub enum ErrorKind {
     MissingWhitespaceBeforeDoctypeName,
     MissingWhitespaceBetweenDoctypePublicAndSystemIdentifiers,
     NestedComment,
+    DoubleHyphenWithInComment,
     NoncharacterInInputStream,
     SurrogateInInputStream,
     SurrogateCharacterReference,
     UnexpectedCharacterAfterDoctypeSystemIdentifier,
     UnexpectedColonBeforeAttributeName,
     UnexpectedSolidusInTag,
+    NoTargetNameInProcessingInstruction,
+    MissingWhitespaceBeforeQuestionInProcessingInstruction,
 
     // Parser errors
     UnexpectedTokenInStartPhase,

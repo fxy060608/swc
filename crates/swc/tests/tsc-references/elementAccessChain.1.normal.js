@@ -1,17 +1,17 @@
 //// [elementAccessChain.ts]
-var ref, ref1, ref2, ref3, ref4, ref5, ref6, ref7, ref8, ref9, ref10, ref11, ref12, ref13, ref14;
+var _o3_b, _o3_b1, _o4_b_c_d, _o4_b, _o4_b_c_d1, _o4_b1, _o5_b_c_d, _o5_b, _o5_b_c_d1, _o5_b1, _o5_b_c_d2, _o5_b2, _o5_b_c_d3, _o5_b3, _o6;
 o1 === null || o1 === void 0 ? void 0 : o1["b"];
 o2 === null || o2 === void 0 ? void 0 : o2["b"].c;
 o2 === null || o2 === void 0 ? void 0 : o2.b["c"];
-(ref = o3["b"]) === null || ref === void 0 ? void 0 : ref.c;
-(ref1 = o3.b) === null || ref1 === void 0 ? void 0 : ref1["c"];
-(ref3 = (ref2 = o4.b) === null || ref2 === void 0 ? void 0 : ref2["c"].d) === null || ref3 === void 0 ? void 0 : ref3.e;
-(ref5 = (ref4 = o4.b) === null || ref4 === void 0 ? void 0 : ref4["c"].d) === null || ref5 === void 0 ? void 0 : ref5["e"];
-(ref7 = (ref6 = o5.b) === null || ref6 === void 0 ? void 0 : ref6.call(o5)["c"].d) === null || ref7 === void 0 ? void 0 : ref7.e;
-(ref9 = (ref8 = o5.b) === null || ref8 === void 0 ? void 0 : ref8.call(o5)["c"].d) === null || ref9 === void 0 ? void 0 : ref9["e"];
-(ref11 = (ref10 = o5["b"]) === null || ref10 === void 0 ? void 0 : ref10.call(o5)["c"].d) === null || ref11 === void 0 ? void 0 : ref11.e;
-(ref13 = (ref12 = o5["b"]) === null || ref12 === void 0 ? void 0 : ref12.call(o5)["c"].d) === null || ref13 === void 0 ? void 0 : ref13["e"];
-(ref14 = o6()) === null || ref14 === void 0 ? void 0 : ref14["x"];
+(_o3_b = o3["b"]) === null || _o3_b === void 0 ? void 0 : _o3_b.c;
+(_o3_b1 = o3.b) === null || _o3_b1 === void 0 ? void 0 : _o3_b1["c"];
+(_o4_b_c_d = (_o4_b = o4.b) === null || _o4_b === void 0 ? void 0 : _o4_b["c"].d) === null || _o4_b_c_d === void 0 ? void 0 : _o4_b_c_d.e;
+(_o4_b_c_d1 = (_o4_b1 = o4.b) === null || _o4_b1 === void 0 ? void 0 : _o4_b1["c"].d) === null || _o4_b_c_d1 === void 0 ? void 0 : _o4_b_c_d1["e"];
+(_o5_b_c_d = (_o5_b = o5.b) === null || _o5_b === void 0 ? void 0 : _o5_b.call(o5)["c"].d) === null || _o5_b_c_d === void 0 ? void 0 : _o5_b_c_d.e;
+(_o5_b_c_d1 = (_o5_b1 = o5.b) === null || _o5_b1 === void 0 ? void 0 : _o5_b1.call(o5)["c"].d) === null || _o5_b_c_d1 === void 0 ? void 0 : _o5_b_c_d1["e"];
+(_o5_b_c_d2 = (_o5_b2 = o5["b"]) === null || _o5_b2 === void 0 ? void 0 : _o5_b2.call(o5)["c"].d) === null || _o5_b_c_d2 === void 0 ? void 0 : _o5_b_c_d2.e;
+(_o5_b_c_d3 = (_o5_b3 = o5["b"]) === null || _o5_b3 === void 0 ? void 0 : _o5_b3.call(o5)["c"].d) === null || _o5_b_c_d3 === void 0 ? void 0 : _o5_b_c_d3["e"];
+(_o6 = o6()) === null || _o6 === void 0 ? void 0 : _o6["x"];
 // GH#36031
 o2 === null || o2 === void 0 ? void 0 : o2["b"].c;
 o2 === null || o2 === void 0 ? void 0 : o2["b"]["c"];

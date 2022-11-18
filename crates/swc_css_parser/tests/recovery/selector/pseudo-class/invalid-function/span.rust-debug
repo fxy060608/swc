@@ -38,7 +38,7 @@
    :  ^
    `----
 
-  x WhiteSpace { value: Atom(' ' type=inline) }
+  x WhiteSpace { value: " " }
    ,-[$DIR/tests/recovery/selector/pseudo-class/invalid-function/input.css:1:1]
  1 | : nth-child(2) {
    :  ^
@@ -47,13 +47,19 @@
   x ComponentValue
    ,-[$DIR/tests/recovery/selector/pseudo-class/invalid-function/input.css:1:1]
  1 | : nth-child(2) {
-   :   ^^^^^^^^^^
+   :   ^^^^^^^^^^^^
    `----
 
-  x Function { value: Atom('nth-child' type=static), raw: Atom('nth-child' type=static) }
+  x Function
    ,-[$DIR/tests/recovery/selector/pseudo-class/invalid-function/input.css:1:1]
  1 | : nth-child(2) {
-   :   ^^^^^^^^^^
+   :   ^^^^^^^^^^^^
+   `----
+
+  x Ident
+   ,-[$DIR/tests/recovery/selector/pseudo-class/invalid-function/input.css:1:1]
+ 1 | : nth-child(2) {
+   :   ^^^^^^^^^
    `----
 
   x ComponentValue
@@ -62,22 +68,10 @@
    :             ^
    `----
 
-  x Number { value: 2.0, raw: Atom('2' type=inline), type_flag: Integer }
+  x Number { value: 2.0, raw: "2", type_flag: Integer }
    ,-[$DIR/tests/recovery/selector/pseudo-class/invalid-function/input.css:1:1]
  1 | : nth-child(2) {
    :             ^
-   `----
-
-  x ComponentValue
-   ,-[$DIR/tests/recovery/selector/pseudo-class/invalid-function/input.css:1:1]
- 1 | : nth-child(2) {
-   :              ^
-   `----
-
-  x RParen
-   ,-[$DIR/tests/recovery/selector/pseudo-class/invalid-function/input.css:1:1]
- 1 | : nth-child(2) {
-   :              ^
    `----
 
   x ComponentValue
@@ -86,7 +80,7 @@
    :               ^
    `----
 
-  x WhiteSpace { value: Atom(' ' type=inline) }
+  x WhiteSpace { value: " " }
    ,-[$DIR/tests/recovery/selector/pseudo-class/invalid-function/input.css:1:1]
  1 | : nth-child(2) {
    :               ^

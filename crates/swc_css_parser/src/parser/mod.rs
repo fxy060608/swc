@@ -41,8 +41,8 @@ pub struct ParserConfig {
     #[serde(default)]
     pub css_modules: bool,
 
-    /// If this is `true`, the nested selectors without `&` will be parsed as
-    /// valid selectors
+    /// If this is `true`, the nested selector starts with an identifier will be
+    /// parsed as valid selectors (i.e. `ul { color: red; li { color: blue } }`)
     ///
     /// Defaults to `false`.
     #[serde(default)]
@@ -51,7 +51,6 @@ pub struct ParserConfig {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BlockContentsGrammar {
-    NoGrammar,
     StyleBlock,
     DeclarationList,
     RuleList,
@@ -61,7 +60,7 @@ pub enum BlockContentsGrammar {
 
 impl Default for BlockContentsGrammar {
     fn default() -> Self {
-        BlockContentsGrammar::NoGrammar
+        BlockContentsGrammar::Stylesheet
     }
 }
 
@@ -69,16 +68,17 @@ impl Default for BlockContentsGrammar {
 struct Ctx {
     is_top_level: bool,
     block_contents_grammar: BlockContentsGrammar,
+    mixed_with_declarations: bool,
 
+    in_keyframes_at_rule: bool,
     in_supports_at_rule: bool,
     in_import_at_rule: bool,
     in_page_at_rule: bool,
     in_container_at_rule: bool,
     in_font_feature_values_at_rule: bool,
-    is_trying_legacy_nesting: bool,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Parser<I>
 where
     I: ParserInput,

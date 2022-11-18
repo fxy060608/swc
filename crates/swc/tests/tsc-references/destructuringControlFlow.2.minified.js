@@ -1,4 +1,5 @@
 //// [destructuringControlFlow.ts]
-(0, [
+import _sliced_to_array from "@swc/helpers/src/_sliced_to_array.mjs";
+[
     "foo"
-][1]).toUpperCase();
+][1].toUpperCase();

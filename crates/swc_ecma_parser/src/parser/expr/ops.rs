@@ -122,7 +122,7 @@ impl<I: Tokens> Parser<I> {
             let expr = left;
             let node = {
                 let type_ann = self.next_then_parse_ts_type()?;
-                Box::new(Expr::TsAs(TsAsExpr {
+                Box::new(Expr::TsSatisfies(TsSatisfiesExpr {
                     span: span!(self, start),
                     expr,
                     type_ann,
@@ -331,10 +331,6 @@ impl<I: Tokens> Parser<I> {
         }
 
         if is!(self, "await") {
-            let ctx = self.ctx();
-            if ctx.in_function && !ctx.in_async {
-                self.emit_err(self.input.cur_span(), SyntaxError::AwaitInFunction);
-            }
             return self.parse_await_expr();
         }
 
@@ -379,12 +375,16 @@ impl<I: Tokens> Parser<I> {
 
         let span = span!(self, start);
 
-        if is_one_of!(self, ')', ']') && !self.ctx().in_async {
-            if ctx.in_async || ctx.module {
+        if is_one_of!(self, ')', ']', ';', ',') && !ctx.in_async {
+            if ctx.module {
                 self.emit_err(span, SyntaxError::InvalidIdentInAsync);
             }
 
             return Ok(Box::new(Expr::Ident(Ident::new(js_word!("await"), span))));
+        }
+
+        if ctx.in_function && !ctx.in_async {
+            self.emit_err(self.input.cur_span(), SyntaxError::AwaitInFunction);
         }
 
         if ctx.in_parameters && !ctx.in_function {

@@ -185,7 +185,7 @@
                             return t;
                         }
                         function checked(e) {
-                            if (e >= 2147483647) throw RangeError("Attempt to allocate Buffer larger than maximum size: 0x" + 2147483647..toString(16) + " bytes");
+                            if (e >= 2147483647) throw RangeError("Attempt to allocate Buffer larger than maximum size: 0x7fffffff bytes");
                             return 0 | e;
                         }
                         function byteLength(e, r) {
@@ -908,7 +908,7 @@
                         }, y = Object.getOwnPropertyDescriptor;
                         if (y) try {
                             y({}, "");
-                        } catch (r) {
+                        } catch (r1) {
                             y = null;
                         }
                         var throwTypeError = function() {
@@ -1209,8 +1209,8 @@
                             if ("%" === t && "%" !== e) throw new n("invalid intrinsic syntax, expected closing `%`");
                             if ("%" === e && "%" !== t) throw new n("invalid intrinsic syntax, expected opening `%`");
                             var o = [];
-                            return P(r, O, function(r, t, e, n1) {
-                                o[o.length] = e ? P(n1, w, "$1") : t || r;
+                            return P(r, O, function(r, t, e, n) {
+                                o[o.length] = e ? P(n, w, "$1") : t || r;
                             }), o;
                         }, j = function(r, t) {
                             var o, e = r;
@@ -1267,12 +1267,12 @@
                         r.exports = function(r) {
                             var y, i = this;
                             if ("function" != typeof i || "[object Function]" !== o.call(i)) throw TypeError("Function.prototype.bind called on incompatible " + i);
-                            for(var a = e.call(arguments, 1), binder = function() {
+                            for(var a = e.call(arguments, 1), p = Math.max(0, i.length - a.length), f = [], u = 0; u < p; u++)f.push("$" + u);
+                            if (y = Function("binder", "return function (" + f.join(",") + "){ return binder.apply(this,arguments); }")(function() {
                                 if (!(this instanceof y)) return i.apply(r, a.concat(e.call(arguments)));
                                 var t = i.apply(this, a.concat(e.call(arguments)));
                                 return Object(t) === t ? t : this;
-                            }, p = Math.max(0, i.length - a.length), f = [], u = 0; u < p; u++)f.push("$" + u);
-                            if (y = Function("binder", "return function (" + f.join(",") + "){ return binder.apply(this,arguments); }")(binder), i.prototype) {
+                            }), i.prototype) {
                                 var s = function() {};
                                 s.prototype = i.prototype, y.prototype = new s(), s.prototype = null;
                             }
@@ -1293,7 +1293,7 @@
                         }, y = Object.getOwnPropertyDescriptor;
                         if (y) try {
                             y({}, "");
-                        } catch (r) {
+                        } catch (r1) {
                             y = null;
                         }
                         var throwTypeError = function() {
@@ -1607,8 +1607,8 @@
                             if ("%" === t && "%" !== e) throw new n("invalid intrinsic syntax, expected closing `%`");
                             if ("%" === e && "%" !== t) throw new n("invalid intrinsic syntax, expected opening `%`");
                             var o = [];
-                            return m(r, h, function(r, t, e, n1) {
-                                o[o.length] = e ? m(n1, O, "$1") : t || r;
+                            return m(r, h, function(r, t, e, n) {
+                                o[o.length] = e ? m(n, O, "$1") : t || r;
                             }), o;
                         }, E = function(r, t) {
                             var o, e = r;
@@ -2252,7 +2252,7 @@
                         }, y = Object.getOwnPropertyDescriptor;
                         if (y) try {
                             y({}, "");
-                        } catch (r) {
+                        } catch (r1) {
                             y = null;
                         }
                         var throwTypeError = function() {

@@ -84,12 +84,12 @@ where
     pub(super) fn remove_bin_paren(&mut self, n: &mut BinExpr) {
         if let Expr::Bin(right) = &mut *n.right {
             if right.op == n.op {
-                if matches!(n.op, op!("&&") | op!("||") | op!("??"))
+                if n.op.may_short_circuit()
                     || (right.left.is_str() && right.op == op!(bin, "+"))
                     || (n.left.is_str() && right.right.is_str())
                 {
                     self.changed = true;
-                    report_change!("Remove extra paren in binray expression");
+                    report_change!("Remove extra paren in binary expression");
                     let left = n.left.take();
                     let BinExpr {
                         op,
@@ -279,7 +279,7 @@ where
     /// # Examples
     ///
     /// - `x() && true` => `!!x()`
-    pub(super) fn compress_logical_exprs_as_bang_bang(&mut self, e: &mut Expr, in_bool_ctx: bool) {
+    pub(super) fn compress_logical_exprs_as_bang_bang(&mut self, e: &mut Expr, _in_bool_ctx: bool) {
         if !self.options.conditionals && !self.options.reduce_vars {
             return;
         }
@@ -299,12 +299,10 @@ where
         }
 
         let lt = bin.left.get_type();
-        if !in_bool_ctx {
-            match lt {
-                // Don't change type
-                Known(Type::Bool) => {}
-                _ => return,
-            }
+        match lt {
+            // Don't change type
+            Known(Type::Bool) => {}
+            _ => return,
         }
 
         let rt = bin.right.get_type();

@@ -1,7 +1,5 @@
 use std::mem::take;
 
-#[allow(unused_imports)]
-use retain_mut::RetainMut;
 use swc_atoms::js_word;
 use swc_common::{util::take::Take, Spanned, DUMMY_SP};
 use swc_ecma_ast::*;
@@ -272,6 +270,12 @@ where
                                                 seq.exprs.extend(take(&mut exprs));
                                                 seq.exprs.extend(extra);
 
+                                                if seq.exprs.len() == 1 {
+                                                    stmt.init = Some(VarDeclOrExpr::Expr(
+                                                        seq.exprs.pop().unwrap(),
+                                                    ));
+                                                }
+
                                                 new_stmts.push(T::from_stmt(Stmt::For(stmt)));
 
                                                 continue;
@@ -281,11 +285,13 @@ where
                                     e.prepend_exprs(take(&mut exprs));
                                 }
                                 None => {
-                                    stmt.init =
-                                        Some(VarDeclOrExpr::Expr(Box::new(Expr::Seq(SeqExpr {
-                                            span: DUMMY_SP,
-                                            exprs: take(&mut exprs),
-                                        }))))
+                                    if exprs.is_empty() {
+                                        stmt.init = None;
+                                    } else {
+                                        stmt.init = Some(VarDeclOrExpr::Expr(Expr::from_exprs(
+                                            take(&mut exprs),
+                                        )))
+                                    }
                                 }
                                 _ => {
                                     unreachable!()
@@ -326,10 +332,7 @@ where
                             if !exprs.is_empty() {
                                 new_stmts.push(T::from_stmt(Stmt::Expr(ExprStmt {
                                     span: DUMMY_SP,
-                                    expr: Box::new(Expr::Seq(SeqExpr {
-                                        span: DUMMY_SP,
-                                        exprs: take(&mut exprs),
-                                    })),
+                                    expr: Expr::from_exprs(take(&mut exprs)),
                                 })))
                             }
 
@@ -341,10 +344,7 @@ where
                     if !exprs.is_empty() {
                         new_stmts.push(T::from_stmt(Stmt::Expr(ExprStmt {
                             span: DUMMY_SP,
-                            expr: Box::new(Expr::Seq(SeqExpr {
-                                span: DUMMY_SP,
-                                exprs: take(&mut exprs),
-                            })),
+                            expr: Expr::from_exprs(take(&mut exprs)),
                         })))
                     }
 
@@ -356,10 +356,7 @@ where
         if !exprs.is_empty() {
             new_stmts.push(T::from_stmt(Stmt::Expr(ExprStmt {
                 span: DUMMY_SP,
-                expr: Box::new(Expr::Seq(SeqExpr {
-                    span: DUMMY_SP,
-                    exprs: take(&mut exprs),
-                })),
+                expr: Expr::from_exprs(take(&mut exprs)),
             })))
         }
 
@@ -495,7 +492,7 @@ where
             prepend_stmts(stmts, self.prepend_stmts.drain(..).map(T::from_stmt));
         }
 
-        if self.append_stmts.is_empty() {
+        if !self.append_stmts.is_empty() {
             stmts.extend(self.append_stmts.drain(..).map(T::from_stmt));
         }
 
@@ -584,9 +581,31 @@ where
             Stmt::Return(ReturnStmt { arg: Some(arg), .. }) => {
                 vec![Mergable::Expr(arg)]
             }
+
             Stmt::If(s) if options.sequences() => {
                 vec![Mergable::Expr(&mut s.test)]
             }
+
+            Stmt::Switch(s) if options.sequences() => {
+                vec![Mergable::Expr(&mut s.discriminant)]
+            }
+
+            Stmt::For(s) if options.sequences() => {
+                if let Some(VarDeclOrExpr::Expr(e)) = &mut s.init {
+                    vec![Mergable::Expr(e)]
+                } else {
+                    return None;
+                }
+            }
+
+            Stmt::ForOf(s) if options.sequences() => {
+                vec![Mergable::Expr(&mut s.right)]
+            }
+
+            Stmt::ForIn(s) if options.sequences() => {
+                vec![Mergable::Expr(&mut s.right)]
+            }
+
             Stmt::Throw(s) if options.sequences() => {
                 vec![Mergable::Expr(&mut s.arg)]
             }
@@ -594,21 +613,7 @@ where
             Stmt::Decl(Decl::Fn(f)) => {
                 // Check for side effects
 
-                if !f.function.decorators.is_empty() {
-                    return None;
-                }
-                for p in &f.function.params {
-                    if !p.decorators.is_empty() {
-                        return None;
-                    }
-
-                    if !self.is_pat_skippable_for_seq(None, &p.pat) {
-                        return None;
-                    }
-                }
-
-                // Side-effect free function can be skipped.
-                vec![]
+                vec![Mergable::FnDecl(f)]
             }
 
             _ => return None,
@@ -641,7 +646,15 @@ where
         for stmt in stmts.iter_mut() {
             let is_end = matches!(
                 stmt.as_stmt(),
-                Some(Stmt::If(..) | Stmt::Throw(..) | Stmt::Return(..))
+                Some(
+                    Stmt::If(..)
+                        | Stmt::Throw(..)
+                        | Stmt::Return(..)
+                        | Stmt::Switch(..)
+                        | Stmt::For(..)
+                        | Stmt::ForIn(..)
+                        | Stmt::ForOf(..)
+                ) | None
             );
             let can_skip = match stmt.as_stmt() {
                 Some(Stmt::Decl(Decl::Fn(..))) => true,
@@ -690,6 +703,10 @@ where
             if let Some(Stmt::Expr(es)) = stmt.as_stmt_mut() {
                 if let Expr::Seq(e) = &mut *es.expr {
                     e.exprs.retain(|e| !e.is_invalid());
+                    if e.exprs.len() == 1 {
+                        es.expr = e.exprs.pop().unwrap();
+                        return true;
+                    }
                 }
             }
 
@@ -705,6 +722,7 @@ where
 
                     !v.decls.is_empty()
                 }
+                Some(Stmt::Decl(Decl::Fn(f))) => !f.ident.is_dummy(),
                 Some(Stmt::Expr(s)) if s.expr.is_invalid() => false,
 
                 _ => true,
@@ -757,7 +775,10 @@ where
             )
         };
 
-        if !self.options.sequences() && !e.span.has_mark(self.marks.synthesized_seq) {
+        if !self.options.sequences()
+            && !self.options.collapse_vars
+            && !e.span.has_mark(self.marks.synthesized_seq)
+        {
             log_abort!("sequences: Disabled && no mark");
             return;
         }
@@ -884,6 +905,7 @@ where
                                 None => continue,
                             },
                             Mergable::Expr(e) => e,
+                            Mergable::FnDecl(..) => continue,
                         },
                     )? {
                         did_work = true;
@@ -927,6 +949,7 @@ where
                                 break;
                             }
                         }
+
                         _ => {}
                     }
 
@@ -954,6 +977,21 @@ where
                                 if IdentUsageFinder::find(&id, &**e2) {
                                     break;
                                 }
+                            }
+                        }
+
+                        // Function declaration is side-effect free.
+                        //
+                        // TODO(kdy1): Paramters with default value can have side effect. But this
+                        // is very unrealistic in real-world code, so I'm
+                        // postponing handling for it.
+                        Mergable::FnDecl(f) => {
+                            if f.function
+                                .params
+                                .iter()
+                                .any(|p| !self.is_pat_skippable_for_seq(Some(a), &p.pat))
+                            {
+                                break;
                             }
                         }
                     }
@@ -1051,6 +1089,15 @@ where
                                 return false;
                             }
                         }
+
+                        Mergable::FnDecl(a) => {
+                            // TODO(kdy1): I'm not sure if we can remove this check. I added this
+                            // just to be safe, and we may remove this check in future.
+                            if is_ident_used_by(e.to_id(), &**a) {
+                                log_abort!("ident used by a (fn)");
+                                return false;
+                            }
+                        }
                     }
 
                     // We can't proceed if the rhs (a.id = b.right) is
@@ -1106,6 +1153,15 @@ where
 
                             _ => None,
                         },
+
+                        Mergable::FnDecl(a) => Some(collect_infects_from(
+                            &a.function,
+                            AliasConfig {
+                                marks: Some(self.marks),
+                                ignore_nested: true,
+                                need_all: true,
+                            },
+                        )),
                     };
 
                     if let Some(ids_used_by_a_init) = ids_used_by_a_init {
@@ -1191,6 +1247,13 @@ where
                         Mergable::Expr(a) => {
                             if is_ident_used_by(left_id.to_id(), &**a) {
                                 log_abort!("e.left is used by a (expr)");
+                                return false;
+                            }
+                        }
+                        Mergable::FnDecl(a) => {
+                            // TODO(kdy1): I'm not sure if this check is required.
+                            if is_ident_used_by(left_id.to_id(), &**a) {
+                                log_abort!("e.left is used by a ()");
                                 return false;
                             }
                         }
@@ -1388,7 +1451,7 @@ where
             | Expr::TsNonNull(_)
             | Expr::TsAs(_)
             | Expr::TsInstantiation(_)
-            | Expr::TsSatisfaction(_) => false,
+            | Expr::TsSatisfies(_) => false,
         }
     }
 
@@ -1402,6 +1465,7 @@ where
             let a = match a {
                 Mergable::Expr(e) => dump(*e, false),
                 Mergable::Var(e) => dump(*e, false),
+                Mergable::FnDecl(e) => dump(*e, false),
             };
 
             Some(
@@ -1420,7 +1484,7 @@ where
         }
 
         match a {
-            Mergable::Var(..) => {}
+            Mergable::Var(..) | Mergable::FnDecl(..) => {}
             Mergable::Expr(a) => {
                 if let Expr::Seq(a) = a {
                     for a in a.exprs.iter_mut().rev() {
@@ -1472,6 +1536,12 @@ where
                         return Ok(false);
                     }
                 },
+
+                Mergable::FnDecl(..) => {
+                    // A function declaration is always inlinable as it can be
+                    // viewed as a variable with an identifier name and a
+                    // function expression as a initialized.
+                }
             }
         }
 
@@ -1500,9 +1570,8 @@ where
                     return Ok(false);
                 }
 
-                match *op {
-                    op!("&&") | op!("||") | op!("??") => return Ok(false),
-                    _ => {}
+                if op.may_short_circuit() {
+                    return Ok(false);
                 }
 
                 trace_op!("seq: Try right of bin");
@@ -1595,6 +1664,20 @@ where
                 };
 
                 if !self.is_skippable_for_seq(Some(a), &Expr::Ident(b_left.clone())) {
+                    // Let's be safe
+                    if IdentUsageFinder::find(&b_left.to_id(), &b_assign.right) {
+                        return Ok(false);
+                    }
+
+                    // As we are not *skipping* lhs, we can inline here
+                    if let Some(a_id) = a.id() {
+                        if a_id == b_left.to_id() {
+                            if self.replace_seq_assignment(a, b)? {
+                                return Ok(true);
+                            }
+                        }
+                    }
+
                     return Ok(false);
                 }
 
@@ -1806,6 +1889,14 @@ where
                     crate::debug::dump(&*b, false)
                 );
             }
+
+            Mergable::FnDecl(a) => {
+                trace_op!(
+                    "sequences: Trying to merge `{}` => `{}`",
+                    crate::debug::dump(&**a, false),
+                    crate::debug::dump(&*b, false)
+                );
+            }
         }
 
         if self.replace_seq_update(a, b)? {
@@ -1830,6 +1921,10 @@ where
     /// console.log(++c)
 
     fn replace_seq_update(&mut self, a: &mut Mergable, b: &mut Expr) -> Result<bool, ()> {
+        if !self.options.sequences() {
+            return Ok(false);
+        }
+
         if let Mergable::Expr(a) = a {
             match a {
                 Expr::Update(UpdateExpr {
@@ -2033,7 +2128,7 @@ where
                             }
                         }
 
-                        (left_id.clone(), right)
+                        (left_id.clone(), Some(right))
                     }
                     _ => return Ok(false),
                 }
@@ -2066,39 +2161,61 @@ where
                     }
 
                     match &mut a.init {
-                        Some(v) => (left, v),
+                        Some(v) => (left, Some(v)),
                         None => {
                             if usage.declared_count > 1 {
                                 return Ok(false);
                             }
 
                             right_val = undefined(DUMMY_SP);
-                            (left, &mut right_val)
+                            (left, Some(&mut right_val))
                         }
                     }
                 } else {
                     return Ok(false);
                 }
             }
+
+            Mergable::FnDecl(a) => {
+                if let Some(usage) = self.data.vars.get(&a.ident.to_id()) {
+                    if usage.ref_count != 1 || usage.reassigned() || !usage.is_fn_local {
+                        return Ok(false);
+                    }
+
+                    if usage.inline_prevented {
+                        return Ok(false);
+                    }
+
+                    if contains_arguments(&a.function) {
+                        return Ok(false);
+                    }
+
+                    (a.ident.clone(), None)
+                } else {
+                    return Ok(false);
+                }
+            }
         };
 
-        if a_right.is_this()
-            || matches!(
-                &**a_right,
-                Expr::Ident(Ident {
-                    sym: js_word!("arguments"),
-                    ..
-                })
-            )
-        {
-            return Ok(false);
-        }
-        if contains_arguments(&**a_right) {
-            return Ok(false);
+        if let Some(a_right) = a_right {
+            if a_right.is_this()
+                || matches!(
+                    &**a_right,
+                    Expr::Ident(Ident {
+                        sym: js_word!("arguments"),
+                        ..
+                    })
+                )
+            {
+                return Ok(false);
+            }
+            if contains_arguments(&**a_right) {
+                return Ok(false);
+            }
         }
 
         macro_rules! take_a {
-            ($force_drop:expr) => {
+            ($force_drop:expr, $drop_op:expr) => {
                 match a {
                     Mergable::Var(a) => {
                         if self.options.unused {
@@ -2120,19 +2237,30 @@ where
                         .unwrap_or_else(|| undefined(DUMMY_SP))
                     }
                     Mergable::Expr(a) => {
-                        if can_remove {
+                        if can_remove || $force_drop {
                             if let Expr::Assign(e) = a {
-                                report_change!(
-                                    "sequences: Dropping assignment as we are going to drop the \
-                                     variable declaration. ({})",
-                                    left_id
-                                );
+                                if e.op == op!("=") || $drop_op {
+                                    report_change!(
+                                        "sequences: Dropping assignment as we are going to drop \
+                                         the variable declaration. ({})",
+                                        left_id
+                                    );
 
-                                **a = *e.right.take();
+                                    **a = *e.right.take();
+                                }
                             }
                         }
 
                         Box::new(a.take())
+                    }
+
+                    Mergable::FnDecl(a) => {
+                        // We can inline a function declaration as a function expression.
+
+                        Box::new(Expr::Fn(FnExpr {
+                            ident: Some(a.ident.take()),
+                            function: a.function.take(),
+                        }))
                     }
                 }
             };
@@ -2143,7 +2271,10 @@ where
             Expr::Assign(b @ AssignExpr { op: op!("="), .. }) => {
                 if let Some(b_left) = b.left.as_ident() {
                     if b_left.to_id() == left_id.to_id() {
-                        let mut a_expr = take_a!(true);
+                        report_change!("sequences: Merged assignment into another assignment");
+                        self.changed = true;
+
+                        let mut a_expr = take_a!(true, false);
                         let a_expr = self.ignore_return_value(&mut a_expr);
 
                         if let Some(a) = a_expr {
@@ -2158,19 +2289,35 @@ where
             }
             Expr::Assign(b) => {
                 if let Some(b_left) = b.left.as_ident() {
-                    if b_left.to_id() == left_id.to_id() {
-                        if let Some(bin_op) = b.op.to_update() {
-                            b.op = op!("=");
+                    let a_op = match a {
+                        Mergable::Var(_) => Some(op!("=")),
+                        Mergable::Expr(Expr::Assign(AssignExpr { op: a_op, .. })) => Some(*a_op),
+                        Mergable::FnDecl(_) => Some(op!("=")),
+                        _ => None,
+                    };
 
-                            let to = take_a!(true);
+                    if let Some(a_op) = a_op {
+                        if can_drop_op_for(a_op, b.op) {
+                            if b_left.to_id() == left_id.to_id() {
+                                if let Some(bin_op) = b.op.to_update() {
+                                    report_change!(
+                                        "sequences: Merged assignment into another (op) assignment"
+                                    );
+                                    self.changed = true;
 
-                            b.right = Box::new(Expr::Bin(BinExpr {
-                                span: DUMMY_SP,
-                                op: bin_op,
-                                left: to,
-                                right: b.right.take(),
-                            }));
-                            return Ok(true);
+                                    b.op = a_op;
+
+                                    let to = take_a!(true, true);
+
+                                    b.right = Box::new(Expr::Bin(BinExpr {
+                                        span: DUMMY_SP,
+                                        op: bin_op,
+                                        left: to,
+                                        right: b.right.take(),
+                                    }));
+                                    return Ok(true);
+                                }
+                            }
                         }
                     }
                 }
@@ -2206,7 +2353,7 @@ where
             left_id.span.ctxt
         );
 
-        let to = take_a!(false);
+        let to = take_a!(false, false);
 
         replace_id_with_expr(b, left_id.to_id(), to);
 
@@ -2307,6 +2454,7 @@ impl Visit for UsageCounter<'_> {
 enum Mergable<'a> {
     Var(&'a mut VarDeclarator),
     Expr(&'a mut Expr),
+    FnDecl(&'a mut FnDecl),
 }
 
 impl Mergable<'_> {
@@ -2320,6 +2468,7 @@ impl Mergable<'_> {
                 Expr::Assign(s) => s.left.as_ident().map(|v| v.to_id()),
                 _ => None,
             },
+            Mergable::FnDecl(f) => Some(f.ident.to_id()),
         }
     }
 }
@@ -2333,4 +2482,17 @@ pub(crate) fn is_trivial_lit(e: &Expr) -> bool {
         Expr::Unary(e @ UnaryExpr { op: op!("!"), .. }) => is_trivial_lit(&e.arg),
         _ => false,
     }
+}
+
+/// This assumes `a.left.to_id() == b.left.to_id()`
+fn can_drop_op_for(a: AssignOp, b: AssignOp) -> bool {
+    if a == op!("=") {
+        return true;
+    }
+
+    if a == b {
+        return matches!(a, op!("+=") | op!("*="));
+    }
+
+    false
 }

@@ -20,7 +20,13 @@
   x ComponentValue
    ,-[$DIR/tests/recovery/selector/attribute/invalid-matcher-2/input.css:1:1]
  1 | [href#="test"] {}
-   : ^
+   : ^^^^^^^^^^^^^^
+   `----
+
+  x SimpleBlock
+   ,-[$DIR/tests/recovery/selector/attribute/invalid-matcher-2/input.css:1:1]
+ 1 | [href#="test"] {}
+   : ^^^^^^^^^^^^^^
    `----
 
   x LBracket
@@ -35,7 +41,7 @@
    :  ^^^^
    `----
 
-  x Ident { value: Atom('href' type=static), raw: Atom('href' type=static) }
+  x Ident { value: Atom('href' type=static), raw: "href" }
    ,-[$DIR/tests/recovery/selector/attribute/invalid-matcher-2/input.css:1:1]
  1 | [href#="test"] {}
    :  ^^^^
@@ -71,7 +77,7 @@
    :        ^^^^^^
    `----
 
-  x String { value: Atom('test' type=inline), raw: Atom('"test"' type=inline) }
+  x String { value: Atom('test' type=inline), raw: "\"test\"" }
    ,-[$DIR/tests/recovery/selector/attribute/invalid-matcher-2/input.css:1:1]
  1 | [href#="test"] {}
    :        ^^^^^^
@@ -80,22 +86,10 @@
   x ComponentValue
    ,-[$DIR/tests/recovery/selector/attribute/invalid-matcher-2/input.css:1:1]
  1 | [href#="test"] {}
-   :              ^
-   `----
-
-  x RBracket
-   ,-[$DIR/tests/recovery/selector/attribute/invalid-matcher-2/input.css:1:1]
- 1 | [href#="test"] {}
-   :              ^
-   `----
-
-  x ComponentValue
-   ,-[$DIR/tests/recovery/selector/attribute/invalid-matcher-2/input.css:1:1]
- 1 | [href#="test"] {}
    :               ^
    `----
 
-  x WhiteSpace { value: Atom(' ' type=inline) }
+  x WhiteSpace { value: " " }
    ,-[$DIR/tests/recovery/selector/attribute/invalid-matcher-2/input.css:1:1]
  1 | [href#="test"] {}
    :               ^

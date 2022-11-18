@@ -101,18 +101,21 @@
    ,-[$DIR/tests/recovery/value/quotes/input.css:2:5]
  2 | ,-> content: "tes
  3 | `->     t";
+ 4 |     }
    `----
 
   x StyleBlock
    ,-[$DIR/tests/recovery/value/quotes/input.css:2:5]
  2 | ,-> content: "tes
  3 | `->     t";
+ 4 |     }
    `----
 
   x Declaration
    ,-[$DIR/tests/recovery/value/quotes/input.css:2:5]
  2 | ,-> content: "tes
  3 | `->     t";
+ 4 |     }
    `----
 
   x DeclarationName
@@ -133,10 +136,22 @@
    :          ^^^^
    `----
 
-  x BadString { value: Atom('tes' type=inline), raw: Atom('"tes' type=inline) }
+  x BadString { raw_value: "\"tes" }
    ,-[$DIR/tests/recovery/value/quotes/input.css:2:5]
  2 | content: "tes
    :          ^^^^
+   `----
+
+  x ComponentValue
+   ,-[$DIR/tests/recovery/value/quotes/input.css:2:5]
+ 2 | ,-> content: "tes
+ 3 | `->     t";
+   `----
+
+  x WhiteSpace { value: "\n    " }
+   ,-[$DIR/tests/recovery/value/quotes/input.css:2:5]
+ 2 | ,-> content: "tes
+ 3 | `->     t";
    `----
 
   x ComponentValue
@@ -145,7 +160,7 @@
    : ^
    `----
 
-  x Ident
+  x Ident { value: Atom('t' type=inline), raw: "t" }
    ,-[$DIR/tests/recovery/value/quotes/input.css:3:5]
  3 | t";
    : ^
@@ -157,7 +172,7 @@
    :  ^^
    `----
 
-  x BadString { value: Atom(';' type=inline), raw: Atom('";' type=inline) }
+  x BadString { raw_value: "\";" }
    ,-[$DIR/tests/recovery/value/quotes/input.css:3:5]
  3 | t";
    :  ^^

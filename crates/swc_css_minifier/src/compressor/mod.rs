@@ -13,13 +13,13 @@ mod container;
 mod ctx;
 mod declaration;
 mod easing_function;
-mod empty;
 mod frequency;
 mod import;
 mod keyframes;
 mod length;
 mod math;
 mod media;
+mod rules;
 mod selector;
 mod supports;
 mod time;
@@ -59,7 +59,7 @@ impl VisitMut for Compressor {
     fn visit_mut_stylesheet(&mut self, n: &mut Stylesheet) {
         n.visit_mut_children_with(self);
 
-        self.compress_empty_stylesheet(n);
+        self.compress_stylesheet(n);
 
         if !self.need_utf8_at_rule {
             match n.rules.get(0) {
@@ -77,7 +77,7 @@ impl VisitMut for Compressor {
     fn visit_mut_simple_block(&mut self, n: &mut SimpleBlock) {
         n.visit_mut_children_with(self);
 
-        self.compress_empty_simple_block(n);
+        self.compress_simple_block(n);
     }
 
     fn visit_mut_time(&mut self, n: &mut Time) {
@@ -139,10 +139,10 @@ impl VisitMut for Compressor {
         self.compress_keyframes_at_rule(n);
     }
 
-    fn visit_mut_import_prelude_href(&mut self, n: &mut ImportPreludeHref) {
+    fn visit_mut_import_href(&mut self, n: &mut ImportHref) {
         n.visit_mut_children_with(self);
 
-        self.compress_import_prelude_href(n);
+        self.compress_import_href(n);
     }
 
     fn visit_mut_media_query_list(&mut self, n: &mut MediaQueryList) {
@@ -213,7 +213,11 @@ impl VisitMut for Compressor {
             ..self.ctx
         }));
 
-        self.compress_calc_sum(n);
+        // Don't touch `@supports`, it can be used to check a browser's support for one
+        // or more specific CSS features
+        if !self.in_supports_conidition {
+            self.compress_calc_sum(n);
+        }
     }
 
     fn visit_mut_component_value(&mut self, n: &mut ComponentValue) {
@@ -396,10 +400,20 @@ impl VisitMut for Compressor {
                 | Token::Function { value, .. }
                 | Token::AtKeyword { value, .. }
                 | Token::String { value, .. }
-                | Token::BadString { value, .. }
-                | Token::Dimension { unit: value, .. }
+                | Token::Url { value, .. }
                     if !contains_only_ascii_characters(value) =>
                 {
+                    self.need_utf8_at_rule = true;
+                }
+                Token::BadString {
+                    raw_value: value, ..
+                }
+                | Token::BadUrl {
+                    raw_value: value, ..
+                } if !contains_only_ascii_characters(value) => {
+                    self.need_utf8_at_rule = true;
+                }
+                Token::Dimension { unit: value, .. } if !contains_only_ascii_characters(value) => {
                     self.need_utf8_at_rule = true;
                 }
                 _ => {}

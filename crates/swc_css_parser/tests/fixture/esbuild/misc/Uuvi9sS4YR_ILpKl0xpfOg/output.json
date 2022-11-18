@@ -91,7 +91,7 @@
             "type": "Declaration",
             "span": {
               "start": 5,
-              "end": 23,
+              "end": 24,
               "ctxt": 0
             },
             "name": {
@@ -130,9 +130,7 @@
                     "ctxt": 0
                   },
                   "value": "abc",
-                  "before": "",
-                  "raw": "a\\62 c",
-                  "after": ""
+                  "raw": "a\\62 c"
                 },
                 "modifiers": null
               }

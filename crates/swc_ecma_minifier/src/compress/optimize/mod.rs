@@ -1,7 +1,5 @@
-use std::{iter::once, mem::take};
+use std::iter::once;
 
-#[allow(unused_imports)]
-use retain_mut::RetainMut;
 use rustc_hash::{FxHashMap, FxHashSet};
 use swc_atoms::{js_word, JsWord};
 use swc_common::{
@@ -9,6 +7,7 @@ use swc_common::{
     SyntaxContext, DUMMY_SP,
 };
 use swc_ecma_ast::*;
+use swc_ecma_transforms_optimization::debug_assert_valid;
 use swc_ecma_utils::{
     prepend_stmts, undefined, ExprCtx, ExprExt, ExprFactory, IsEmpty, ModuleItemLike, StmtLike,
     Type, Value,
@@ -20,7 +19,7 @@ use Value::Known;
 
 use self::{
     unused::PropertyAccessOpts,
-    util::{extract_class_side_effect, Finalizer, NormalMultiReplacer},
+    util::{extract_class_side_effect, Finalizer, NormalMultiReplacer, SynthesizedStmts},
 };
 use super::util::{drop_invalid_stmts, is_fine_for_if_cons};
 #[cfg(feature = "debug")]
@@ -665,11 +664,8 @@ where
             Expr::Paren(e) => return self.ignore_return_value(&mut e.expr),
 
             Expr::Bin(BinExpr {
-                op: op!("&&") | op!("||"),
-                left,
-                right,
-                ..
-            }) => {
+                op, left, right, ..
+            }) if op.may_short_circuit() => {
                 let ctx = Ctx {
                     dont_use_negated_iife: self.ctx.dont_use_negated_iife
                         || self.options.side_effects,
@@ -1387,8 +1383,8 @@ where
         let mut old_prepend_stmts = self.prepend_stmts.take();
         let old_append_stmts = self.append_stmts.take();
         n.visit_mut_with(self);
-        old_prepend_stmts.append(&mut *self.prepend_stmts);
-        old_prepend_stmts.append(&mut *self.append_stmts);
+        old_prepend_stmts.append(&mut self.prepend_stmts);
+        old_prepend_stmts.append(&mut self.append_stmts);
 
         self.prepend_stmts = old_prepend_stmts;
         self.append_stmts = old_append_stmts;
@@ -1473,7 +1469,7 @@ where
     fn visit_mut_bin_expr(&mut self, n: &mut BinExpr) {
         {
             let ctx = Ctx {
-                in_cond: self.ctx.in_cond || matches!(n.op, op!("&&") | op!("||") | op!("??")),
+                in_cond: self.ctx.in_cond || n.op.may_short_circuit(),
                 ..self.ctx
             };
 
@@ -1740,23 +1736,63 @@ where
             _ => {}
         }
 
+        if e.is_seq() {
+            debug_assert_valid(e);
+        }
+
         self.remove_invalid(e);
+
+        if e.is_seq() {
+            debug_assert_valid(e);
+        }
 
         self.optimize_str_access_to_arguments(e);
 
+        if e.is_seq() {
+            debug_assert_valid(e);
+        }
+
         self.replace_props(e);
+
+        if e.is_seq() {
+            debug_assert_valid(e);
+        }
 
         self.drop_unused_assignments(e);
 
+        if e.is_seq() {
+            debug_assert_valid(e);
+        }
+
         self.compress_lits(e);
+
+        if e.is_seq() {
+            debug_assert_valid(e);
+        }
 
         self.compress_typeofs(e);
 
+        if e.is_seq() {
+            debug_assert_valid(e);
+        }
+
         self.compress_logical_exprs_as_bang_bang(e, false);
+
+        if e.is_seq() {
+            debug_assert_valid(e);
+        }
 
         self.inline(e);
 
+        if e.is_seq() {
+            debug_assert_valid(e);
+        }
+
         self.handle_property_access(e);
+
+        if e.is_seq() {
+            debug_assert_valid(e);
+        }
 
         if let Expr::Bin(bin) = e {
             let expr = self.optimize_lit_cmp(bin);
@@ -1767,19 +1803,47 @@ where
             }
         }
 
+        if e.is_seq() {
+            debug_assert_valid(e);
+        }
+
         self.compress_cond_expr_if_similar(e);
+
+        if e.is_seq() {
+            debug_assert_valid(e);
+        }
 
         if self.options.negate_iife {
             self.negate_iife_in_cond(e);
+
+            if e.is_seq() {
+                debug_assert_valid(e);
+            }
         }
 
         self.collapse_assignment_to_vars(e);
 
+        if e.is_seq() {
+            debug_assert_valid(e);
+        }
+
         self.evaluate(e);
+
+        if e.is_seq() {
+            debug_assert_valid(e);
+        }
 
         self.invoke_iife(e);
 
+        if e.is_seq() {
+            debug_assert_valid(e);
+        }
+
         self.optimize_bangbang(e);
+
+        if e.is_seq() {
+            debug_assert_valid(e);
+        }
 
         match e {
             Expr::Seq(s) if s.exprs.is_empty() => {
@@ -1876,6 +1940,8 @@ where
                 }
             }
         }
+
+        self.normalize_expr(&mut n.expr);
 
         #[cfg(debug_assertions)]
         {
@@ -1974,6 +2040,8 @@ where
     fn visit_mut_for_stmt(&mut self, s: &mut ForStmt) {
         self.visit_with_prepend(&mut s.init);
 
+        debug_assert_valid(&s.init);
+
         s.test.visit_mut_with(self);
         s.update.visit_mut_with(self);
 
@@ -2023,9 +2091,25 @@ where
             }
         }
 
+        #[cfg(debug_assertions)]
+        {
+            n.visit_with(&mut AssertValid);
+        }
+
         if let Some(body) = &mut n.body {
             self.merge_if_returns(&mut body.stmts, false, true);
+
+            #[cfg(debug_assertions)]
+            {
+                body.visit_with(&mut AssertValid);
+            }
+
             self.drop_else_token(&mut body.stmts);
+        }
+
+        #[cfg(debug_assertions)]
+        {
+            n.visit_with(&mut AssertValid);
         }
 
         {
@@ -2333,16 +2417,21 @@ where
             ..self.ctx
         };
         s.visit_mut_children_with(&mut *self.with_ctx(ctx));
+
         if self.prepend_stmts.is_empty() && self.append_stmts.is_empty() {
             match s {
                 // We use var decl with no declarator to indicate we dropped an decl.
                 Stmt::Decl(Decl::Var(v)) if v.decls.is_empty() => {
                     *s = Stmt::Empty(EmptyStmt { span: DUMMY_SP });
+                    self.prepend_stmts = old_prepend;
+                    self.append_stmts = old_append;
                     return;
                 }
                 Stmt::Expr(es) => {
                     if es.expr.is_invalid() {
                         *s = Stmt::Empty(EmptyStmt { span: DUMMY_SP });
+                        self.prepend_stmts = old_prepend;
+                        self.append_stmts = old_append;
                         return;
                     }
                 }
@@ -2364,21 +2453,48 @@ where
         }) = s
         {
             *s = *body.take();
+
+            debug_assert_valid(s);
         }
 
         self.remove_duplicate_var_decls(s);
+
+        match s {
+            Stmt::Decl(Decl::Var(v)) if v.decls.is_empty() => {
+                s.take();
+                if self.prepend_stmts.is_empty() && self.append_stmts.is_empty() {
+                    self.prepend_stmts = old_prepend;
+                    self.append_stmts = old_append;
+                    return;
+                }
+            }
+            _ => {}
+        }
+
+        debug_assert_valid(s);
 
         // visit_mut_children_with above may produce easily optimizable block
         // statements.
         self.try_removing_block(s, false, false);
 
+        debug_assert_valid(s);
+
         // These methods may modify prepend_stmts or append_stmts.
         self.optimize_loops_if_cond_is_false(s);
+
+        debug_assert_valid(s);
+
         self.optimize_loops_with_break(s);
+
+        debug_assert_valid(s);
 
         self.try_removing_block(s, false, false);
 
+        debug_assert_valid(s);
+
         if !self.prepend_stmts.is_empty() || !self.append_stmts.is_empty() {
+            report_change!("Creating a fake block because of prepend or append");
+
             let span = s.span();
             *s = Stmt::Block(BlockStmt {
                 span: span.apply_mark(self.marks.fake_block),
@@ -2405,7 +2521,8 @@ where
         self.prepend_stmts = old_prepend;
         self.append_stmts = old_append;
 
-        let len = self.prepend_stmts.len();
+        let prepend_len = self.prepend_stmts.len();
+        let append_len = self.append_stmts.len();
 
         #[cfg(feature = "debug")]
         if self.debug_infinite_loop {
@@ -2416,7 +2533,8 @@ where
             }
         }
 
-        debug_assert_eq!(self.prepend_stmts.len(), len);
+        debug_assert_eq!(self.prepend_stmts.len(), prepend_len);
+        debug_assert_eq!(self.append_stmts.len(), append_len);
 
         if let Stmt::Expr(ExprStmt { expr, .. }) = s {
             if is_pure_undefined(&self.expr_ctx, expr) {
@@ -2454,7 +2572,8 @@ where
             }
         }
 
-        debug_assert_eq!(self.prepend_stmts.len(), len);
+        debug_assert_eq!(self.prepend_stmts.len(), prepend_len);
+        debug_assert_eq!(self.append_stmts.len(), append_len);
 
         match s {
             // We use var decl with no declarator to indicate we dropped an decl.
@@ -2465,34 +2584,39 @@ where
             _ => {}
         }
 
-        debug_assert_eq!(self.prepend_stmts.len(), len);
-
-        #[cfg(debug_assertions)]
-        {
-            s.visit_with(&mut AssertValid);
-        }
-
-        debug_assert_eq!(self.prepend_stmts.len(), len);
+        debug_assert_eq!(self.prepend_stmts.len(), prepend_len);
+        debug_assert_eq!(self.append_stmts.len(), append_len);
+        debug_assert_valid(s);
 
         self.compress_if_without_alt(s);
 
-        debug_assert_eq!(self.prepend_stmts.len(), len);
+        debug_assert_eq!(self.prepend_stmts.len(), prepend_len);
+        debug_assert_eq!(self.append_stmts.len(), append_len);
+        debug_assert_valid(s);
 
         self.compress_if_stmt_as_cond(s);
 
-        debug_assert_eq!(self.prepend_stmts.len(), len);
+        debug_assert_eq!(self.prepend_stmts.len(), prepend_len);
+        debug_assert_eq!(self.append_stmts.len(), append_len);
+        debug_assert_valid(s);
 
         self.compress_if_stmt_as_expr(s);
 
-        debug_assert_eq!(self.prepend_stmts.len(), len);
+        debug_assert_eq!(self.prepend_stmts.len(), prepend_len);
+        debug_assert_eq!(self.append_stmts.len(), append_len);
+        debug_assert_valid(s);
 
         self.optimize_const_switches(s);
 
-        debug_assert_eq!(self.prepend_stmts.len(), len);
+        debug_assert_eq!(self.prepend_stmts.len(), prepend_len);
+        debug_assert_eq!(self.append_stmts.len(), append_len);
+        debug_assert_valid(s);
 
         self.optimize_switches(s);
 
-        debug_assert_eq!(self.prepend_stmts.len(), len);
+        debug_assert_eq!(self.prepend_stmts.len(), prepend_len);
+        debug_assert_eq!(self.append_stmts.len(), append_len);
+        debug_assert_valid(s);
 
         #[cfg(feature = "debug")]
         if self.debug_infinite_loop {
@@ -2503,14 +2627,9 @@ where
             }
         }
 
-        debug_assert_eq!(self.prepend_stmts.len(), len);
-
-        #[cfg(debug_assertions)]
-        {
-            s.visit_with(&mut AssertValid);
-        }
-
-        debug_assert_eq!(self.prepend_stmts.len(), len);
+        debug_assert_eq!(self.prepend_stmts.len(), prepend_len);
+        debug_assert_eq!(self.append_stmts.len(), append_len);
+        debug_assert_valid(s);
     }
 
     fn visit_mut_stmts(&mut self, stmts: &mut Vec<Stmt>) {
@@ -2703,7 +2822,11 @@ where
 
         var.init.visit_mut_with(self);
 
+        debug_assert_valid(&var.init);
+
         self.remove_duplicate_name_of_function(var);
+
+        debug_assert_valid(&var.init);
 
         if let VarDeclarator {
             name: Pat::Ident(id),
@@ -2723,6 +2846,8 @@ where
         };
 
         self.store_var_for_prop_hoisting(var);
+
+        debug_assert_valid(&var.init);
     }
 
     #[cfg_attr(feature = "debug", tracing::instrument(skip_all))]
@@ -2748,6 +2873,8 @@ where
                 self.changed = true;
                 return false;
             }
+
+            debug_assert_valid(&*var);
 
             true
         });
@@ -2846,6 +2973,7 @@ where
                         if let Some(usage) = self.data.vars.get(&i.id.to_id()) {
                             if usage.declared_as_catch_param {
                                 var.init = None;
+                                debug_assert_valid(var);
                                 return true;
                             }
                         }
@@ -2853,6 +2981,8 @@ where
 
                     return false;
                 }
+
+                debug_assert_valid(var);
 
                 true
             });
@@ -2936,44 +3066,5 @@ fn is_left_access_to_arguments(l: &PatOrExpr) -> bool {
             Pat::Expr(e) => is_expr_access_to_arguments(e),
             _ => false,
         },
-    }
-}
-
-#[derive(Debug, Default, PartialEq, Eq)]
-struct SynthesizedStmts(Vec<Stmt>);
-
-impl SynthesizedStmts {
-    fn take_stmts(&mut self) -> Vec<Stmt> {
-        take(&mut self.0)
-    }
-}
-
-impl std::ops::Deref for SynthesizedStmts {
-    type Target = Vec<Stmt>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl std::ops::DerefMut for SynthesizedStmts {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
-
-impl Take for SynthesizedStmts {
-    fn dummy() -> Self {
-        Self(Take::dummy())
-    }
-}
-
-impl Drop for SynthesizedStmts {
-    fn drop(&mut self) {
-        if !self.0.is_empty() {
-            if !std::thread::panicking() {
-                panic!("We should not drop synthesized stmts");
-            }
-        }
     }
 }

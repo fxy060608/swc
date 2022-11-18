@@ -1,4 +1,7 @@
-use std::ops::{Deref, DerefMut};
+use std::{
+    mem::take,
+    ops::{Deref, DerefMut},
+};
 
 use rustc_hash::{FxHashMap, FxHashSet};
 use swc_atoms::js_word;
@@ -17,11 +20,45 @@ where
     M: Mode,
 {
     pub(super) fn normalize_expr(&mut self, e: &mut Expr) {
-        if let Expr::Seq(seq) = e {
-            self.normalize_sequences(seq);
-            if seq.exprs.len() == 1 {
-                *e = *seq.exprs.take().into_iter().next().unwrap();
+        match e {
+            Expr::Seq(seq) => {
+                for e in &mut seq.exprs {
+                    self.normalize_expr(e);
+                }
+
+                if seq.exprs.len() == 1 {
+                    *e = *seq.exprs.take().into_iter().next().unwrap();
+                    self.normalize_expr(e);
+                    return;
+                }
+
+                if seq.exprs.iter().any(|v| v.is_seq()) {
+                    let mut new = vec![];
+
+                    for e in seq.exprs.take() {
+                        match *e {
+                            Expr::Seq(s) => {
+                                new.extend(s.exprs);
+                            }
+                            _ => new.push(e),
+                        }
+                    }
+
+                    seq.exprs = new;
+                }
             }
+
+            Expr::Cond(cond) => {
+                self.normalize_expr(&mut cond.test);
+                self.normalize_expr(&mut cond.cons);
+                self.normalize_expr(&mut cond.alt);
+            }
+
+            Expr::Assign(a) => {
+                self.normalize_expr(&mut a.right);
+            }
+
+            _ => {}
         }
     }
 
@@ -494,6 +531,59 @@ impl VisitMut for ExprReplacer {
                     key: PropName::Ident(i.clone()),
                     value,
                 });
+            }
+        }
+    }
+}
+
+#[derive(Debug, Default, PartialEq, Eq)]
+pub(super) struct SynthesizedStmts(Vec<Stmt>);
+
+impl SynthesizedStmts {
+    pub fn take_stmts(&mut self) -> Vec<Stmt> {
+        take(&mut self.0)
+    }
+}
+
+impl std::ops::Deref for SynthesizedStmts {
+    type Target = Vec<Stmt>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl SynthesizedStmts {
+    pub fn push(&mut self, stmt: Stmt) {
+        self.0.push(stmt);
+    }
+
+    pub fn extend(&mut self, stmts: impl IntoIterator<Item = Stmt>) {
+        self.0.extend(stmts);
+    }
+
+    pub fn append(&mut self, other: &mut SynthesizedStmts) {
+        self.0.append(&mut other.0);
+    }
+}
+
+impl std::ops::DerefMut for SynthesizedStmts {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl Take for SynthesizedStmts {
+    fn dummy() -> Self {
+        Self(Take::dummy())
+    }
+}
+
+impl Drop for SynthesizedStmts {
+    fn drop(&mut self) {
+        if !self.0.is_empty() {
+            if !std::thread::panicking() {
+                panic!("We should not drop synthesized stmts");
             }
         }
     }

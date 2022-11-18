@@ -2404,19 +2404,19 @@
   x ComponentValue
     ,-[$DIR/tests/fixture/csstree/1/input.css:27:9]
  27 | --custom1: { something !important };
-    : ^^^^^^^^^^^^
+    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     `----
 
   x StyleBlock
     ,-[$DIR/tests/fixture/csstree/1/input.css:27:9]
  27 | --custom1: { something !important };
-    : ^^^^^^^^^^^^
+    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     `----
 
   x Declaration
     ,-[$DIR/tests/fixture/csstree/1/input.css:27:9]
  27 | --custom1: { something !important };
-    : ^^^^^^^^^^^^
+    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     `----
 
   x DeclarationName
@@ -2434,7 +2434,13 @@
   x ComponentValue
     ,-[$DIR/tests/fixture/csstree/1/input.css:27:9]
  27 | --custom1: { something !important };
-    :            ^
+    :            ^^^^^^^^^^^^^^^^^^^^^^^^
+    `----
+
+  x SimpleBlock
+    ,-[$DIR/tests/fixture/csstree/1/input.css:27:9]
+ 27 | --custom1: { something !important };
+    :            ^^^^^^^^^^^^^^^^^^^^^^^^
     `----
 
   x LBrace
@@ -2449,7 +2455,7 @@
     :             ^
     `----
 
-  x WhiteSpace { value: Atom(' ' type=inline) }
+  x WhiteSpace { value: " " }
     ,-[$DIR/tests/fixture/csstree/1/input.css:27:9]
  27 | --custom1: { something !important };
     :             ^
@@ -2461,7 +2467,7 @@
     :              ^^^^^^^^^
     `----
 
-  x Ident { value: Atom('something' type=dynamic), raw: Atom('something' type=dynamic) }
+  x Ident { value: Atom('something' type=dynamic), raw: "something" }
     ,-[$DIR/tests/fixture/csstree/1/input.css:27:9]
  27 | --custom1: { something !important };
     :              ^^^^^^^^^
@@ -2473,7 +2479,7 @@
     :                       ^
     `----
 
-  x WhiteSpace { value: Atom(' ' type=inline) }
+  x WhiteSpace { value: " " }
     ,-[$DIR/tests/fixture/csstree/1/input.css:27:9]
  27 | --custom1: { something !important };
     :                       ^
@@ -2497,7 +2503,7 @@
     :                         ^^^^^^^^^
     `----
 
-  x Ident { value: Atom('important' type=static), raw: Atom('important' type=static) }
+  x Ident { value: Atom('important' type=static), raw: "important" }
     ,-[$DIR/tests/fixture/csstree/1/input.css:27:9]
  27 | --custom1: { something !important };
     :                         ^^^^^^^^^
@@ -2509,22 +2515,10 @@
     :                                  ^
     `----
 
-  x WhiteSpace { value: Atom(' ' type=inline) }
+  x WhiteSpace { value: " " }
     ,-[$DIR/tests/fixture/csstree/1/input.css:27:9]
  27 | --custom1: { something !important };
     :                                  ^
-    `----
-
-  x ComponentValue
-    ,-[$DIR/tests/fixture/csstree/1/input.css:27:9]
- 27 | --custom1: { something !important };
-    :                                   ^
-    `----
-
-  x RBrace
-    ,-[$DIR/tests/fixture/csstree/1/input.css:27:9]
- 27 | --custom1: { something !important };
-    :                                   ^
     `----
 
   x ComponentValue
@@ -2560,7 +2554,13 @@
   x ComponentValue
     ,-[$DIR/tests/fixture/csstree/1/input.css:28:9]
  28 | --custom2: ([]) !important;
-    :            ^
+    :            ^^^^
+    `----
+
+  x SimpleBlock
+    ,-[$DIR/tests/fixture/csstree/1/input.css:28:9]
+ 28 | --custom2: ([]) !important;
+    :            ^^^^
     `----
 
   x LParen
@@ -2572,49 +2572,19 @@
   x ComponentValue
     ,-[$DIR/tests/fixture/csstree/1/input.css:28:9]
  28 | --custom2: ([]) !important;
-    :             ^
+    :             ^^
+    `----
+
+  x SimpleBlock
+    ,-[$DIR/tests/fixture/csstree/1/input.css:28:9]
+ 28 | --custom2: ([]) !important;
+    :             ^^
     `----
 
   x LBracket
     ,-[$DIR/tests/fixture/csstree/1/input.css:28:9]
  28 | --custom2: ([]) !important;
     :             ^
-    `----
-
-  x ComponentValue
-    ,-[$DIR/tests/fixture/csstree/1/input.css:28:9]
- 28 | --custom2: ([]) !important;
-    :              ^
-    `----
-
-  x RBracket
-    ,-[$DIR/tests/fixture/csstree/1/input.css:28:9]
- 28 | --custom2: ([]) !important;
-    :              ^
-    `----
-
-  x ComponentValue
-    ,-[$DIR/tests/fixture/csstree/1/input.css:28:9]
- 28 | --custom2: ([]) !important;
-    :               ^
-    `----
-
-  x RParen
-    ,-[$DIR/tests/fixture/csstree/1/input.css:28:9]
- 28 | --custom2: ([]) !important;
-    :               ^
-    `----
-
-  x ComponentValue
-    ,-[$DIR/tests/fixture/csstree/1/input.css:28:9]
- 28 | --custom2: ([]) !important;
-    :                ^
-    `----
-
-  x WhiteSpace { value: Atom(' ' type=inline) }
-    ,-[$DIR/tests/fixture/csstree/1/input.css:28:9]
- 28 | --custom2: ([]) !important;
-    :                ^
     `----
 
   x ImportantFlag
@@ -3389,13 +3359,13 @@
   x ComponentValue
     ,-[$DIR/tests/fixture/csstree/1/input.css:46:5]
  46 | from  { color: red }
-    :         ^^^^^^^^^^
+    :         ^^^^^^^^^^^
     `----
 
   x Declaration
     ,-[$DIR/tests/fixture/csstree/1/input.css:46:5]
  46 | from  { color: red }
-    :         ^^^^^^^^^^
+    :         ^^^^^^^^^^^
     `----
 
   x DeclarationName
@@ -3491,13 +3461,13 @@
   x ComponentValue
     ,-[$DIR/tests/fixture/csstree/1/input.css:47:5]
  47 | 50.1% { color: green; background: green }
-    :                       ^^^^^^^^^^^^^^^^^
+    :                       ^^^^^^^^^^^^^^^^^^
     `----
 
   x Declaration
     ,-[$DIR/tests/fixture/csstree/1/input.css:47:5]
  47 | 50.1% { color: green; background: green }
-    :                       ^^^^^^^^^^^^^^^^^
+    :                       ^^^^^^^^^^^^^^^^^^
     `----
 
   x DeclarationName
@@ -3686,19 +3656,19 @@
   x ComponentValue
     ,-[$DIR/tests/fixture/csstree/1/input.css:52:5]
  52 | --empty-var: ;
-    : ^^^^^^^^^^^^^^
+    : ^^^^^^^^^^^^^
     `----
 
   x StyleBlock
     ,-[$DIR/tests/fixture/csstree/1/input.css:52:5]
  52 | --empty-var: ;
-    : ^^^^^^^^^^^^^^
+    : ^^^^^^^^^^^^^
     `----
 
   x Declaration
     ,-[$DIR/tests/fixture/csstree/1/input.css:52:5]
  52 | --empty-var: ;
-    : ^^^^^^^^^^^^^^
+    : ^^^^^^^^^^^^^
     `----
 
   x DeclarationName
@@ -3716,19 +3686,19 @@
   x ComponentValue
     ,-[$DIR/tests/fixture/csstree/1/input.css:53:5]
  53 | --bad-var:;
-    : ^^^^^^^^^^^
+    : ^^^^^^^^^^
     `----
 
   x StyleBlock
     ,-[$DIR/tests/fixture/csstree/1/input.css:53:5]
  53 | --bad-var:;
-    : ^^^^^^^^^^^
+    : ^^^^^^^^^^
     `----
 
   x Declaration
     ,-[$DIR/tests/fixture/csstree/1/input.css:53:5]
  53 | --bad-var:;
-    : ^^^^^^^^^^^
+    : ^^^^^^^^^^
     `----
 
   x DeclarationName

@@ -18,13 +18,14 @@ $bad foo {
   color: red;
 }
 $bad: rule;
+
+
 a {
-  div.major { color: blue }
-color: red }
+  div.major { color: blue } color: red }
 a {
-  div: hover {color:blue} color:red;
+  div: hover { color: blue } color: red;
 }
 a {
-  div: hover {color:blue};
+  div: hover { color: blue };
   color: red;
 }

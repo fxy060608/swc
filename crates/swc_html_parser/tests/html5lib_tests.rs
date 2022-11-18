@@ -1,8 +1,11 @@
+#![allow(clippy::redundant_clone)]
+#![allow(clippy::while_let_on_iterator)]
+
 use std::{fs, mem::take, path::PathBuf};
 
 use common::{document_span_visualizer, DomVisualizer};
 use serde_json::Value;
-use swc_atoms::{js_word, JsWord};
+use swc_atoms::JsWord;
 use swc_common::{
     collections::AHashSet,
     input::{SourceFileInput, StringInput},
@@ -143,7 +146,7 @@ fn html5lib_test_tokenizer(input: PathBuf) {
             lexer.set_input_state(state.clone());
 
             if let Some(last_start_tag) = test.get("lastStartTag") {
-                let last_start_tag: String = serde_json::from_value(last_start_tag.clone())
+                let last_start_tag: JsWord = serde_json::from_value(last_start_tag.clone())
                     .expect("failed to get lastStartTag in test");
 
                 lexer.set_last_start_tag_name(&last_start_tag);
@@ -210,7 +213,7 @@ fn html5lib_test_tokenizer(input: PathBuf) {
                         *raw = None;
                     }
                     Token::Comment { ref mut raw, .. } => {
-                        *raw = js_word!("");
+                        *raw = None;
                     }
                     _ => {}
                 }
@@ -355,7 +358,7 @@ fn html5lib_test_tokenizer(input: PathBuf) {
 
                                     vec![Token::Comment {
                                         data: data.into(),
-                                        raw: js_word!(""),
+                                        raw: None,
                                     }]
                                 }
                                 _ => {
@@ -666,11 +669,9 @@ fn html5lib_test_tree_construction(input: PathBuf) {
             let need_skip_fragment = relative_path_to_test.contains("template_dat")
                 && matches!(counter, 109 | 110 | 111);
 
-            if !need_skip_fragment {
-                if !document_fragment.is_empty() {
-                    file_stem += ".fragment_";
-                    file_stem += &document_fragment.join("").replace(' ', "_");
-                }
+            if !need_skip_fragment && !document_fragment.is_empty() {
+                file_stem += ".fragment_";
+                file_stem += &document_fragment.join("").replace(' ', "_");
             }
 
             if scripting_enabled {
@@ -799,9 +800,8 @@ fn html5lib_test_tree_construction(input: PathBuf) {
                 || file_name.contains("svg_dat.5.fragment_tbody")
                 || file_name.contains("svg_dat.6.fragment_tbody")
                 || file_name.contains("svg_dat.7.fragment_tbody")
+                || file_name.contains("foreign-fragment_dat.3.fragment_svg_path")
             {
-                errors.len() - 1
-            } else if file_name.contains("foreign-fragment_dat.3.fragment_svg_path") {
                 errors.len() - 1
             } else {
                 errors.len()

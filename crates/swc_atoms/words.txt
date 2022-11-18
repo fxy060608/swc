@@ -612,6 +612,7 @@ animatemotion
 animatetransform
 animation
 animation-name
+anonymous
 annotation
 annotation-xml
 any
@@ -725,7 +726,9 @@ continue
 counter-style
 createClass
 createReactClass
+crossorigin
 cubic-bezier
+custom-media
 cursor
 data
 datalist
@@ -783,6 +786,7 @@ eval
 even
 ex
 export
+exportparts
 extends
 face
 false

@@ -794,7 +794,7 @@ where
             Expr::TsInstantiation(ref n) => emit!(n),
             Expr::OptChain(ref n) => emit!(n),
             Expr::Invalid(ref n) => emit!(n),
-            Expr::TsSatisfaction(n) => {
+            Expr::TsSatisfies(n) => {
                 emit!(n)
             }
         }
@@ -1229,6 +1229,19 @@ where
             }
             emit!(node.super_class);
             emit!(node.super_type_params);
+        }
+
+        if !node.implements.is_empty() {
+            space!();
+            keyword!("implements");
+
+            space!();
+
+            self.emit_list(
+                node.span,
+                Some(&node.implements),
+                ListFormat::ClassHeritageClauses,
+            )?;
         }
 
         formatting_space!();
@@ -2736,8 +2749,30 @@ where
                 }
             }
 
+            Expr::Cond(e) => {
+                if self.has_leading_comment(&e.test) {
+                    return true;
+                }
+            }
+
             Expr::Seq(e) => {
                 if let Some(e) = e.exprs.first() {
+                    if self.has_leading_comment(e) {
+                        return true;
+                    }
+                }
+            }
+
+            Expr::Assign(e) => {
+                if let Some(cmt) = self.comments {
+                    let lo = e.span.lo;
+
+                    if cmt.has_leading(lo) {
+                        return true;
+                    }
+                }
+
+                if let Some(e) = e.left.as_expr() {
                     if self.has_leading_comment(e) {
                         return true;
                     }

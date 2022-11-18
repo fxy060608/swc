@@ -68,7 +68,15 @@ where
         match n {
             Rule::QualifiedRule(n) => emit!(self, n),
             Rule::AtRule(n) => emit!(self, n),
-            Rule::ListOfComponentValues(n) => emit!(self, n),
+            Rule::ListOfComponentValues(n) => {
+                emit!(
+                    &mut *self.with_ctx(Ctx {
+                        in_list_of_component_values: true,
+                        ..self.ctx
+                    }),
+                    n
+                )
+            }
         }
     }
 
@@ -81,10 +89,22 @@ where
     #[emitter]
     fn emit_qualified_rule_prelude(&mut self, n: &QualifiedRulePrelude) -> Result {
         match n {
-            QualifiedRulePrelude::ListOfComponentValues(n) => emit!(self, n),
             QualifiedRulePrelude::SelectorList(n) => {
                 emit!(self, n);
                 formatting_space!(self);
+            }
+            QualifiedRulePrelude::RelativeSelectorList(n) => {
+                emit!(self, n);
+                formatting_space!(self);
+            }
+            QualifiedRulePrelude::ListOfComponentValues(n) => {
+                emit!(
+                    &mut *self.with_ctx(Ctx {
+                        in_list_of_component_values: true,
+                        ..self.ctx
+                    }),
+                    n
+                )
             }
         }
     }
@@ -135,7 +155,6 @@ where
     #[emitter]
     fn emit_at_rule_prelude(&mut self, n: &AtRulePrelude) -> Result {
         match n {
-            AtRulePrelude::ListOfComponentValues(n) => emit!(self, n),
             AtRulePrelude::CharsetPrelude(n) => {
                 space!(self);
                 emit!(self, n);
@@ -191,10 +210,10 @@ where
             }
             AtRulePrelude::ImportPrelude(n) => {
                 match &*n.href {
-                    ImportPreludeHref::Url(_) => {
+                    ImportHref::Url(_) => {
                         space!(self);
                     }
-                    ImportPreludeHref::Str(_) => {
+                    ImportHref::Str(_) => {
                         formatting_space!(self);
                     }
                 }
@@ -295,6 +314,15 @@ where
                 space!(self);
                 emit!(self, n);
             }
+            AtRulePrelude::ListOfComponentValues(n) => {
+                emit!(
+                    &mut *self.with_ctx(Ctx {
+                        in_list_of_component_values: true,
+                        ..self.ctx
+                    }),
+                    n
+                )
+            }
         }
     }
 
@@ -307,68 +335,69 @@ where
     }
 
     #[emitter]
-    fn emit_import_prelude_supports_type(&mut self, n: &ImportPreludeSupportsType) -> Result {
-        match n {
-            ImportPreludeSupportsType::SupportsCondition(n) => emit!(self, n),
-            ImportPreludeSupportsType::Declaration(n) => emit!(self, n),
-        }
-    }
-
-    #[emitter]
     fn emit_import_prelude(&mut self, n: &ImportPrelude) -> Result {
         emit!(self, n.href);
 
-        if let Some(layer_name) = &n.layer_name {
+        if n.layer_name.is_some() || n.import_conditions.is_some() {
             formatting_space!(self);
+        }
+
+        if let Some(layer_name) = &n.layer_name {
             emit!(self, layer_name);
 
-            if self.config.minify && (n.supports.is_some() || n.media.is_some()) {
-                if let ImportPreludeLayerName::Ident(_) = &**layer_name {
+            if n.import_conditions.is_some() {
+                if let ImportLayerName::Ident(_) = &**layer_name {
                     space!(self);
+                } else {
+                    formatting_space!(self);
                 }
             }
         }
 
-        if let Some(supports) = &n.supports {
-            formatting_space!(self);
-            write_raw!(self, "supports");
-            write_raw!(self, "(");
-            emit!(self, supports);
-            write_raw!(self, ")");
-        }
+        emit!(self, n.import_conditions);
+    }
 
-        if let Some(media) = &n.media {
-            formatting_space!(self);
-            emit!(self, media);
+    #[emitter]
+    fn emit_import_prelude_href(&mut self, n: &ImportHref) -> Result {
+        match n {
+            ImportHref::Url(n) => emit!(self, n),
+            ImportHref::Str(n) => emit!(self, n),
         }
     }
 
     #[emitter]
-    fn emit_import_prelude_href(&mut self, n: &ImportPreludeHref) -> Result {
+    fn emit_import_layer_name(&mut self, n: &ImportLayerName) -> Result {
         match n {
-            ImportPreludeHref::Url(n) => emit!(self, n),
-            ImportPreludeHref::Str(n) => emit!(self, n),
-        }
-    }
-
-    #[emitter]
-    fn emit_import_layer_name(&mut self, n: &ImportPreludeLayerName) -> Result {
-        match n {
-            ImportPreludeLayerName::Ident(n) => emit!(self, n),
-            ImportPreludeLayerName::Function(n) if n.value.is_empty() => {
+            ImportLayerName::Ident(n) => emit!(self, n),
+            ImportLayerName::Function(n) if n.value.is_empty() => {
                 // Never emit `layer()`
                 emit!(
                     self,
                     AtRuleName::Ident(swc_css_ast::Ident {
                         span: n.span,
                         value: js_word!("layer"),
-                        raw: Some(js_word!("layer"))
+                        raw: None
                     })
                 )
             }
-            ImportPreludeLayerName::Function(n) => {
+            ImportLayerName::Function(n) => {
                 emit!(self, n)
             }
+        }
+    }
+
+    #[emitter]
+    fn emit_import_conditions(&mut self, n: &ImportConditions) -> Result {
+        if let Some(supports) = &n.supports {
+            emit!(self, supports);
+
+            if n.media.is_some() {
+                formatting_space!(self);
+            }
+        }
+
+        if let Some(media) = &n.media {
+            emit!(self, media);
         }
     }
 
@@ -1118,6 +1147,10 @@ where
         for (idx, node) in iter.enumerate() {
             emit!(self, node);
 
+            if self.ctx.in_list_of_component_values {
+                continue;
+            }
+
             let is_current_preserved_token = matches!(node, ComponentValue::PreservedToken(_));
             let next = nodes.get(idx + 1);
             let is_next_preserved_token = matches!(next, Some(ComponentValue::PreservedToken(_)));
@@ -1140,7 +1173,7 @@ where
                         })) => false,
                         _ => !self.config.minify,
                     },
-                    ComponentValue::Ident(_) => match next {
+                    ComponentValue::Ident(_) | ComponentValue::DashedIdent(_) => match next {
                         Some(ComponentValue::SimpleBlock(SimpleBlock { name, .. })) => {
                             if name.token == Token::LParen {
                                 true
@@ -1333,7 +1366,7 @@ where
                     decrease_indent!(self);
                 }
                 _ => {
-                    if ending == "]" && idx != len - 1 {
+                    if !self.ctx.in_list_of_component_values && ending == "]" && idx != len - 1 {
                         space!(self);
                     }
                 }
@@ -1374,13 +1407,23 @@ where
             ComponentValue::CalcSum(n) => emit!(self, n),
             ComponentValue::ComplexSelector(n) => emit!(self, n),
             ComponentValue::LayerName(n) => emit!(self, n),
+            ComponentValue::Declaration(n) => emit!(self, n),
+            ComponentValue::SupportsCondition(n) => emit!(self, n),
         }
     }
 
     #[emitter]
     fn emit_style_block(&mut self, n: &StyleBlock) -> Result {
         match n {
-            StyleBlock::ListOfComponentValues(n) => emit!(self, n),
+            StyleBlock::ListOfComponentValues(n) => {
+                emit!(
+                    &mut *self.with_ctx(Ctx {
+                        in_list_of_component_values: true,
+                        ..self.ctx
+                    }),
+                    n
+                )
+            }
             StyleBlock::AtRule(n) => emit!(self, n),
             StyleBlock::Declaration(n) => emit!(self, n),
             StyleBlock::QualifiedRule(n) => emit!(self, n),
@@ -1392,7 +1435,15 @@ where
         match n {
             DeclarationOrAtRule::Declaration(n) => emit!(self, n),
             DeclarationOrAtRule::AtRule(n) => emit!(self, n),
-            DeclarationOrAtRule::ListOfComponentValues(n) => emit!(self, n),
+            DeclarationOrAtRule::ListOfComponentValues(n) => {
+                emit!(
+                    &mut *self.with_ctx(Ctx {
+                        in_list_of_component_values: true,
+                        ..self.ctx
+                    }),
+                    n
+                )
+            }
         }
     }
 
@@ -1429,7 +1480,11 @@ where
         }
 
         if is_custom_property {
-            self.emit_list(&n.value, ListFormat::NotDelimited)?;
+            self.with_ctx(Ctx {
+                in_list_of_component_values: true,
+                ..self.ctx
+            })
+            .emit_list(&n.value, ListFormat::NotDelimited)?;
         } else {
             self.emit_list_of_component_values_inner(
                 &n.value,
@@ -1509,12 +1564,16 @@ where
     #[emitter]
     fn emit_dashed_ident(&mut self, n: &DashedIdent) -> Result {
         if self.config.minify {
+            write_raw!(self, lo_span_offset!(n.span, 2), "--");
+
             let serialized = serialize_ident(&n.value, n.raw.as_deref(), true);
 
             write_raw!(self, n.span, &serialized);
         } else if let Some(raw) = &n.raw {
             write_raw!(self, n.span, raw);
         } else {
+            write_raw!(self, lo_span_offset!(n.span, 2), "--");
+
             let serialized = serialize_ident(&n.value, n.raw.as_deref(), false);
 
             write_raw!(self, n.span, &serialized);
@@ -1919,8 +1978,8 @@ where
 
                 write_raw!(self, span, &function);
             }
-            Token::BadString { raw, .. } => {
-                write_str!(self, span, raw);
+            Token::BadString { raw_value } => {
+                write_str!(self, span, raw_value);
             }
             Token::String { raw, .. } => {
                 write_str!(self, span, raw);
@@ -1928,19 +1987,13 @@ where
             Token::Url {
                 raw_name,
                 raw_value,
-                before,
-                after,
                 ..
             } => {
-                let mut url = String::with_capacity(
-                    raw_name.len() + before.len() + raw_value.len() + after.len() + 2,
-                );
+                let mut url = String::with_capacity(raw_name.len() + raw_value.len() + 2);
 
                 url.push_str(raw_name);
                 url.push('(');
-                url.push_str(before);
                 url.push_str(raw_value);
-                url.push_str(after);
                 url.push(')');
 
                 write_str!(self, span, &url);
@@ -1950,7 +2003,7 @@ where
                 raw_value,
                 ..
             } => {
-                let mut bad_url = String::with_capacity(raw_name.len() + raw_value.len() + 2);
+                let mut bad_url = String::with_capacity(raw_value.len() + 2);
 
                 bad_url.push_str(raw_name);
                 bad_url.push('(');
@@ -2038,12 +2091,10 @@ where
             url.push_str(&n.value);
 
             write_str!(self, n.span, &url);
-        } else if let (Some(before), Some(raw), Some(after)) = (&n.before, &n.raw, &n.after) {
-            let mut url = String::with_capacity(before.len() + raw.len() + after.len());
+        } else if let Some(raw) = &n.raw {
+            let mut url = String::with_capacity(raw.len());
 
-            url.push_str(before);
             url.push_str(raw);
-            url.push_str(after);
 
             write_str!(self, n.span, &url);
         } else {
@@ -2133,7 +2184,15 @@ where
     fn emit_forgiving_complex_list(&mut self, n: &ForgivingComplexSelector) -> Result {
         match n {
             ForgivingComplexSelector::ComplexSelector(n) => emit!(self, n),
-            ForgivingComplexSelector::ListOfComponentValues(n) => emit!(self, n),
+            ForgivingComplexSelector::ListOfComponentValues(n) => {
+                emit!(
+                    &mut *self.with_ctx(Ctx {
+                        in_list_of_component_values: true,
+                        ..self.ctx
+                    }),
+                    n
+                )
+            }
         }
     }
 
@@ -2171,7 +2230,15 @@ where
     fn emit_forgiving_relative_selector(&mut self, n: &ForgivingRelativeSelector) -> Result {
         match n {
             ForgivingRelativeSelector::RelativeSelector(n) => emit!(self, n),
-            ForgivingRelativeSelector::ListOfComponentValues(n) => emit!(self, n),
+            ForgivingRelativeSelector::ListOfComponentValues(n) => {
+                emit!(
+                    &mut *self.with_ctx(Ctx {
+                        in_list_of_component_values: true,
+                        ..self.ctx
+                    }),
+                    n
+                )
+            }
         }
     }
 

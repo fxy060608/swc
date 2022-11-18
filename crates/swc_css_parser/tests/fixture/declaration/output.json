@@ -782,9 +782,7 @@
                     "ctxt": 0
                   },
                   "value": "value",
-                  "before": "",
-                  "raw": "value",
-                  "after": ""
+                  "raw": "value"
                 },
                 "modifiers": null
               },
@@ -813,9 +811,7 @@
                     "ctxt": 0
                   },
                   "value": "value",
-                  "before": "",
-                  "raw": "value",
-                  "after": ""
+                  "raw": "value"
                 },
                 "modifiers": null
               }
@@ -1481,7 +1477,7 @@
             "type": "Declaration",
             "span": {
               "start": 541,
-              "end": 558,
+              "end": 560,
               "ctxt": 0
             },
             "name": {

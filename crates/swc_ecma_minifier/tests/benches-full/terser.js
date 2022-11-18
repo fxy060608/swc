@@ -3,7 +3,7 @@
         'exports',
         'source-map'
     ], factory) : factory((global1 = 'undefined' != typeof globalThis ? globalThis : global1 || self).Terser = {}, global1.sourceMap);
-}(this, function(exports, MOZ_SourceMap) {
+}(this, function(exports1, MOZ_SourceMap) {
     'use strict';
     let mangle_options;
     var def_is_string, def_find_defs, MOZ_SourceMap__default = MOZ_SourceMap && 'object' == typeof MOZ_SourceMap && 'default' in MOZ_SourceMap ? MOZ_SourceMap : {
@@ -417,8 +417,7 @@
                         return ret;
                     }(function(ch, i) {
                         if (is_big_int) return !1;
-                        var code = ch.charCodeAt(0);
-                        switch(code){
+                        switch(ch.charCodeAt(0)){
                             case 95:
                                 return numeric_separator = !0;
                             case 98:
@@ -1913,8 +1912,8 @@
         base && base.PROPS && (props = props.concat(base.PROPS));
         for(var code = "return function AST_" + type + "(props){ if (props) { ", i = props.length; --i >= 0;)code += "this." + props[i] + " = props." + props[i] + ";";
         const proto = base && Object.create(base.prototype);
-        (proto && proto.initialize || methods && methods.initialize) && (code += "this.initialize();"), code += "}", code += "this.flags = 0;";
-        var ctor = Function(code += "}")();
+        (proto && proto.initialize || methods && methods.initialize) && (code += "this.initialize();");
+        var ctor = Function(code += "}this.flags = 0;}")();
         if (proto && (ctor.prototype = proto, ctor.BASE = base), base && base.SUBCLASSES.push(ctor), ctor.prototype.CTOR = ctor, ctor.prototype.constructor = ctor, ctor.PROPS = props || null, ctor.SELF_PROPS = self_props, ctor.SUBCLASSES = [], type && (ctor.prototype.TYPE = ctor.TYPE = type), methods) for(i in methods)HOP(methods, i) && ("$" === i[0] ? ctor[i.substr(1)] = methods[i] : ctor.prototype[i] = methods[i]);
         return ctor.DEFMETHOD = function(name, method) {
             this.prototype[name] = method;
@@ -4085,14 +4084,14 @@
         AST_Node.from_mozilla_ast = function(node) {
             var save_stack = FROM_MOZ_STACK;
             FROM_MOZ_STACK = [];
-            var ast1 = from_moz(node);
-            return FROM_MOZ_STACK = save_stack, ast1;
+            var ast = from_moz(node);
+            return FROM_MOZ_STACK = save_stack, ast;
         };
         var TO_MOZ_STACK = null;
         function to_moz(node) {
             null === TO_MOZ_STACK && (TO_MOZ_STACK = []), TO_MOZ_STACK.push(node);
-            var ast1 = null != node ? node.to_mozilla_ast(TO_MOZ_STACK[TO_MOZ_STACK.length - 2]) : null;
-            return TO_MOZ_STACK.pop(), 0 === TO_MOZ_STACK.length && (TO_MOZ_STACK = null), ast1;
+            var ast = null != node ? node.to_mozilla_ast(TO_MOZ_STACK[TO_MOZ_STACK.length - 2]) : null;
+            return TO_MOZ_STACK.pop(), 0 === TO_MOZ_STACK.length && (TO_MOZ_STACK = null), ast;
         }
         function to_moz_in_destructuring() {
             for(var i = TO_MOZ_STACK.length; i--;)if (TO_MOZ_STACK[i] instanceof AST_Destructuring) return !0;
@@ -4289,9 +4288,7 @@
             var a = str.split(/\r?\n/), n = a.length - 1;
             current_line += n, current_col += a[0].length, n > 0 && (ensure_line_len(), current_col = a[n].length), last = str;
         }
-        var star = function() {
-            print("*");
-        }, space = options.beautify ? function() {
+        var space = options.beautify ? function() {
             print(" ");
         } : function() {
             might_need_space = !0;
@@ -4360,7 +4357,9 @@
             },
             newline: newline,
             print: print,
-            star: star,
+            star: function() {
+                print("*");
+            },
             space: space,
             comma: function() {
                 print(","), space();
@@ -18048,5 +18047,5 @@
             return error.defs;
         }
     }
-    exports._default_options = _default_options, exports._run_cli = run_cli, exports.minify = minify;
+    exports1._default_options = _default_options, exports1._run_cli = run_cli, exports1.minify = minify;
 });

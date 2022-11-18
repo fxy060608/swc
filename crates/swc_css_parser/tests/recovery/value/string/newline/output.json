@@ -91,7 +91,7 @@
             "type": "Declaration",
             "span": {
               "start": 9,
-              "end": 16,
+              "end": 17,
               "ctxt": 0
             },
             "name": {
@@ -114,8 +114,7 @@
                 },
                 "token": {
                   "BadString": {
-                    "value": "",
-                    "raw": "\""
+                    "raw_value": "\""
                   }
                 }
               }

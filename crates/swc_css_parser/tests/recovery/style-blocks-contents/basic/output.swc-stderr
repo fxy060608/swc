@@ -23,14 +23,20 @@
     :      ^
     `----
 
-  x Invalid selector
+  x Expected ":"
+    ,-[$DIR/tests/recovery/style-blocks-contents/basic/input.css:46:5]
+ 46 | }
+    : ^
+    `----
+
+  x Expected '{'
     ,-[$DIR/tests/recovery/style-blocks-contents/basic/input.css:39:5]
  39 | & test;
     :       ^
     `----
 
-  x Unexpected character `';'`
+  x Unexpected token
     ,-[$DIR/tests/recovery/style-blocks-contents/basic/input.css:39:5]
  39 | & test;
-    :       ^
+    : ^
     `----

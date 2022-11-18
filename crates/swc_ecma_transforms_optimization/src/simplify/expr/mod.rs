@@ -258,7 +258,10 @@ impl SimplifyExpr {
                     }
 
                     if exprs.is_empty() {
-                        *expr = *val;
+                        *expr = Expr::Seq(SeqExpr {
+                            span: val.span(),
+                            exprs: vec![0.into(), val],
+                        });
                         return;
                     }
 
@@ -483,7 +486,7 @@ impl SimplifyExpr {
                             self.changed = true;
 
                             // 0 && $right
-                            *expr = *(left.take());
+                            *expr = *left.take();
                             return;
                         }
                     } else if val {
@@ -500,7 +503,14 @@ impl SimplifyExpr {
                     if !left.may_have_side_effects(&self.expr_ctx) {
                         self.changed = true;
 
-                        *expr = *node.take();
+                        if node.directness_maters() {
+                            *expr = Expr::Seq(SeqExpr {
+                                span: node.span(),
+                                exprs: vec![0.into(), node.take()],
+                            });
+                        } else {
+                            *expr = *node.take();
+                        }
                     } else {
                         self.changed = true;
 
@@ -1330,7 +1340,14 @@ impl VisitMut for SimplifyExpr {
 
                     let expr_value = if val { cons } else { alt };
                     *expr = if p.is_pure() {
-                        *(expr_value.take())
+                        if expr_value.directness_maters() {
+                            Expr::Seq(SeqExpr {
+                                span: *span,
+                                exprs: vec![0.into(), expr_value.take()],
+                            })
+                        } else {
+                            *expr_value.take()
+                        }
                     } else {
                         Expr::Seq(SeqExpr {
                             span: *span,

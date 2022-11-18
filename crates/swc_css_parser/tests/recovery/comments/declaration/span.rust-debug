@@ -83,18 +83,21 @@
    ,-[$DIR/tests/recovery/comments/declaration/input.css:2:5]
  2 | ,-> prop: url("test") /* comment */   /* comment */
  3 | `->         /* comment */:
+ 4 |     }
    `----
 
   x StyleBlock
    ,-[$DIR/tests/recovery/comments/declaration/input.css:2:5]
  2 | ,-> prop: url("test") /* comment */   /* comment */
  3 | `->         /* comment */:
+ 4 |     }
    `----
 
   x Declaration
    ,-[$DIR/tests/recovery/comments/declaration/input.css:2:5]
  2 | ,-> prop: url("test") /* comment */   /* comment */
  3 | `->         /* comment */:
+ 4 |     }
    `----
 
   x DeclarationName
@@ -115,7 +118,7 @@
    :       ^^^^^^^^^^^
    `----
 
-  x Url
+  x Function
    ,-[$DIR/tests/recovery/comments/declaration/input.css:2:5]
  2 | prop: url("test") /* comment */   /* comment */
    :       ^^^^^^^^^^^
@@ -127,16 +130,52 @@
    :       ^^^
    `----
 
-  x UrlValue
+  x ComponentValue
    ,-[$DIR/tests/recovery/comments/declaration/input.css:2:5]
  2 | prop: url("test") /* comment */   /* comment */
    :           ^^^^^^
    `----
 
-  x Str
+  x String { value: Atom('test' type=inline), raw: "\"test\"" }
    ,-[$DIR/tests/recovery/comments/declaration/input.css:2:5]
  2 | prop: url("test") /* comment */   /* comment */
    :           ^^^^^^
+   `----
+
+  x ComponentValue
+   ,-[$DIR/tests/recovery/comments/declaration/input.css:2:5]
+ 2 | prop: url("test") /* comment */   /* comment */
+   :                  ^
+   `----
+
+  x WhiteSpace { value: " " }
+   ,-[$DIR/tests/recovery/comments/declaration/input.css:2:5]
+ 2 | prop: url("test") /* comment */   /* comment */
+   :                  ^
+   `----
+
+  x ComponentValue
+   ,-[$DIR/tests/recovery/comments/declaration/input.css:2:5]
+ 2 | prop: url("test") /* comment */   /* comment */
+   :                                ^^^
+   `----
+
+  x WhiteSpace { value: "   " }
+   ,-[$DIR/tests/recovery/comments/declaration/input.css:2:5]
+ 2 | prop: url("test") /* comment */   /* comment */
+   :                                ^^^
+   `----
+
+  x ComponentValue
+   ,-[$DIR/tests/recovery/comments/declaration/input.css:2:5]
+ 2 | ,-> prop: url("test") /* comment */   /* comment */
+ 3 | `->         /* comment */:
+   `----
+
+  x WhiteSpace { value: "\n        " }
+   ,-[$DIR/tests/recovery/comments/declaration/input.css:2:5]
+ 2 | ,-> prop: url("test") /* comment */   /* comment */
+ 3 | `->         /* comment */:
    `----
 
   x ComponentValue

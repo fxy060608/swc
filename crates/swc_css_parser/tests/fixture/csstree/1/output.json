@@ -1835,9 +1835,7 @@
                     "ctxt": 0
                   },
                   "value": "path/to.png",
-                  "before": "",
-                  "raw": "path/to.png",
-                  "after": ""
+                  "raw": "path/to.png"
                 },
                 "modifiers": null
               },
@@ -2331,7 +2329,7 @@
                   "type": "Declaration",
                   "span": {
                     "start": 815,
-                    "end": 827,
+                    "end": 850,
                     "ctxt": 0
                   },
                   "name": {
@@ -2341,107 +2339,108 @@
                       "end": 824,
                       "ctxt": 0
                     },
-                    "value": "--custom1",
+                    "value": "custom1",
                     "raw": "--custom1"
                   },
                   "value": [
                     {
-                      "type": "PreservedToken",
+                      "type": "SimpleBlock",
                       "span": {
                         "start": 826,
-                        "end": 827,
-                        "ctxt": 0
-                      },
-                      "token": "LBrace"
-                    },
-                    {
-                      "type": "PreservedToken",
-                      "span": {
-                        "start": 827,
-                        "end": 828,
-                        "ctxt": 0
-                      },
-                      "token": {
-                        "WhiteSpace": {
-                          "value": " "
-                        }
-                      }
-                    },
-                    {
-                      "type": "PreservedToken",
-                      "span": {
-                        "start": 828,
-                        "end": 837,
-                        "ctxt": 0
-                      },
-                      "token": {
-                        "Ident": {
-                          "value": "something",
-                          "raw": "something"
-                        }
-                      }
-                    },
-                    {
-                      "type": "PreservedToken",
-                      "span": {
-                        "start": 837,
-                        "end": 838,
-                        "ctxt": 0
-                      },
-                      "token": {
-                        "WhiteSpace": {
-                          "value": " "
-                        }
-                      }
-                    },
-                    {
-                      "type": "PreservedToken",
-                      "span": {
-                        "start": 838,
-                        "end": 839,
-                        "ctxt": 0
-                      },
-                      "token": {
-                        "Delim": {
-                          "value": "!"
-                        }
-                      }
-                    },
-                    {
-                      "type": "PreservedToken",
-                      "span": {
-                        "start": 839,
-                        "end": 848,
-                        "ctxt": 0
-                      },
-                      "token": {
-                        "Ident": {
-                          "value": "important",
-                          "raw": "important"
-                        }
-                      }
-                    },
-                    {
-                      "type": "PreservedToken",
-                      "span": {
-                        "start": 848,
-                        "end": 849,
-                        "ctxt": 0
-                      },
-                      "token": {
-                        "WhiteSpace": {
-                          "value": " "
-                        }
-                      }
-                    },
-                    {
-                      "type": "PreservedToken",
-                      "span": {
-                        "start": 849,
                         "end": 850,
                         "ctxt": 0
                       },
-                      "token": "RBrace"
+                      "name": {
+                        "type": "PreservedToken",
+                        "span": {
+                          "start": 826,
+                          "end": 827,
+                          "ctxt": 0
+                        },
+                        "token": "LBrace"
+                      },
+                      "value": [
+                        {
+                          "type": "PreservedToken",
+                          "span": {
+                            "start": 827,
+                            "end": 828,
+                            "ctxt": 0
+                          },
+                          "token": {
+                            "WhiteSpace": {
+                              "value": " "
+                            }
+                          }
+                        },
+                        {
+                          "type": "PreservedToken",
+                          "span": {
+                            "start": 828,
+                            "end": 837,
+                            "ctxt": 0
+                          },
+                          "token": {
+                            "Ident": {
+                              "value": "something",
+                              "raw": "something"
+                            }
+                          }
+                        },
+                        {
+                          "type": "PreservedToken",
+                          "span": {
+                            "start": 837,
+                            "end": 838,
+                            "ctxt": 0
+                          },
+                          "token": {
+                            "WhiteSpace": {
+                              "value": " "
+                            }
+                          }
+                        },
+                        {
+                          "type": "PreservedToken",
+                          "span": {
+                            "start": 838,
+                            "end": 839,
+                            "ctxt": 0
+                          },
+                          "token": {
+                            "Delim": {
+                              "value": "!"
+                            }
+                          }
+                        },
+                        {
+                          "type": "PreservedToken",
+                          "span": {
+                            "start": 839,
+                            "end": 848,
+                            "ctxt": 0
+                          },
+                          "token": {
+                            "Ident": {
+                              "value": "important",
+                              "raw": "important"
+                            }
+                          }
+                        },
+                        {
+                          "type": "PreservedToken",
+                          "span": {
+                            "start": 848,
+                            "end": 849,
+                            "ctxt": 0
+                          },
+                          "token": {
+                            "WhiteSpace": {
+                              "value": " "
+                            }
+                          }
+                        }
+                      ]
                     }
                   ],
                   "important": null
@@ -2460,58 +2459,46 @@
                       "end": 869,
                       "ctxt": 0
                     },
-                    "value": "--custom2",
+                    "value": "custom2",
                     "raw": "--custom2"
                   },
                   "value": [
                     {
-                      "type": "PreservedToken",
+                      "type": "SimpleBlock",
                       "span": {
                         "start": 871,
-                        "end": 872,
-                        "ctxt": 0
-                      },
-                      "token": "LParen"
-                    },
-                    {
-                      "type": "PreservedToken",
-                      "span": {
-                        "start": 872,
-                        "end": 873,
-                        "ctxt": 0
-                      },
-                      "token": "LBracket"
-                    },
-                    {
-                      "type": "PreservedToken",
-                      "span": {
-                        "start": 873,
-                        "end": 874,
-                        "ctxt": 0
-                      },
-                      "token": "RBracket"
-                    },
-                    {
-                      "type": "PreservedToken",
-                      "span": {
-                        "start": 874,
                         "end": 875,
                         "ctxt": 0
                       },
-                      "token": "RParen"
-                    },
-                    {
-                      "type": "PreservedToken",
-                      "span": {
-                        "start": 875,
-                        "end": 876,
-                        "ctxt": 0
+                      "name": {
+                        "type": "PreservedToken",
+                        "span": {
+                          "start": 871,
+                          "end": 872,
+                          "ctxt": 0
+                        },
+                        "token": "LParen"
                       },
-                      "token": {
-                        "WhiteSpace": {
-                          "value": " "
+                      "value": [
+                        {
+                          "type": "SimpleBlock",
+                          "span": {
+                            "start": 872,
+                            "end": 874,
+                            "ctxt": 0
+                          },
+                          "name": {
+                            "type": "PreservedToken",
+                            "span": {
+                              "start": 872,
+                              "end": 873,
+                              "ctxt": 0
+                            },
+                            "token": "LBracket"
+                          },
+                          "value": []
                         }
-                      }
+                      ]
                     }
                   ],
                   "important": {
@@ -2855,7 +2842,7 @@
                             "end": 1029,
                             "ctxt": 0
                           },
-                          "value": "--something",
+                          "value": "something",
                           "raw": "--something"
                         },
                         {
@@ -3183,37 +3170,45 @@
           "raw": "'foo'"
         },
         "layerName": null,
-        "supports": null,
-        "media": {
-          "type": "MediaQueryList",
+        "importConditions": {
+          "type": "ImportCondition",
           "span": {
             "start": 1132,
             "end": 1138,
             "ctxt": 0
           },
-          "queries": [
-            {
-              "type": "MediaQuery",
-              "span": {
-                "start": 1132,
-                "end": 1138,
-                "ctxt": 0
-              },
-              "modifier": null,
-              "mediaType": {
-                "type": "Ident",
+          "supports": null,
+          "media": {
+            "type": "MediaQueryList",
+            "span": {
+              "start": 1132,
+              "end": 1138,
+              "ctxt": 0
+            },
+            "queries": [
+              {
+                "type": "MediaQuery",
                 "span": {
                   "start": 1132,
                   "end": 1138,
                   "ctxt": 0
                 },
-                "value": "screen",
-                "raw": "screen"
-              },
-              "keyword": null,
-              "condition": null
-            }
-          ]
+                "modifier": null,
+                "mediaType": {
+                  "type": "Ident",
+                  "span": {
+                    "start": 1132,
+                    "end": 1138,
+                    "ctxt": 0
+                  },
+                  "value": "screen",
+                  "raw": "screen"
+                },
+                "keyword": null,
+                "condition": null
+              }
+            ]
+          }
         }
       },
       "block": null
@@ -3302,7 +3297,7 @@
                   "type": "Declaration",
                   "span": {
                     "start": 1172,
-                    "end": 1182,
+                    "end": 1183,
                     "ctxt": 0
                   },
                   "name": {
@@ -3411,7 +3406,7 @@
                   "type": "Declaration",
                   "span": {
                     "start": 1211,
-                    "end": 1228,
+                    "end": 1229,
                     "ctxt": 0
                   },
                   "name": {
@@ -3626,7 +3621,7 @@
             "type": "Declaration",
             "span": {
               "start": 1285,
-              "end": 1299,
+              "end": 1298,
               "ctxt": 0
             },
             "name": {
@@ -3636,7 +3631,7 @@
                 "end": 1296,
                 "ctxt": 0
               },
-              "value": "--empty-var",
+              "value": "empty-var",
               "raw": "--empty-var"
             },
             "value": [],
@@ -3646,7 +3641,7 @@
             "type": "Declaration",
             "span": {
               "start": 1304,
-              "end": 1315,
+              "end": 1314,
               "ctxt": 0
             },
             "name": {
@@ -3656,7 +3651,7 @@
                 "end": 1313,
                 "ctxt": 0
               },
-              "value": "--bad-var",
+              "value": "bad-var",
               "raw": "--bad-var"
             },
             "value": [],

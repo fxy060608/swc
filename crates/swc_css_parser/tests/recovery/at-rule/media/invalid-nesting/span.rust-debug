@@ -132,13 +132,15 @@
   x ComponentValue
    ,-[$DIR/tests/recovery/at-rule/media/invalid-nesting/input.css:2:5]
  2 | max-inline-size: 1024px;
-   : ^^^^^^^^^^^^^^^^^^^^^^^^
+   : ^^^^^^^^^^^^^^^^^^^^^^^^^
+ 3 | }
    `----
 
   x Rule
    ,-[$DIR/tests/recovery/at-rule/media/invalid-nesting/input.css:2:5]
  2 | max-inline-size: 1024px;
-   : ^^^^^^^^^^^^^^^^^^^^^^^^
+   : ^^^^^^^^^^^^^^^^^^^^^^^^^
+ 3 | }
    `----
 
   x ComponentValue
@@ -147,7 +149,7 @@
    : ^^^^^^^^^^^^^^^
    `----
 
-  x Ident { value: Atom('max-inline-size' type=dynamic), raw: Atom('max-inline-size' type=dynamic) }
+  x Ident { value: Atom('max-inline-size' type=dynamic), raw: "max-inline-size" }
    ,-[$DIR/tests/recovery/at-rule/media/invalid-nesting/input.css:2:5]
  2 | max-inline-size: 1024px;
    : ^^^^^^^^^^^^^^^
@@ -171,7 +173,7 @@
    :                 ^
    `----
 
-  x WhiteSpace { value: Atom(' ' type=inline) }
+  x WhiteSpace { value: " " }
    ,-[$DIR/tests/recovery/at-rule/media/invalid-nesting/input.css:2:5]
  2 | max-inline-size: 1024px;
    :                 ^
@@ -183,7 +185,7 @@
    :                  ^^^^^^
    `----
 
-  x Dimension { value: 1024.0, raw_value: Atom('1024' type=inline), unit: Atom('px' type=static), raw_unit: Atom('px' type=static), type_flag: Integer }
+  x Dimension { value: 1024.0, raw_value: "1024", unit: Atom('px' type=static), raw_unit: "px", type_flag: Integer }
    ,-[$DIR/tests/recovery/at-rule/media/invalid-nesting/input.css:2:5]
  2 | max-inline-size: 1024px;
    :                  ^^^^^^
@@ -199,4 +201,18 @@
    ,-[$DIR/tests/recovery/at-rule/media/invalid-nesting/input.css:2:5]
  2 | max-inline-size: 1024px;
    :                        ^
+   `----
+
+  x ComponentValue
+   ,-[$DIR/tests/recovery/at-rule/media/invalid-nesting/input.css:2:5]
+ 2 | max-inline-size: 1024px;
+   :                         ^
+ 3 | }
+   `----
+
+  x WhiteSpace { value: "\n" }
+   ,-[$DIR/tests/recovery/at-rule/media/invalid-nesting/input.css:2:5]
+ 2 | max-inline-size: 1024px;
+   :                         ^
+ 3 | }
    `----

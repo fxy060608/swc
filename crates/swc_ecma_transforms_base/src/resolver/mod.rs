@@ -519,12 +519,19 @@ impl<'a> VisitMut for Resolver<'a> {
 
     typed_ref!(visit_mut_ts_this_type_or_ident, TsThisTypeOrIdent);
 
-    typed_ref!(visit_mut_ts_expr_with_type_args, TsExprWithTypeArgs);
-
     visit_mut_obj_and_computed!();
 
     // TODO: How should I handle this?
     typed!(visit_mut_ts_namespace_export_decl, TsNamespaceExportDecl);
+
+    fn visit_mut_ts_expr_with_type_args(&mut self, n: &mut TsExprWithTypeArgs) {
+        if self.config.handle_types {
+            let old = self.in_type;
+            self.in_type = true;
+            n.visit_mut_children_with(self);
+            self.in_type = old;
+        }
+    }
 
     fn visit_mut_export_specifier(&mut self, s: &mut ExportSpecifier) {
         let old = self.ident_type;
@@ -1110,6 +1117,12 @@ impl<'a> VisitMut for Resolver<'a> {
         self.with_child(ScopeKind::Block, |child| {
             s.cases.visit_mut_with(child);
         });
+    }
+
+    fn visit_mut_switch_case(&mut self, n: &mut SwitchCase) {
+        n.cons.visit_mut_with(self);
+
+        n.test.visit_mut_with(self);
     }
 
     fn visit_mut_ts_as_expr(&mut self, n: &mut TsAsExpr) {
