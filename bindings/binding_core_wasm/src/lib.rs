@@ -1,33 +1,9 @@
-use anyhow::Error;
-use serde::Serialize;
-use serde_wasm_bindgen::Serializer;
-use swc_core::{
-    base::HandlerOpts,
-    binding_macros::wasm::{
-        compiler, convert_err, future_to_promise,
-        js_sys::{JsString, Promise},
-        noop, Options, ParseOptions, SourceMapsConfig,
-    },
-    common::{
-        comments::{self, SingleThreadedComments},
-        errors::Handler,
-        sync::Lrc,
-        FileName, Mark, SourceMap, GLOBALS,
-    },
-    ecma::{
-        ast::{EsVersion, Program},
-        transforms::base::resolver,
-        visit::VisitMutWith,
-    },
+use swc_core::binding_macros::{
+    build_minify, build_minify_sync, build_parse, build_parse_sync, build_print, build_print_sync,
+    build_transform, build_transform_sync,
 };
-use wasm_bindgen::{prelude::*, JsCast};
+use wasm_bindgen::prelude::*;
 mod types;
-
-// A serializer with options to provide backward compat for the input / output
-// from the bindgen generated swc interfaces.
-const COMPAT_SERIALIZER: Serializer = Serializer::new()
-    .serialize_maps_as_objects(true)
-    .serialize_missing_as_null(true);
 
 /// Custom interface definitions for the @swc/wasm's public interface instead of
 /// auto generated one, which is not reflecting most of types in detail.
@@ -278,3 +254,11 @@ pub fn print_sync(s: JsValue, opts: JsValue) -> Result<JsValue, JsValue> {
 pub fn print(s: JsValue, opts: JsValue) -> Promise {
     future_to_promise(async { print_sync(s, opts) })
 }
+build_minify_sync!(#[wasm_bindgen(js_name = "minifySync", typescript_type = "minifySync",skip_typescript)]);
+build_minify!(#[wasm_bindgen(js_name = "minify", typescript_type = "minify",skip_typescript)]);
+build_parse_sync!(#[wasm_bindgen(js_name = "parseSync", typescript_type = "parseSync",skip_typescript)]);
+build_parse!(#[wasm_bindgen(js_name = "parse", typescript_type = "parse",skip_typescript)]);
+build_print_sync!(#[wasm_bindgen(js_name = "printSync", typescript_type = "printSync",skip_typescript)]);
+build_print!(#[wasm_bindgen(js_name = "print", typescript_type = "print",skip_typescript)]);
+build_transform_sync!(#[wasm_bindgen(js_name = "transformSync", typescript_type = "transformSync",skip_typescript)]);
+build_transform!(#[wasm_bindgen(js_name = "transform", typescript_type = "transform",skip_typescript)]);
