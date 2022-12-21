@@ -36,7 +36,7 @@ pub fn compressor() -> impl VisitMut {
 struct Compressor {
     ctx: Ctx,
     need_utf8_at_rule: bool,
-    in_supports_conidition: bool,
+    in_supports_condition: bool,
 }
 
 impl Compressor {
@@ -99,26 +99,32 @@ impl VisitMut for Compressor {
     }
 
     fn visit_mut_declaration(&mut self, n: &mut Declaration) {
+        if self.in_supports_condition {
+            n.visit_mut_children_with(self);
+
+            return;
+        }
+
+        self.compress_declaration(n);
+
         if let DeclarationName::Ident(Ident { value, .. }) = &n.name {
-            match value.to_ascii_lowercase() {
-                js_word!("opacity")
-                | js_word!("fill-opacity")
-                | js_word!("stroke-opacity")
-                | js_word!("shape-image-threshold") => {
-                    n.visit_mut_children_with(&mut *self.with_ctx(Ctx {
-                        preserve_alpha_value: false,
-                        ..self.ctx
-                    }));
-                }
-                _ => {
-                    n.visit_mut_children_with(self);
-                }
+            if matches_eq_ignore_ascii_case!(
+                value,
+                js_word!("opacity"),
+                js_word!("fill-opacity"),
+                js_word!("stroke-opacity"),
+                js_word!("shape-image-threshold")
+            ) {
+                n.visit_mut_children_with(&mut *self.with_ctx(Ctx {
+                    preserve_alpha_value: false,
+                    ..self.ctx
+                }));
+            } else {
+                n.visit_mut_children_with(self);
             }
         } else {
             n.visit_mut_children_with(self);
         }
-
-        self.compress_declaration(n);
     }
 
     fn visit_mut_color(&mut self, n: &mut Color) {
@@ -169,6 +175,12 @@ impl VisitMut for Compressor {
         self.compress_media_in_parens(n);
     }
 
+    fn visit_mut_media_feature(&mut self, n: &mut MediaFeature) {
+        n.visit_mut_children_with(self);
+
+        self.compress_media_feature(n);
+    }
+
     fn visit_mut_media_feature_value(&mut self, n: &mut MediaFeatureValue) {
         n.visit_mut_children_with(self);
 
@@ -177,13 +189,13 @@ impl VisitMut for Compressor {
     }
 
     fn visit_mut_supports_condition(&mut self, n: &mut SupportsCondition) {
-        let old_in_support_condition = self.in_supports_conidition;
+        let old_in_support_condition = self.in_supports_condition;
 
-        self.in_supports_conidition = true;
+        self.in_supports_condition = true;
 
         n.visit_mut_children_with(self);
 
-        self.in_supports_conidition = old_in_support_condition;
+        self.in_supports_condition = old_in_support_condition;
 
         self.compress_supports_condition(n);
     }
@@ -215,13 +227,17 @@ impl VisitMut for Compressor {
 
         // Don't touch `@supports`, it can be used to check a browser's support for one
         // or more specific CSS features
-        if !self.in_supports_conidition {
+        if !self.in_supports_condition {
             self.compress_calc_sum(n);
         }
     }
 
     fn visit_mut_component_value(&mut self, n: &mut ComponentValue) {
         n.visit_mut_children_with(self);
+
+        if self.in_supports_condition {
+            return;
+        }
 
         self.compress_calc_sum_in_component_value(n);
 
@@ -246,7 +262,7 @@ impl VisitMut for Compressor {
         match &n.name {
             Ident { value, .. }
                 if matches!(
-                    value.to_ascii_lowercase(),
+                    *value,
                     js_word!("not")
                         | js_word!("is")
                         | js_word!("where")
@@ -269,7 +285,7 @@ impl VisitMut for Compressor {
     fn visit_mut_selector_list(&mut self, n: &mut SelectorList) {
         n.visit_mut_children_with(self);
 
-        self.comrpess_selector_list(n);
+        self.compress_selector_list(n);
     }
 
     fn visit_mut_forgiving_selector_list(&mut self, n: &mut ForgivingSelectorList) {
@@ -325,23 +341,23 @@ impl VisitMut for Compressor {
     }
 
     fn visit_mut_function(&mut self, n: &mut Function) {
-        match n.name.value.to_ascii_lowercase() {
-            js_word!("rotate")
-            | js_word!("skew")
-            | js_word!("skewx")
-            | js_word!("skewy")
-            | js_word!("rotate3d")
-            | js_word!("rotatex")
-            | js_word!("rotatey")
-            | js_word!("rotatez") => {
-                n.visit_mut_children_with(&mut *self.with_ctx(Ctx {
-                    in_transform_function: true,
-                    ..self.ctx
-                }));
-            }
-            _ => {
-                n.visit_mut_children_with(self);
-            }
+        if matches_eq!(
+            n.name,
+            js_word!("rotate"),
+            js_word!("skew"),
+            js_word!("skewx"),
+            js_word!("skewy"),
+            js_word!("rotate3d"),
+            js_word!("rotatex"),
+            js_word!("rotatey"),
+            js_word!("rotatez")
+        ) {
+            n.visit_mut_children_with(&mut *self.with_ctx(Ctx {
+                in_transform_function: true,
+                ..self.ctx
+            }));
+        } else {
+            n.visit_mut_children_with(self);
         }
     }
 
@@ -405,15 +421,15 @@ impl VisitMut for Compressor {
                 {
                     self.need_utf8_at_rule = true;
                 }
-                Token::BadString {
-                    raw_value: value, ..
-                }
-                | Token::BadUrl {
-                    raw_value: value, ..
-                } if !contains_only_ascii_characters(value) => {
+                Token::BadString { raw: value, .. } if !contains_only_ascii_characters(value) => {
                     self.need_utf8_at_rule = true;
                 }
-                Token::Dimension { unit: value, .. } if !contains_only_ascii_characters(value) => {
+                Token::BadUrl { raw: value, .. } if !contains_only_ascii_characters(value) => {
+                    self.need_utf8_at_rule = true;
+                }
+                Token::Dimension(box DimensionToken { unit: value, .. })
+                    if !contains_only_ascii_characters(value) =>
+                {
                     self.need_utf8_at_rule = true;
                 }
                 _ => {}

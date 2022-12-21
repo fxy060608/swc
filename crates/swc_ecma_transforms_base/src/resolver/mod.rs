@@ -974,8 +974,10 @@ impl<'a> VisitMut for Resolver<'a> {
         // Always resolve the import declaration identifiers even if it's type only.
         // We need to analyze these identifiers for type stripping purposes.
         self.ident_type = IdentType::Binding;
+        let old_in_type = self.in_type;
         self.in_type = n.type_only;
         n.visit_mut_children_with(self);
+        self.in_type = old_in_type;
     }
 
     fn visit_mut_import_named_specifier(&mut self, s: &mut ImportNamedSpecifier) {
@@ -1126,6 +1128,14 @@ impl<'a> VisitMut for Resolver<'a> {
     }
 
     fn visit_mut_ts_as_expr(&mut self, n: &mut TsAsExpr) {
+        if self.config.handle_types {
+            n.type_ann.visit_mut_with(self);
+        }
+
+        n.expr.visit_mut_with(self);
+    }
+
+    fn visit_mut_ts_satisfies_expr(&mut self, n: &mut TsSatisfiesExpr) {
         if self.config.handle_types {
             n.type_ann.visit_mut_with(self);
         }

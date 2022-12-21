@@ -113,14 +113,6 @@ fn run(input: &Path, minify: bool) {
 struct NormalizeTest;
 
 impl VisitMut for NormalizeTest {
-    fn visit_mut_at_rule(&mut self, n: &mut AtRule) {
-        n.visit_mut_children_with(self);
-
-        if let AtRuleName::Ident(ident) = &mut n.name {
-            ident.value = ident.value.to_lowercase().into();
-        }
-    }
-
     fn visit_mut_media_query(&mut self, n: &mut MediaQuery) {
         n.visit_mut_children_with(self);
 
@@ -233,12 +225,12 @@ impl VisitMut for NormalizeTest {
         n.visit_mut_children_with(self);
 
         match n {
-            ComponentValue::Number(Number { value, .. }) if value.fract() == 0.0 => {
-                *n = ComponentValue::Integer(Integer {
+            ComponentValue::Number(number) if number.value.fract() == 0.0 => {
+                *n = ComponentValue::Integer(Box::new(Integer {
                     span: Default::default(),
-                    value: value.round() as i64,
+                    value: number.value.round() as i64,
                     raw: None,
-                })
+                }))
             }
             _ => {}
         }
@@ -292,18 +284,6 @@ impl VisitMut for NormalizeTest {
         if let DeclarationName::Ident(name) = &mut n.name {
             name.value = name.value.to_lowercase().into();
         }
-    }
-
-    fn visit_mut_function(&mut self, n: &mut Function) {
-        n.visit_mut_children_with(self);
-
-        n.name.value = n.name.value.to_lowercase().into();
-    }
-
-    fn visit_mut_url(&mut self, n: &mut Url) {
-        n.visit_mut_children_with(self);
-
-        n.name.value = n.name.value.to_lowercase().into();
     }
 
     fn visit_mut_pseudo_class_selector(&mut self, n: &mut PseudoClassSelector) {
@@ -382,7 +362,7 @@ impl VisitMut for NormalizeTest {
         n.visit_mut_children_with(self);
 
         if let Token::WhiteSpace { .. } = &n.token {
-            n.token = Token::WhiteSpace { value: "".into() }
+            n.token = Token::WhiteSpace { value: "".into() };
         }
     }
 

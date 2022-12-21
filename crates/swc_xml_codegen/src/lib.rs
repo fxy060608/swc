@@ -62,6 +62,7 @@ where
             Child::Text(n) => emit!(self, n),
             Child::Comment(n) => emit!(self, n),
             Child::ProcessingInstruction(n) => emit!(self, n),
+            Child::CdataSection(n) => emit!(self, n),
         }
     }
 
@@ -287,6 +288,17 @@ where
         write_multiline_raw!(self, n.span, &processing_instruction);
     }
 
+    #[emitter]
+    fn emit_cdata_section(&mut self, n: &CdataSection) -> Result {
+        let mut cdata_section = String::with_capacity(n.data.len() + 12);
+
+        cdata_section.push_str("<![CDATA[");
+        cdata_section.push_str(&n.data);
+        cdata_section.push_str("]]>");
+
+        write_multiline_raw!(self, n.span, &cdata_section);
+    }
+
     fn create_context_for_element(&self, n: &Element) -> Ctx {
         let need_escape_text = match &*n.tag_name {
             "noscript" => !self.config.scripting_enabled,
@@ -340,7 +352,7 @@ fn normalize_attribute_value(value: &str) -> String {
     let mut normalized = String::with_capacity(value.len() + 2);
 
     normalized.push('"');
-    normalized.push_str(value);
+    normalized.push_str(&escape_string(value, true));
     normalized.push('"');
 
     normalized
@@ -450,9 +462,8 @@ fn escape_string(value: &str, is_attribute_mode: bool) -> String {
             '&' => {
                 result.push_str("&amp;");
             }
-            '\u{00A0}' => result.push_str("&nbsp;"),
             '"' if is_attribute_mode => result.push_str("&quot;"),
-            '<' if !is_attribute_mode => {
+            '<' if is_attribute_mode => {
                 result.push_str("&lt;");
             }
             '>' if !is_attribute_mode => {

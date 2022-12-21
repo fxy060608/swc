@@ -23,36 +23,40 @@ define!({
     }
 
     pub enum ComponentValue {
-        PreservedToken(TokenAndSpan),
-        Function(Function),
-        SimpleBlock(SimpleBlock),
+        PreservedToken(Box<TokenAndSpan>),
+        Function(Box<Function>),
+        SimpleBlock(Box<SimpleBlock>),
 
-        DeclarationOrAtRule(DeclarationOrAtRule),
-        Rule(Rule),
-        StyleBlock(StyleBlock),
-        KeyframeBlock(KeyframeBlock),
+        AtRule(Box<AtRule>),
+        QualifiedRule(Box<QualifiedRule>),
+        ListOfComponentValues(Box<ListOfComponentValues>),
+        KeyframeBlock(Box<KeyframeBlock>),
 
-        Ident(Ident),
-        DashedIdent(DashedIdent),
-        Str(Str),
-        Url(Url),
-        Integer(Integer),
-        Number(Number),
-        Percentage(Percentage),
-        Dimension(Dimension),
-        Ratio(Ratio),
-        UnicodeRange(UnicodeRange),
-        Color(Color),
-        AlphaValue(AlphaValue),
-        Hue(Hue),
-        CmykComponent(CmykComponent),
-        Delimiter(Delimiter),
+        Ident(Box<Ident>),
+        DashedIdent(Box<DashedIdent>),
+        Str(Box<Str>),
+        Url(Box<Url>),
+        Integer(Box<Integer>),
+        Number(Box<Number>),
+        Percentage(Box<Percentage>),
+        Dimension(Box<Dimension>),
+        LengthPercentage(Box<LengthPercentage>),
+        FrequencyPercentage(Box<FrequencyPercentage>),
+        AnglePercentage(Box<AnglePercentage>),
+        TimePercentage(Box<TimePercentage>),
+        Ratio(Box<Ratio>),
+        UnicodeRange(Box<UnicodeRange>),
+        Color(Box<Color>),
+        AlphaValue(Box<AlphaValue>),
+        Hue(Box<Hue>),
+        CmykComponent(Box<CmykComponent>),
+        Delimiter(Box<Delimiter>),
 
-        CalcSum(CalcSum),
-        ComplexSelector(ComplexSelector),
-        LayerName(LayerName),
-        SupportsCondition(SupportsCondition),
-        Declaration(Declaration),
+        CalcSum(Box<CalcSum>),
+        ComplexSelector(Box<ComplexSelector>),
+        LayerName(Box<LayerName>),
+        SupportsCondition(Box<SupportsCondition>),
+        Declaration(Box<Declaration>),
     }
 
     pub struct Ident {
@@ -150,9 +154,14 @@ define!({
         pub value: DelimiterValue,
     }
 
+    pub enum FunctionName {
+        Ident(Ident),
+        DashedIdent(DashedIdent),
+    }
+
     pub struct Function {
         pub span: Span,
-        pub name: Ident,
+        pub name: FunctionName,
         pub value: Vec<ComponentValue>,
     }
 

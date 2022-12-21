@@ -6310,7 +6310,7 @@
         },
         5546: function(module, __unused_webpack_exports, __webpack_require__) {
             "use strict";
-            var adapter, process = __webpack_require__(3454), utils = __webpack_require__(4867), normalizeHeaderName = __webpack_require__(6016), AxiosError = __webpack_require__(723), transitionalDefaults = __webpack_require__(7874), toFormData = __webpack_require__(7675), DEFAULT_CONTENT_TYPE = {
+            var process = __webpack_require__(3454), utils = __webpack_require__(4867), normalizeHeaderName = __webpack_require__(6016), AxiosError = __webpack_require__(723), transitionalDefaults = __webpack_require__(7874), toFormData = __webpack_require__(7675), DEFAULT_CONTENT_TYPE = {
                 'Content-Type': 'application/x-www-form-urlencoded'
             };
             function setContentTypeIfUnset(headers, value) {
@@ -6326,7 +6326,10 @@
             }
             var defaults = {
                 transitional: transitionalDefaults,
-                adapter: ('undefined' != typeof XMLHttpRequest ? adapter = __webpack_require__(5448) : void 0 !== process && '[object process]' === Object.prototype.toString.call(process) && (adapter = __webpack_require__(5448)), adapter),
+                adapter: function() {
+                    var adapter;
+                    return 'undefined' != typeof XMLHttpRequest ? adapter = __webpack_require__(5448) : void 0 !== process && '[object process]' === Object.prototype.toString.call(process) && (adapter = __webpack_require__(5448)), adapter;
+                }(),
                 transformRequest: [
                     function(data, headers) {
                         if (normalizeHeaderName(headers, 'Accept'), normalizeHeaderName(headers, 'Content-Type'), utils.isFormData(data) || utils.isArrayBuffer(data) || utils.isBuffer(data) || utils.isStream(data) || utils.isFile(data) || utils.isBlob(data)) return data;
@@ -6445,25 +6448,29 @@
         4372: function(module, __unused_webpack_exports, __webpack_require__) {
             "use strict";
             var utils = __webpack_require__(4867);
-            module.exports = utils.isStandardBrowserEnv() ? {
-                write: function(name, value, expires, path, domain, secure) {
-                    var cookie = [];
-                    cookie.push(name + '=' + encodeURIComponent(value)), utils.isNumber(expires) && cookie.push('expires=' + new Date(expires).toGMTString()), utils.isString(path) && cookie.push('path=' + path), utils.isString(domain) && cookie.push('domain=' + domain), !0 === secure && cookie.push('secure'), document.cookie = cookie.join('; ');
-                },
-                read: function(name) {
-                    var match = document.cookie.match(RegExp('(^|;\\s*)(' + name + ')=([^;]*)'));
-                    return match ? decodeURIComponent(match[3]) : null;
-                },
-                remove: function(name) {
-                    this.write(name, '', Date.now() - 86400000);
-                }
-            } : {
-                write: function() {},
-                read: function() {
-                    return null;
-                },
-                remove: function() {}
-            };
+            module.exports = utils.isStandardBrowserEnv() ? function() {
+                return {
+                    write: function(name, value, expires, path, domain, secure) {
+                        var cookie = [];
+                        cookie.push(name + '=' + encodeURIComponent(value)), utils.isNumber(expires) && cookie.push('expires=' + new Date(expires).toGMTString()), utils.isString(path) && cookie.push('path=' + path), utils.isString(domain) && cookie.push('domain=' + domain), !0 === secure && cookie.push('secure'), document.cookie = cookie.join('; ');
+                    },
+                    read: function(name) {
+                        var match = document.cookie.match(RegExp('(^|;\\s*)(' + name + ')=([^;]*)'));
+                        return match ? decodeURIComponent(match[3]) : null;
+                    },
+                    remove: function(name) {
+                        this.write(name, '', Date.now() - 86400000);
+                    }
+                };
+            }() : function() {
+                return {
+                    write: function() {},
+                    read: function() {
+                        return null;
+                    },
+                    remove: function() {}
+                };
+            }();
         },
         1793: function(module) {
             "use strict";
@@ -6501,8 +6508,10 @@
                     return parsed.protocol === originURL.protocol && parsed.host === originURL.host;
                 };
             }() : function() {
-                return !0;
-            };
+                return function() {
+                    return !0;
+                };
+            }();
         },
         6016: function(module, __unused_webpack_exports, __webpack_require__) {
             "use strict";
@@ -6639,10 +6648,12 @@
         },
         4867: function(module, __unused_webpack_exports, __webpack_require__) {
             "use strict";
-            var cache, TypedArray, bind = __webpack_require__(1849), toString1 = Object.prototype.toString, kindOf = (cache = Object.create(null), function(thing) {
-                var str = toString1.call(thing);
-                return cache[str] || (cache[str] = str.slice(8, -1).toLowerCase());
-            });
+            var bind = __webpack_require__(1849), toString1 = Object.prototype.toString, kindOf = function(cache) {
+                return function(thing) {
+                    var str = toString1.call(thing);
+                    return cache[str] || (cache[str] = str.slice(8, -1).toLowerCase());
+                };
+            }(Object.create(null));
             function kindOfTest(type) {
                 return type = type.toLowerCase(), function(thing) {
                     return kindOf(thing) === type;
@@ -6741,9 +6752,11 @@
                 for(var arr = Array(i); i-- > 0;)arr[i] = thing[i];
                 return arr;
             }
-            var isTypedArray = (TypedArray = 'undefined' != typeof Uint8Array && Object.getPrototypeOf(Uint8Array), function(thing) {
-                return TypedArray && thing instanceof TypedArray;
-            });
+            var isTypedArray = function(TypedArray) {
+                return function(thing) {
+                    return TypedArray && thing instanceof TypedArray;
+                };
+            }('undefined' != typeof Uint8Array && Object.getPrototypeOf(Uint8Array));
             module.exports = {
                 isArray: isArray,
                 isArrayBuffer: isArrayBuffer,
@@ -6838,7 +6851,7 @@
                     1e13
                 ], SQRT_BASE = 1e7, MAX = 1E9;
                 function clone(configObject) {
-                    var pow2_53, random53bitInt, basePrefix, dotAfter, dotBefore, isInfinityOrNaN, whitespaceOrPlus, div, convertBase, parseNumeric, P = BigNumber.prototype = {
+                    var div, convertBase, parseNumeric, P = BigNumber.prototype = {
                         constructor: BigNumber,
                         toString: null,
                         valueOf: null
@@ -7046,33 +7059,36 @@
                         return maxOrMin(arguments, P.lt);
                     }, BigNumber.minimum = BigNumber.min = function() {
                         return maxOrMin(arguments, P.gt);
-                    }, BigNumber.random = (pow2_53 = 0x20000000000000, random53bitInt = 0x20000000000000 * Math.random() & 0x1fffff ? function() {
-                        return mathfloor(Math.random() * pow2_53);
-                    } : function() {
-                        return (0x40000000 * Math.random() | 0) * 0x800000 + (0x800000 * Math.random() | 0);
-                    }, function(dp) {
-                        var a, b, e, k, v, i = 0, c = [], rand = new BigNumber(ONE);
-                        if (null == dp ? dp = DECIMAL_PLACES : intCheck(dp, 0, MAX), k = mathceil(dp / LOG_BASE), CRYPTO) {
-                            if (crypto.getRandomValues) {
-                                for(a = crypto.getRandomValues(new Uint32Array(k *= 2)); i < k;)(v = 0x20000 * a[i] + (a[i + 1] >>> 11)) >= 9e15 ? (b = crypto.getRandomValues(new Uint32Array(2)), a[i] = b[0], a[i + 1] = b[1]) : (c.push(v % 1e14), i += 2);
-                                i = k / 2;
-                            } else if (crypto.randomBytes) {
-                                for(a = crypto.randomBytes(k *= 7); i < k;)(v = (31 & a[i]) * 0x1000000000000 + 0x10000000000 * a[i + 1] + 0x100000000 * a[i + 2] + 0x1000000 * a[i + 3] + (a[i + 4] << 16) + (a[i + 5] << 8) + a[i + 6]) >= 9e15 ? crypto.randomBytes(7).copy(a, i) : (c.push(v % 1e14), i += 7);
-                                i = k / 7;
-                            } else throw CRYPTO = !1, Error(bignumberError + 'crypto unavailable');
-                        }
-                        if (!CRYPTO) for(; i < k;)(v = random53bitInt()) < 9e15 && (c[i++] = v % 1e14);
-                        for(k = c[--i], dp %= LOG_BASE, k && dp && (v = POWS_TEN[LOG_BASE - dp], c[i] = mathfloor(k / v) * v); 0 === c[i]; c.pop(), i--);
-                        if (i < 0) c = [
-                            e = 0
-                        ];
-                        else {
-                            for(e = -1; 0 === c[0]; c.splice(0, 1), e -= LOG_BASE);
-                            for(i = 1, v = c[0]; v >= 10; v /= 10, i++);
-                            i < LOG_BASE && (e -= LOG_BASE - i);
-                        }
-                        return rand.e = e, rand.c = c, rand;
-                    }), BigNumber.sum = function() {
+                    }, BigNumber.random = function() {
+                        var pow2_53 = 0x20000000000000, random53bitInt = 0x20000000000000 * Math.random() & 0x1fffff ? function() {
+                            return mathfloor(Math.random() * pow2_53);
+                        } : function() {
+                            return (0x40000000 * Math.random() | 0) * 0x800000 + (0x800000 * Math.random() | 0);
+                        };
+                        return function(dp) {
+                            var a, b, e, k, v, i = 0, c = [], rand = new BigNumber(ONE);
+                            if (null == dp ? dp = DECIMAL_PLACES : intCheck(dp, 0, MAX), k = mathceil(dp / LOG_BASE), CRYPTO) {
+                                if (crypto.getRandomValues) {
+                                    for(a = crypto.getRandomValues(new Uint32Array(k *= 2)); i < k;)(v = 0x20000 * a[i] + (a[i + 1] >>> 11)) >= 9e15 ? (b = crypto.getRandomValues(new Uint32Array(2)), a[i] = b[0], a[i + 1] = b[1]) : (c.push(v % 1e14), i += 2);
+                                    i = k / 2;
+                                } else if (crypto.randomBytes) {
+                                    for(a = crypto.randomBytes(k *= 7); i < k;)(v = (31 & a[i]) * 0x1000000000000 + 0x10000000000 * a[i + 1] + 0x100000000 * a[i + 2] + 0x1000000 * a[i + 3] + (a[i + 4] << 16) + (a[i + 5] << 8) + a[i + 6]) >= 9e15 ? crypto.randomBytes(7).copy(a, i) : (c.push(v % 1e14), i += 7);
+                                    i = k / 7;
+                                } else throw CRYPTO = !1, Error(bignumberError + 'crypto unavailable');
+                            }
+                            if (!CRYPTO) for(; i < k;)(v = random53bitInt()) < 9e15 && (c[i++] = v % 1e14);
+                            for(k = c[--i], dp %= LOG_BASE, k && dp && (v = POWS_TEN[LOG_BASE - dp], c[i] = mathfloor(k / v) * v); 0 === c[i]; c.pop(), i--);
+                            if (i < 0) c = [
+                                e = 0
+                            ];
+                            else {
+                                for(e = -1; 0 === c[0]; c.splice(0, 1), e -= LOG_BASE);
+                                for(i = 1, v = c[0]; v >= 10; v /= 10, i++);
+                                i < LOG_BASE && (e -= LOG_BASE - i);
+                            }
+                            return rand.e = e, rand.c = c, rand;
+                        };
+                    }(), BigNumber.sum = function() {
                         for(var i = 1, args = arguments, sum = new BigNumber(args[0]); i < args.length;)sum = sum.plus(args[i++]);
                         return sum;
                     }, convertBase = function() {
@@ -7154,18 +7170,21 @@
                             } else q.e = e, q.r = +more;
                             return q;
                         };
-                    }(), basePrefix = /^(-?)0([xbo])(?=\w[\w.]*$)/i, dotAfter = /^([^.]+)\.$/, dotBefore = /^\.([^.]+)$/, isInfinityOrNaN = /^-?(Infinity|NaN)$/, whitespaceOrPlus = /^\s*\+(?=[\w.])|^\s+|\s+$/g, parseNumeric = function(x, str, isNum, b) {
-                        var base, s = isNum ? str : str.replace(whitespaceOrPlus, '');
-                        if (isInfinityOrNaN.test(s)) x.s = isNaN(s) ? null : s < 0 ? -1 : 1;
-                        else {
-                            if (!isNum && (s = s.replace(basePrefix, function(m, p1, p2) {
-                                return base = 'x' == (p2 = p2.toLowerCase()) ? 16 : 'b' == p2 ? 2 : 8, b && b != base ? m : p1;
-                            }), b && (base = b, s = s.replace(dotAfter, '$1').replace(dotBefore, '0.$1')), str != s)) return new BigNumber(s, base);
-                            if (BigNumber.DEBUG) throw Error(bignumberError + 'Not a' + (b ? ' base ' + b : '') + ' number: ' + str);
-                            x.s = null;
-                        }
-                        x.c = x.e = null;
-                    }, P.absoluteValue = P.abs = function() {
+                    }(), parseNumeric = function() {
+                        var basePrefix = /^(-?)0([xbo])(?=\w[\w.]*$)/i, dotAfter = /^([^.]+)\.$/, dotBefore = /^\.([^.]+)$/, isInfinityOrNaN = /^-?(Infinity|NaN)$/, whitespaceOrPlus = /^\s*\+(?=[\w.])|^\s+|\s+$/g;
+                        return function(x, str, isNum, b) {
+                            var base, s = isNum ? str : str.replace(whitespaceOrPlus, '');
+                            if (isInfinityOrNaN.test(s)) x.s = isNaN(s) ? null : s < 0 ? -1 : 1;
+                            else {
+                                if (!isNum && (s = s.replace(basePrefix, function(m, p1, p2) {
+                                    return base = 'x' == (p2 = p2.toLowerCase()) ? 16 : 'b' == p2 ? 2 : 8, b && b != base ? m : p1;
+                                }), b && (base = b, s = s.replace(dotAfter, '$1').replace(dotBefore, '0.$1')), str != s)) return new BigNumber(s, base);
+                                if (BigNumber.DEBUG) throw Error(bignumberError + 'Not a' + (b ? ' base ' + b : '') + ' number: ' + str);
+                                x.s = null;
+                            }
+                            x.c = x.e = null;
+                        };
+                    }(), P.absoluteValue = P.abs = function() {
                         var x = new BigNumber(this);
                         return x.s < 0 && (x.s = 1), x;
                     }, P.comparedTo = function(y, b) {
@@ -11737,8 +11756,9 @@
             };
         },
         3346: function(module, __unused_webpack_exports, __webpack_require__) {
-            var global, factory;
-            global = 0, factory = function() {
+            !function(global, factory) {
+                module.exports = factory();
+            }(0, function() {
                 'use strict';
                 var toStringFunction = Function.prototype.toString, create = Object.create, defineProperty = Object.defineProperty, getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor, getOwnPropertyNames = Object.getOwnPropertyNames, getOwnPropertySymbols = Object.getOwnPropertySymbols, getPrototypeOf$1 = Object.getPrototypeOf, _a = Object.prototype, hasOwnProperty = _a.hasOwnProperty, propertyIsEnumerable = _a.propertyIsEnumerable, SYMBOL_PROPERTIES = 'function' == typeof getOwnPropertySymbols, WEAK_MAP = 'function' == typeof WeakMap, createCache = function() {
                     if (WEAK_MAP) return function() {
@@ -11829,7 +11849,7 @@
                         realm: options ? options.realm : void 0
                     });
                 }, copy;
-            }, module.exports = factory();
+            });
         },
         4029: function(module, __unused_webpack_exports, __webpack_require__) {
             "use strict";
@@ -15451,7 +15471,10 @@
             module.exports = isKeyable;
         },
         5346: function(module, __unused_webpack_exports, __webpack_require__) {
-            var uid, coreJsData = __webpack_require__(4429), maskSrcKey = (uid = /[^.]+$/.exec(coreJsData && coreJsData.keys && coreJsData.keys.IE_PROTO || '')) ? 'Symbol(src)_1.' + uid : '';
+            var coreJsData = __webpack_require__(4429), maskSrcKey = function() {
+                var uid = /[^.]+$/.exec(coreJsData && coreJsData.keys && coreJsData.keys.IE_PROTO || '');
+                return uid ? 'Symbol(src)_1.' + uid : '';
+            }();
             function isMasked(func) {
                 return !!maskSrcKey && maskSrcKey in func;
             }
@@ -17556,115 +17579,120 @@
             }();
         },
         1951: function(module) {
-            var __webpack_modules__, __webpack_exports__, __dirname = "/";
-            __webpack_modules__ = {
-                965: function(__unused_webpack_module, exports) {
-                    var indexOf = function(e, t) {
-                        if (e.indexOf) return e.indexOf(t);
-                        for(var r = 0; r < e.length; r++)if (e[r] === t) return r;
-                        return -1;
-                    }, Object_keys = function(e) {
-                        if (Object.keys) return Object.keys(e);
-                        var t = [];
-                        for(var r in e)t.push(r);
-                        return t;
-                    }, forEach = function(e, t) {
-                        if (e.forEach) return e.forEach(t);
-                        for(var r = 0; r < e.length; r++)t(e[r], r, e);
-                    }, defineProp = function() {
-                        try {
-                            return Object.defineProperty({}, "_", {}), function(e, t, r) {
-                                Object.defineProperty(e, t, {
-                                    writable: !0,
-                                    enumerable: !1,
-                                    configurable: !0,
-                                    value: r
-                                });
-                            };
-                        } catch (e) {
-                            return function(e, t, r) {
-                                e[t] = r;
-                            };
-                        }
-                    }(), globals = [
-                        "Array",
-                        "Boolean",
-                        "Date",
-                        "Error",
-                        "EvalError",
-                        "Function",
-                        "Infinity",
-                        "JSON",
-                        "Math",
-                        "NaN",
-                        "Number",
-                        "Object",
-                        "RangeError",
-                        "ReferenceError",
-                        "RegExp",
-                        "String",
-                        "SyntaxError",
-                        "TypeError",
-                        "URIError",
-                        "decodeURI",
-                        "decodeURIComponent",
-                        "encodeURI",
-                        "encodeURIComponent",
-                        "escape",
-                        "eval",
-                        "isFinite",
-                        "isNaN",
-                        "parseFloat",
-                        "parseInt",
-                        "undefined",
-                        "unescape"
-                    ];
-                    function Context() {}
-                    Context.prototype = {};
-                    var Script = exports.Script = function(e) {
-                        if (!(this instanceof Script)) return new Script(e);
-                        this.code = e;
-                    };
-                    Script.prototype.runInContext = function(e) {
-                        if (!(e instanceof Context)) throw TypeError("needs a 'context' argument.");
-                        var t = document.createElement("iframe");
-                        t.style || (t.style = {}), t.style.display = "none", document.body.appendChild(t);
-                        var r = t.contentWindow, n = r.eval, o = r.execScript;
-                        !n && o && (o.call(r, "null"), n = r.eval), forEach(Object_keys(e), function(t) {
-                            r[t] = e[t];
-                        }), forEach(globals, function(t) {
-                            e[t] && (r[t] = e[t]);
-                        });
-                        var c = Object_keys(r), i = n.call(r, this.code);
-                        return forEach(Object_keys(r), function(t) {
-                            (t in e || -1 === indexOf(c, t)) && (e[t] = r[t]);
-                        }), forEach(globals, function(t) {
-                            t in e || defineProp(e, t, r[t]);
-                        }), document.body.removeChild(t), i;
-                    }, Script.prototype.runInThisContext = function() {
-                        return eval(this.code);
-                    }, Script.prototype.runInNewContext = function(e) {
-                        var t = Script.createContext(e), r = this.runInContext(t);
-                        return e && forEach(Object_keys(t), function(r) {
-                            e[r] = t[r];
-                        }), r;
-                    }, forEach(Object_keys(Script.prototype), function(e) {
-                        exports[e] = Script[e] = function(t) {
-                            var r = Script(t);
-                            return r[e].apply(r, [].slice.call(arguments, 1));
+            var __dirname = "/";
+            !function() {
+                var __webpack_modules__ = {
+                    965: function(__unused_webpack_module, exports) {
+                        var indexOf = function(e, t) {
+                            if (e.indexOf) return e.indexOf(t);
+                            for(var r = 0; r < e.length; r++)if (e[r] === t) return r;
+                            return -1;
+                        }, Object_keys = function(e) {
+                            if (Object.keys) return Object.keys(e);
+                            var t = [];
+                            for(var r in e)t.push(r);
+                            return t;
+                        }, forEach = function(e, t) {
+                            if (e.forEach) return e.forEach(t);
+                            for(var r = 0; r < e.length; r++)t(e[r], r, e);
+                        }, defineProp = function() {
+                            try {
+                                return Object.defineProperty({}, "_", {}), function(e, t, r) {
+                                    Object.defineProperty(e, t, {
+                                        writable: !0,
+                                        enumerable: !1,
+                                        configurable: !0,
+                                        value: r
+                                    });
+                                };
+                            } catch (e) {
+                                return function(e, t, r) {
+                                    e[t] = r;
+                                };
+                            }
+                        }(), globals = [
+                            "Array",
+                            "Boolean",
+                            "Date",
+                            "Error",
+                            "EvalError",
+                            "Function",
+                            "Infinity",
+                            "JSON",
+                            "Math",
+                            "NaN",
+                            "Number",
+                            "Object",
+                            "RangeError",
+                            "ReferenceError",
+                            "RegExp",
+                            "String",
+                            "SyntaxError",
+                            "TypeError",
+                            "URIError",
+                            "decodeURI",
+                            "decodeURIComponent",
+                            "encodeURI",
+                            "encodeURIComponent",
+                            "escape",
+                            "eval",
+                            "isFinite",
+                            "isNaN",
+                            "parseFloat",
+                            "parseInt",
+                            "undefined",
+                            "unescape"
+                        ];
+                        function Context() {}
+                        Context.prototype = {};
+                        var Script = exports.Script = function(e) {
+                            if (!(this instanceof Script)) return new Script(e);
+                            this.code = e;
                         };
-                    }), exports.isContext = function(e) {
-                        return e instanceof Context;
-                    }, exports.createScript = function(e) {
-                        return exports.Script(e);
-                    }, exports.createContext = Script.createContext = function(e) {
-                        var t = new Context;
-                        return "object" == typeof e && forEach(Object_keys(e), function(r) {
-                            t[r] = e[r];
-                        }), t;
-                    };
-                }
-            }, "undefined" != typeof __nccwpck_require__ && (__nccwpck_require__.ab = __dirname + "/"), __webpack_exports__ = {}, __webpack_modules__[965](0, __webpack_exports__), module.exports = __webpack_exports__;
+                        Script.prototype.runInContext = function(e) {
+                            if (!(e instanceof Context)) throw TypeError("needs a 'context' argument.");
+                            var t = document.createElement("iframe");
+                            t.style || (t.style = {}), t.style.display = "none", document.body.appendChild(t);
+                            var r = t.contentWindow, n = r.eval, o = r.execScript;
+                            !n && o && (o.call(r, "null"), n = r.eval), forEach(Object_keys(e), function(t) {
+                                r[t] = e[t];
+                            }), forEach(globals, function(t) {
+                                e[t] && (r[t] = e[t]);
+                            });
+                            var c = Object_keys(r), i = n.call(r, this.code);
+                            return forEach(Object_keys(r), function(t) {
+                                (t in e || -1 === indexOf(c, t)) && (e[t] = r[t]);
+                            }), forEach(globals, function(t) {
+                                t in e || defineProp(e, t, r[t]);
+                            }), document.body.removeChild(t), i;
+                        }, Script.prototype.runInThisContext = function() {
+                            return eval(this.code);
+                        }, Script.prototype.runInNewContext = function(e) {
+                            var t = Script.createContext(e), r = this.runInContext(t);
+                            return e && forEach(Object_keys(t), function(r) {
+                                e[r] = t[r];
+                            }), r;
+                        }, forEach(Object_keys(Script.prototype), function(e) {
+                            exports[e] = Script[e] = function(t) {
+                                var r = Script(t);
+                                return r[e].apply(r, [].slice.call(arguments, 1));
+                            };
+                        }), exports.isContext = function(e) {
+                            return e instanceof Context;
+                        }, exports.createScript = function(e) {
+                            return exports.Script(e);
+                        }, exports.createContext = Script.createContext = function(e) {
+                            var t = new Context;
+                            return "object" == typeof e && forEach(Object_keys(e), function(r) {
+                                t[r] = e[r];
+                            }), t;
+                        };
+                    }
+                };
+                "undefined" != typeof __nccwpck_require__ && (__nccwpck_require__.ab = __dirname + "/");
+                var __webpack_exports__ = {};
+                __webpack_modules__[965](0, __webpack_exports__), module.exports = __webpack_exports__;
+            }();
         },
         4375: function(module, __unused_webpack_exports, __webpack_require__) {
             let promise;
@@ -17941,25 +17969,25 @@
                 'f64.reinterpret/i64': 0xbf
             };
             _exports.typeGenerators = {
-                function (json, stream) {
+                function: (json, stream)=>{
                     leb.unsigned.write(json, stream);
                 },
-                table (json, stream) {
+                table: (json, stream)=>{
                     stream.write([
                         LANGUAGE_TYPES[json.elementType]
                     ]), _exports.typeGenerators.memory(json.limits, stream);
                 },
-                global (json, stream) {
+                global: (json, stream)=>{
                     stream.write([
                         LANGUAGE_TYPES[json.contentType]
                     ]), stream.write([
                         json.mutability
                     ]);
                 },
-                memory (json, stream) {
+                memory: (json, stream)=>{
                     leb.unsigned.write(Number(void 0 !== json.maximum), stream), leb.unsigned.write(json.intial, stream), void 0 !== json.maximum && leb.unsigned.write(json.maximum, stream);
                 },
-                initExpr (json, stream) {
+                initExpr: (json, stream)=>{
                     _exports.generateOp(json, stream), _exports.generateOp({
                         name: 'end',
                         type: 'void'
@@ -17977,7 +18005,7 @@
                 block_type: (json, stream)=>(stream.write([
                         LANGUAGE_TYPES[json]
                     ]), stream),
-                br_table (json, stream) {
+                br_table: (json, stream)=>{
                     for (let target of (leb.unsigned.write(json.targets.length, stream), json.targets))leb.unsigned.write(target, stream);
                     return leb.unsigned.write(json.defaultTarget, stream), stream;
                 },
@@ -17987,7 +18015,7 @@
                 memory_immediate: (json, stream)=>(leb.unsigned.write(json.flags, stream), leb.unsigned.write(json.offset, stream), stream)
             };
             const entryGenerators = {
-                type (entry, stream = new Stream()) {
+                type: (entry, stream = new Stream())=>{
                     stream.write([
                         LANGUAGE_TYPES[entry.form]
                     ]);
@@ -17998,7 +18026,7 @@
                         LANGUAGE_TYPES[entry.return_type]
                     ]), stream.buffer;
                 },
-                import (entry, stream = new Stream()) {
+                import: (entry, stream = new Stream())=>{
                     leb.unsigned.write(entry.moduleStr.length, stream), stream.write(entry.moduleStr), leb.unsigned.write(entry.fieldStr.length, stream), stream.write(entry.fieldStr), stream.write([
                         EXTERNAL_KIND[entry.kind]
                     ]), _exports.typeGenerators[entry.kind](entry.type, stream);
@@ -18007,17 +18035,17 @@
                 table: _exports.typeGenerators.table,
                 global: (entry, stream = new Stream())=>(_exports.typeGenerators.global(entry.type, stream), _exports.typeGenerators.initExpr(entry.init, stream), stream),
                 memory: _exports.typeGenerators.memory,
-                export (entry, stream = new Stream()) {
+                export: (entry, stream = new Stream())=>{
                     const fieldStr = Buffer.from(entry.field_str), strLen = fieldStr.length;
                     return leb.unsigned.write(strLen, stream), stream.write(fieldStr), stream.write([
                         EXTERNAL_KIND[entry.kind]
                     ]), leb.unsigned.write(entry.index, stream), stream;
                 },
-                element (entry, stream = new Stream()) {
+                element: (entry, stream = new Stream())=>{
                     for (let elem of (leb.unsigned.write(entry.index, stream), _exports.typeGenerators.initExpr(entry.offset, stream), leb.unsigned.write(entry.elements.length, stream), entry.elements))leb.unsigned.write(elem, stream);
                     return stream;
                 },
-                code (entry, stream = new Stream()) {
+                code: (entry, stream = new Stream())=>{
                     let codeStream = new Stream();
                     for (let local of (leb.unsigned.write(entry.locals.length, codeStream), entry.locals))leb.unsigned.write(local.count, codeStream), codeStream.write([
                         LANGUAGE_TYPES[local.type]
@@ -18334,19 +18362,19 @@
                 11: 'data'
             };
             _exports.immediataryParsers = {
-                varuint1 (stream) {
+                varuint1: (stream)=>{
                     const int1 = stream.read(1)[0];
                     return int1;
                 },
-                varuint32 (stream) {
+                varuint32: (stream)=>{
                     const int32 = leb.unsigned.read(stream);
                     return int32;
                 },
-                varint32 (stream) {
+                varint32: (stream)=>{
                     const int32 = leb.signed.read(stream);
                     return int32;
                 },
-                varint64 (stream) {
+                varint64: (stream)=>{
                     const int64 = leb.signed.read(stream);
                     return int64;
                 },
@@ -18356,11 +18384,11 @@
                 uint64: (stream)=>[
                         ...stream.read(8)
                     ],
-                block_type (stream) {
+                block_type: (stream)=>{
                     const type = stream.read(1)[0];
                     return LANGUAGE_TYPES[type];
                 },
-                br_table (stream) {
+                br_table: (stream)=>{
                     const json = {
                         targets: []
                     }, num = leb.unsigned.readBn(stream).toNumber();
@@ -18370,36 +18398,36 @@
                     }
                     return json.defaultTarget = leb.unsigned.readBn(stream).toNumber(), json;
                 },
-                call_indirect (stream) {
+                call_indirect: (stream)=>{
                     const json = {};
                     return json.index = leb.unsigned.readBn(stream).toNumber(), json.reserved = stream.read(1)[0], json;
                 },
-                memory_immediate (stream) {
+                memory_immediate: (stream)=>{
                     const json = {};
                     return json.flags = leb.unsigned.readBn(stream).toNumber(), json.offset = leb.unsigned.readBn(stream).toNumber(), json;
                 }
             }, _exports.typeParsers = {
                 function: (stream)=>leb.unsigned.readBn(stream).toNumber(),
-                table (stream) {
+                table: (stream)=>{
                     const entry = {}, type = stream.read(1)[0];
                     return entry.elementType = LANGUAGE_TYPES[type], entry.limits = _exports.typeParsers.memory(stream), entry;
                 },
-                global (stream) {
+                global: (stream)=>{
                     const global = {};
                     let type = stream.read(1)[0];
                     return global.contentType = LANGUAGE_TYPES[type], global.mutability = stream.read(1)[0], global;
                 },
-                memory (stream) {
+                memory: (stream)=>{
                     const limits = {};
                     return limits.flags = leb.unsigned.readBn(stream).toNumber(), limits.intial = leb.unsigned.readBn(stream).toNumber(), 1 === limits.flags && (limits.maximum = leb.unsigned.readBn(stream).toNumber()), limits;
                 },
-                initExpr (stream) {
+                initExpr: (stream)=>{
                     const op = _exports.parseOp(stream);
                     return stream.read(1), op;
                 }
             };
             const sectionParsers = _exports.sectionParsers = {
-                custom (stream, header) {
+                custom: (stream, header)=>{
                     const json = {
                         name: 'custom'
                     }, section = new Stream(stream.read(header.size)), nameLen = leb.unsigned.readBn(section).toNumber(), name = section.read(nameLen);
@@ -18407,7 +18435,7 @@
                         ...section.buffer
                     ], json;
                 },
-                type (stream) {
+                type: (stream)=>{
                     const numberOfEntries = leb.unsigned.readBn(stream).toNumber(), json = {
                         name: 'type',
                         entries: []
@@ -18427,7 +18455,7 @@
                     }
                     return json;
                 },
-                import (stream) {
+                import: (stream)=>{
                     const numberOfEntries = leb.unsigned.readBn(stream).toNumber(), json = {
                         name: 'import',
                         entries: []
@@ -18442,7 +18470,7 @@
                     }
                     return json;
                 },
-                function (stream) {
+                function: (stream)=>{
                     const numberOfEntries = leb.unsigned.readBn(stream).toNumber(), json = {
                         name: 'function',
                         entries: []
@@ -18453,7 +18481,7 @@
                     }
                     return json;
                 },
-                table (stream) {
+                table: (stream)=>{
                     const numberOfEntries = leb.unsigned.readBn(stream).toNumber(), json = {
                         name: 'table',
                         entries: []
@@ -18464,7 +18492,7 @@
                     }
                     return json;
                 },
-                memory (stream) {
+                memory: (stream)=>{
                     const numberOfEntries = leb.unsigned.readBn(stream).toNumber(), json = {
                         name: 'memory',
                         entries: []
@@ -18475,7 +18503,7 @@
                     }
                     return json;
                 },
-                global (stream) {
+                global: (stream)=>{
                     const numberOfEntries = leb.unsigned.readBn(stream).toNumber(), json = {
                         name: 'global',
                         entries: []
@@ -18486,7 +18514,7 @@
                     }
                     return json;
                 },
-                export (stream) {
+                export: (stream)=>{
                     const numberOfEntries = leb.unsigned.readBn(stream).toNumber(), json = {
                         name: 'export',
                         entries: []
@@ -18499,13 +18527,13 @@
                     }
                     return json;
                 },
-                start (stream) {
+                start: (stream)=>{
                     const json = {
                         name: 'start'
                     };
                     return json.index = leb.unsigned.readBn(stream).toNumber(), json;
                 },
-                element (stream) {
+                element: (stream)=>{
                     const numberOfEntries = leb.unsigned.readBn(stream).toNumber(), json = {
                         name: 'element',
                         entries: []
@@ -18524,7 +18552,7 @@
                     }
                     return json;
                 },
-                code (stream) {
+                code: (stream)=>{
                     const numberOfEntries = leb.unsigned.readBn(stream).toNumber(), json = {
                         name: 'code',
                         entries: []
@@ -18550,7 +18578,7 @@
                     }
                     return json;
                 },
-                data (stream) {
+                data: (stream)=>{
                     const numberOfEntries = leb.unsigned.readBn(stream).toNumber(), json = {
                         name: 'data',
                         entries: []
@@ -19352,7 +19380,7 @@
                     return unzipRaw;
                 }
             }), module = __webpack_require__.hmd(module);
-            var u16, u32, process = __webpack_require__(3454);
+            var process = __webpack_require__(3454);
             function readBlobAsArrayBuffer(blob) {
                 return blob.arrayBuffer ? blob.arrayBuffer() : new Promise((resolve, reject)=>{
                     const reader = new FileReader();
@@ -19527,187 +19555,190 @@
             function _get17(dt, pos) {
                 return (dt[pos >>> 3] | dt[(pos >>> 3) + 1] << 8 | dt[(pos >>> 3) + 2] << 16) >>> (7 & pos);
             }
-            const U = (u16 = Uint16Array, u32 = Uint32Array, {
-                next_code: new u16(16),
-                bl_count: new u16(16),
-                ordr: [
-                    16,
-                    17,
-                    18,
-                    0,
-                    8,
-                    7,
-                    9,
-                    6,
-                    10,
-                    5,
-                    11,
-                    4,
-                    12,
-                    3,
-                    13,
-                    2,
-                    14,
-                    1,
-                    15
-                ],
-                of0: [
-                    3,
-                    4,
-                    5,
-                    6,
-                    7,
-                    8,
-                    9,
-                    10,
-                    11,
-                    13,
-                    15,
-                    17,
-                    19,
-                    23,
-                    27,
-                    31,
-                    35,
-                    43,
-                    51,
-                    59,
-                    67,
-                    83,
-                    99,
-                    115,
-                    131,
-                    163,
-                    195,
-                    227,
-                    258,
-                    999,
-                    999,
-                    999
-                ],
-                exb: [
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    1,
-                    1,
-                    1,
-                    1,
-                    2,
-                    2,
-                    2,
-                    2,
-                    3,
-                    3,
-                    3,
-                    3,
-                    4,
-                    4,
-                    4,
-                    4,
-                    5,
-                    5,
-                    5,
-                    5,
-                    0,
-                    0,
-                    0,
-                    0
-                ],
-                ldef: new u16(32),
-                df0: [
-                    1,
-                    2,
-                    3,
-                    4,
-                    5,
-                    7,
-                    9,
-                    13,
-                    17,
-                    25,
-                    33,
-                    49,
-                    65,
-                    97,
-                    129,
-                    193,
-                    257,
-                    385,
-                    513,
-                    769,
-                    1025,
-                    1537,
-                    2049,
-                    3073,
-                    4097,
-                    6145,
-                    8193,
-                    12289,
-                    16385,
-                    24577,
-                    65535,
-                    65535
-                ],
-                dxb: [
-                    0,
-                    0,
-                    0,
-                    0,
-                    1,
-                    1,
-                    2,
-                    2,
-                    3,
-                    3,
-                    4,
-                    4,
-                    5,
-                    5,
-                    6,
-                    6,
-                    7,
-                    7,
-                    8,
-                    8,
-                    9,
-                    9,
-                    10,
-                    10,
-                    11,
-                    11,
-                    12,
-                    12,
-                    13,
-                    13,
-                    0,
-                    0
-                ],
-                ddef: new u32(32),
-                flmap: new u16(512),
-                fltree: [],
-                fdmap: new u16(32),
-                fdtree: [],
-                lmap: new u16(32768),
-                ltree: [],
-                ttree: [],
-                dmap: new u16(32768),
-                dtree: [],
-                imap: new u16(512),
-                itree: [],
-                rev15: new u16(32768),
-                lhst: new u32(286),
-                dhst: new u32(30),
-                ihst: new u32(19),
-                lits: new u32(15000),
-                strt: new u16(65536),
-                prev: new u16(32768)
-            });
+            const U = function() {
+                var u16 = Uint16Array, u32 = Uint32Array;
+                return {
+                    next_code: new u16(16),
+                    bl_count: new u16(16),
+                    ordr: [
+                        16,
+                        17,
+                        18,
+                        0,
+                        8,
+                        7,
+                        9,
+                        6,
+                        10,
+                        5,
+                        11,
+                        4,
+                        12,
+                        3,
+                        13,
+                        2,
+                        14,
+                        1,
+                        15
+                    ],
+                    of0: [
+                        3,
+                        4,
+                        5,
+                        6,
+                        7,
+                        8,
+                        9,
+                        10,
+                        11,
+                        13,
+                        15,
+                        17,
+                        19,
+                        23,
+                        27,
+                        31,
+                        35,
+                        43,
+                        51,
+                        59,
+                        67,
+                        83,
+                        99,
+                        115,
+                        131,
+                        163,
+                        195,
+                        227,
+                        258,
+                        999,
+                        999,
+                        999
+                    ],
+                    exb: [
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        1,
+                        1,
+                        1,
+                        2,
+                        2,
+                        2,
+                        2,
+                        3,
+                        3,
+                        3,
+                        3,
+                        4,
+                        4,
+                        4,
+                        4,
+                        5,
+                        5,
+                        5,
+                        5,
+                        0,
+                        0,
+                        0,
+                        0
+                    ],
+                    ldef: new u16(32),
+                    df0: [
+                        1,
+                        2,
+                        3,
+                        4,
+                        5,
+                        7,
+                        9,
+                        13,
+                        17,
+                        25,
+                        33,
+                        49,
+                        65,
+                        97,
+                        129,
+                        193,
+                        257,
+                        385,
+                        513,
+                        769,
+                        1025,
+                        1537,
+                        2049,
+                        3073,
+                        4097,
+                        6145,
+                        8193,
+                        12289,
+                        16385,
+                        24577,
+                        65535,
+                        65535
+                    ],
+                    dxb: [
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        1,
+                        2,
+                        2,
+                        3,
+                        3,
+                        4,
+                        4,
+                        5,
+                        5,
+                        6,
+                        6,
+                        7,
+                        7,
+                        8,
+                        8,
+                        9,
+                        9,
+                        10,
+                        10,
+                        11,
+                        11,
+                        12,
+                        12,
+                        13,
+                        13,
+                        0,
+                        0
+                    ],
+                    ddef: new u32(32),
+                    flmap: new u16(512),
+                    fltree: [],
+                    fdmap: new u16(32),
+                    fdtree: [],
+                    lmap: new u16(32768),
+                    ltree: [],
+                    ttree: [],
+                    dmap: new u16(32768),
+                    dtree: [],
+                    imap: new u16(512),
+                    itree: [],
+                    rev15: new u16(32768),
+                    lhst: new u32(286),
+                    dhst: new u32(30),
+                    ihst: new u32(19),
+                    lits: new u32(15000),
+                    strt: new u16(65536),
+                    prev: new u16(32768)
+                };
+            }();
             !function() {
                 for(var len = 32768, i = 0; i < len; i++){
                     var x = i;
@@ -21470,10 +21501,12 @@
         },
         7312: function(__unused_webpack_module, exports) {
             "use strict";
-            var SmartWeaveTags, SmartWeaveTags1;
+            var SmartWeaveTags;
             Object.defineProperty(exports, "__esModule", {
                 value: !0
-            }), exports.SmartWeaveTags = void 0, (SmartWeaveTags1 = SmartWeaveTags = exports.SmartWeaveTags || (exports.SmartWeaveTags = {})).APP_NAME = "App-Name", SmartWeaveTags1.APP_VERSION = "App-Version", SmartWeaveTags1.CONTRACT_TX_ID = "Contract", SmartWeaveTags1.INPUT = "Input", SmartWeaveTags1.CONTENT_TYPE = "Content-Type", SmartWeaveTags1.CONTRACT_SRC_TX_ID = "Contract-Src", SmartWeaveTags1.SDK = "SDK", SmartWeaveTags1.MIN_FEE = "Min-Fee", SmartWeaveTags1.INIT_STATE = "Init-State", SmartWeaveTags1.INIT_STATE_TX = "Init-State-TX", SmartWeaveTags1.INTERACT_WRITE = "Interact-Write", SmartWeaveTags1.WASM_LANG = "Wasm-Lang", SmartWeaveTags1.WASM_LANG_VERSION = "Wasm-Lang-Version", SmartWeaveTags1.WASM_META = "Wasm-Meta", SmartWeaveTags1.REQUEST_VRF = "Request-Vrf";
+            }), exports.SmartWeaveTags = void 0, function(SmartWeaveTags) {
+                SmartWeaveTags.APP_NAME = "App-Name", SmartWeaveTags.APP_VERSION = "App-Version", SmartWeaveTags.CONTRACT_TX_ID = "Contract", SmartWeaveTags.INPUT = "Input", SmartWeaveTags.CONTENT_TYPE = "Content-Type", SmartWeaveTags.CONTRACT_SRC_TX_ID = "Contract-Src", SmartWeaveTags.SDK = "SDK", SmartWeaveTags.MIN_FEE = "Min-Fee", SmartWeaveTags.INIT_STATE = "Init-State", SmartWeaveTags.INIT_STATE_TX = "Init-State-TX", SmartWeaveTags.INTERACT_WRITE = "Interact-Write", SmartWeaveTags.WASM_LANG = "Wasm-Lang", SmartWeaveTags.WASM_LANG_VERSION = "Wasm-Lang-Version", SmartWeaveTags.WASM_META = "Wasm-Meta", SmartWeaveTags.REQUEST_VRF = "Request-Vrf";
+            }(SmartWeaveTags = exports.SmartWeaveTags || (exports.SmartWeaveTags = {}));
         },
         2009: function(__unused_webpack_module, exports, __webpack_require__) {
             "use strict";
@@ -22411,14 +22444,16 @@
         },
         1533: function(__unused_webpack_module, exports, __webpack_require__) {
             "use strict";
-            var SourceType, SourceType1;
+            var SourceType;
             Object.defineProperty(exports, "__esModule", {
                 value: !0
             }), exports.WarpGatewayInteractionsLoader = exports.SourceType = void 0;
             const Benchmark_1 = __webpack_require__(9106), LoggerFactory_1 = __webpack_require__(5913);
             __webpack_require__(9180);
             const utils_1 = __webpack_require__(5082);
-            (SourceType1 = SourceType = exports.SourceType || (exports.SourceType = {})).ARWEAVE = "arweave", SourceType1.WARP_SEQUENCER = "redstone-sequencer";
+            !function(SourceType) {
+                SourceType.ARWEAVE = "arweave", SourceType.WARP_SEQUENCER = "redstone-sequencer";
+            }(SourceType = exports.SourceType || (exports.SourceType = {}));
             class WarpGatewayInteractionsLoader {
                 constructor(baseUrl, confirmationStatus = null, source = null){
                     this.baseUrl = baseUrl, this.confirmationStatus = confirmationStatus, this.source = source, this.logger = LoggerFactory_1.LoggerFactory.INST.create('WarpGatewayInteractionsLoader'), this.baseUrl = (0, utils_1.stripTrailingSlash)(baseUrl), Object.assign(this, confirmationStatus), this.source = source;
@@ -22830,7 +22865,7 @@
                         }
                     },
                     api: {
-                        _readContractState (fnIndex, contractTxIdPtr) {
+                        _readContractState: (fnIndex, contractTxIdPtr)=>{
                             const contractTxId = wasmInstance.exports.__getString(contractTxIdPtr), callbackFn = getFn(fnIndex);
                             return console.log('Simulating read state of', contractTxId), setTimeout(()=>{
                                 console.log('calling callback'), callbackFn(wasmInstance.exports.__newString(JSON.stringify({
@@ -22997,7 +23032,7 @@
                             fd_close: ()=>0,
                             fd_fdstat_get: ()=>0,
                             fd_seek: ()=>0,
-                            proc_exit (code) {
+                            proc_exit: (code)=>{
                                 if (__webpack_require__.g.process) process.exit(code);
                                 else throw 'trying to exit with code ' + code;
                             },
@@ -23015,29 +23050,29 @@
                                     this._values[id] = null, this._ids.delete(v), this._idPool.push(id);
                                 }
                             },
-                            'syscall/js.stringVal' (ret_ptr, value_ptr, value_len) {
+                            'syscall/js.stringVal': (ret_ptr, value_ptr, value_len)=>{
                                 const s = loadString(value_ptr, value_len);
                                 storeValue(ret_ptr, s);
                             },
-                            'syscall/js.valueGet' (retval, v_addr, p_ptr, p_len) {
+                            'syscall/js.valueGet': (retval, v_addr, p_ptr, p_len)=>{
                                 let prop = loadString(p_ptr, p_len), value = loadValue(v_addr);
                                 storeValue(retval, Reflect.get(value, prop));
                             },
-                            'syscall/js.valueSet' (v_addr, p_ptr, p_len, x_addr) {
+                            'syscall/js.valueSet': (v_addr, p_ptr, p_len, x_addr)=>{
                                 const v = loadValue(v_addr), p = loadString(p_ptr, p_len), x = loadValue(x_addr);
                                 Reflect.set(v, p, x);
                             },
-                            'syscall/js.valueDelete' (v_addr, p_ptr, p_len) {
+                            'syscall/js.valueDelete': (v_addr, p_ptr, p_len)=>{
                                 const v = loadValue(v_addr), p = loadString(p_ptr, p_len);
                                 Reflect.deleteProperty(v, p);
                             },
-                            'syscall/js.valueIndex' (ret_addr, v_addr, i) {
+                            'syscall/js.valueIndex': (ret_addr, v_addr, i)=>{
                                 storeValue(ret_addr, Reflect.get(loadValue(v_addr), i));
                             },
-                            'syscall/js.valueSetIndex' (v_addr, i, x_addr) {
+                            'syscall/js.valueSetIndex': (v_addr, i, x_addr)=>{
                                 Reflect.set(loadValue(v_addr), i, loadValue(x_addr));
                             },
-                            'syscall/js.valueCall' (ret_addr, v_addr, m_ptr, m_len, args_ptr, args_len, args_cap) {
+                            'syscall/js.valueCall': (ret_addr, v_addr, m_ptr, m_len, args_ptr, args_len, args_cap)=>{
                                 const v = loadValue(v_addr), name = loadString(m_ptr, m_len), args = loadSliceOfValues(args_ptr, args_len, args_cap);
                                 try {
                                     const m = Reflect.get(v, name);
@@ -23046,7 +23081,7 @@
                                     storeValue(ret_addr, err), mem().setUint8(ret_addr + 8, 0);
                                 }
                             },
-                            'syscall/js.valueInvoke' (ret_addr, v_addr, args_ptr, args_len, args_cap) {
+                            'syscall/js.valueInvoke': (ret_addr, v_addr, args_ptr, args_len, args_cap)=>{
                                 try {
                                     const v = loadValue(v_addr), args = loadSliceOfValues(args_ptr, args_len, args_cap);
                                     storeValue(ret_addr, Reflect.apply(v, void 0, args)), mem().setUint8(ret_addr + 8, 1);
@@ -23054,7 +23089,7 @@
                                     storeValue(ret_addr, err), mem().setUint8(ret_addr + 8, 0);
                                 }
                             },
-                            'syscall/js.valueNew' (ret_addr, v_addr, args_ptr, args_len, args_cap) {
+                            'syscall/js.valueNew': (ret_addr, v_addr, args_ptr, args_len, args_cap)=>{
                                 const v = loadValue(v_addr), args = loadSliceOfValues(args_ptr, args_len, args_cap);
                                 try {
                                     storeValue(ret_addr, Reflect.construct(v, args)), mem().setUint8(ret_addr + 8, 1);
@@ -23063,16 +23098,16 @@
                                 }
                             },
                             'syscall/js.valueLength': (v_addr)=>loadValue(v_addr).length,
-                            'syscall/js.valuePrepareString' (ret_addr, v_addr) {
+                            'syscall/js.valuePrepareString': (ret_addr, v_addr)=>{
                                 const s = String(loadValue(v_addr)), str = encoder.encode(s);
                                 storeValue(ret_addr, str), setInt64(ret_addr + 8, str.length);
                             },
-                            'syscall/js.valueLoadString' (v_addr, slice_ptr, slice_len, slice_cap) {
+                            'syscall/js.valueLoadString': (v_addr, slice_ptr, slice_len, slice_cap)=>{
                                 const str = loadValue(v_addr);
                                 loadSlice(slice_ptr, slice_len, slice_cap).set(str);
                             },
                             'syscall/js.valueInstanceOf': (v_addr, t_addr)=>loadValue(v_addr) instanceof loadValue(t_addr),
-                            'syscall/js.copyBytesToGo' (ret_addr, dest_addr, dest_len, dest_cap, source_addr) {
+                            'syscall/js.copyBytesToGo': (ret_addr, dest_addr, dest_len, dest_cap, source_addr)=>{
                                 let num_bytes_copied_addr = ret_addr, returned_status_addr = ret_addr + 4;
                                 const dst = loadSlice(dest_addr, dest_len), src = loadValue(source_addr);
                                 if (!(src instanceof Uint8Array)) {
@@ -23082,7 +23117,7 @@
                                 const toCopy = src.subarray(0, dst.length);
                                 dst.set(toCopy), setInt64(num_bytes_copied_addr, toCopy.length), mem().setUint8(returned_status_addr, 1);
                             },
-                            'syscall/js.copyBytesToJS' (ret_addr, dest_addr, source_addr, source_len, source_cap) {
+                            'syscall/js.copyBytesToJS': (ret_addr, dest_addr, source_addr, source_len, source_cap)=>{
                                 let num_bytes_copied_addr = ret_addr, returned_status_addr = ret_addr + 4;
                                 const dst = loadValue(dest_addr), src = loadSlice(source_addr, source_len);
                                 if (!(dst instanceof Uint8Array)) {
@@ -23590,7 +23625,9 @@
             var SmartWeaveErrorType;
             Object.defineProperty(exports, "__esModule", {
                 value: !0
-            }), exports.SmartWeaveError = exports.SmartWeaveErrorType = void 0, (SmartWeaveErrorType = exports.SmartWeaveErrorType || (exports.SmartWeaveErrorType = {})).CONTRACT_NOT_FOUND = "CONTRACT_NOT_FOUND";
+            }), exports.SmartWeaveError = exports.SmartWeaveErrorType = void 0, function(SmartWeaveErrorType) {
+                SmartWeaveErrorType.CONTRACT_NOT_FOUND = "CONTRACT_NOT_FOUND";
+            }(SmartWeaveErrorType = exports.SmartWeaveErrorType || (exports.SmartWeaveErrorType = {}));
             class SmartWeaveError extends Error {
                 constructor(type, optional = {}){
                     optional.message ? super(optional.message) : super(), this.type = type, this.otherInfo = optional;
@@ -23620,16 +23657,16 @@
                         wallets: arweave.wallets,
                         crypto: arweave.crypto
                     }, this.evaluationOptions = evaluationOptions, this.contract = contract, this.transaction = new Transaction(this), this.block = new Block(this), this.contracts = {
-                        readContractState (contractId, height, returnValidity) {
+                        readContractState: (contractId, height, returnValidity)=>{
                             throw Error('Not implemented - should be set by HandlerApi implementor');
                         },
-                        viewContractState (contractId, input) {
+                        viewContractState: (contractId, input)=>{
                             throw Error('Not implemented - should be set by HandlerApi implementor');
                         },
-                        write (contractId, input) {
+                        write: (contractId, input)=>{
                             throw Error('Not implemented - should be set by HandlerApi implementor');
                         },
-                        refreshState () {
+                        refreshState: ()=>{
                             throw Error('Not implemented - should be set by HandlerApi implementor');
                         }
                     }, this.vrf = new Vrf(this), this.useGas = this.useGas.bind(this), this.getBalance = this.getBalance.bind(this);

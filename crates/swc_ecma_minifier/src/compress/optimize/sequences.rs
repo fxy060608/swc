@@ -3,6 +3,10 @@ use std::mem::take;
 use swc_atoms::js_word;
 use swc_common::{util::take::Take, Spanned, DUMMY_SP};
 use swc_ecma_ast::*;
+use swc_ecma_usage_analyzer::{
+    alias::{collect_infects_from, AccessKind, AliasConfig},
+    util::is_global_var_with_pure_property_access,
+};
 use swc_ecma_utils::{
     contains_arguments, contains_this_expr, prepend_stmts, undefined, ExprExt, IdentUsageFinder,
     StmtLike,
@@ -15,17 +19,13 @@ use super::{is_pure_undefined, Optimizer};
 #[cfg(feature = "debug")]
 use crate::debug::dump;
 use crate::{
-    alias::{collect_infects_from, AccessKind, AliasConfig},
     compress::{
         optimize::{unused::PropertyAccessOpts, util::replace_id_with_expr},
         util::{is_directive, is_ident_used_by, replace_expr},
     },
     mode::Mode,
     option::CompressOptions,
-    util::{
-        idents_used_by, idents_used_by_ignoring_nested, is_global_var_with_pure_property_access,
-        ExprOptExt, ModuleItemExt,
-    },
+    util::{idents_used_by, idents_used_by_ignoring_nested, ExprOptExt, ModuleItemExt},
 };
 
 /// Methods related to the option `sequences`. All methods are noop if
@@ -1170,8 +1170,8 @@ where
                                 .expand_infected(self.module_info, ids_used_by_a_init, 64);
 
                         let deps = match deps {
-                            Ok(v) => v,
-                            Err(()) => return false,
+                            Some(v) => v,
+                            _ => return false,
                         };
                         if deps.contains(&(e.to_id(), AccessKind::Reference))
                             || deps.contains(&(e.to_id(), AccessKind::Call))
@@ -1546,7 +1546,9 @@ where
         }
 
         match b {
-            Expr::Update(..) | Expr::Arrow(..) | Expr::Fn(..) => return Ok(false),
+            Expr::Update(..) | Expr::Arrow(..) | Expr::Fn(..) | Expr::OptChain(..) => {
+                return Ok(false)
+            }
 
             Expr::Cond(b) => {
                 trace_op!("seq: Try test of cond");
@@ -1594,6 +1596,21 @@ where
                 }
 
                 if obj.may_have_side_effects(&self.expr_ctx) {
+                    return Ok(false);
+                }
+
+                // We can't merge into `[]` in some cases because `obj` is **resolved** before
+                // evaluating `[]`.
+                //
+                // See https://github.com/swc-project/swc/pull/6509
+
+                let obj_ids = idents_used_by_ignoring_nested(obj);
+                let a_ids = match a {
+                    Mergable::Var(a) => idents_used_by_ignoring_nested(&a.init),
+                    Mergable::Expr(a) => idents_used_by_ignoring_nested(&**a),
+                    Mergable::FnDecl(a) => idents_used_by_ignoring_nested(&**a),
+                };
+                if obj_ids.intersection(&a_ids).next().is_some() {
                     return Ok(false);
                 }
 
@@ -2222,7 +2239,8 @@ where
                             if let Some(usage) = self.data.vars.get(&left_id.to_id()) {
                                 // We are eliminating one usage, so we use 1 instead of
                                 // 0
-                                if !$force_drop && usage.usage_count == 1 {
+                                if !$force_drop && usage.usage_count == 1 && usage.assign_count == 0
+                                {
                                     report_change!("sequences: Dropping inlined variable");
                                     a.name.take();
                                 }

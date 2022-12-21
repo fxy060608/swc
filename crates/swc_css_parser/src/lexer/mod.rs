@@ -2,7 +2,7 @@ use std::{cell::RefCell, char::REPLACEMENT_CHARACTER, rc::Rc};
 
 use swc_atoms::{js_word, Atom, JsWord};
 use swc_common::{input::Input, BytePos, Span};
-use swc_css_ast::{NumberType, Token, TokenAndSpan};
+use swc_css_ast::{matches_eq_ignore_ascii_case, DimensionToken, NumberType, Token, TokenAndSpan};
 
 use crate::{
     error::{Error, ErrorKind},
@@ -21,12 +21,11 @@ where
     cur_pos: BytePos,
     start_pos: BytePos,
     /// Used to override last_pos
-    last_pos: Option<BytePos>,
+    override_pos: Option<BytePos>,
     config: ParserConfig,
     buf: Rc<RefCell<String>>,
     raw_buf: Rc<RefCell<String>>,
     sub_buf: Rc<RefCell<String>>,
-    sub_raw_buf: Rc<RefCell<String>>,
     errors: Rc<RefCell<Vec<Error>>>,
 }
 
@@ -42,12 +41,11 @@ where
             cur: None,
             cur_pos: start_pos,
             start_pos,
-            last_pos: None,
+            override_pos: None,
             config,
             buf: Rc::new(RefCell::new(String::with_capacity(256))),
             raw_buf: Rc::new(RefCell::new(String::with_capacity(256))),
             sub_buf: Rc::new(RefCell::new(String::with_capacity(32))),
-            sub_raw_buf: Rc::new(RefCell::new(String::with_capacity(32))),
             errors: Default::default(),
         }
     }
@@ -90,21 +88,6 @@ where
 
         op(self, &mut buf, &mut raw)
     }
-
-    fn with_sub_buf_and_raw_buf<F, Ret>(&mut self, op: F) -> LexResult<Ret>
-    where
-        F: for<'any> FnOnce(&mut Lexer<I>, &mut String, &mut String) -> LexResult<Ret>,
-    {
-        let b = self.sub_buf.clone();
-        let r = self.sub_raw_buf.clone();
-        let mut sub_buf = b.borrow_mut();
-        let mut sub_raw_buf = r.borrow_mut();
-
-        sub_buf.clear();
-        sub_raw_buf.clear();
-
-        op(self, &mut sub_buf, &mut sub_raw_buf)
-    }
 }
 
 impl<I: Input> Iterator for Lexer<I> {
@@ -115,7 +98,10 @@ impl<I: Input> Iterator for Lexer<I> {
 
         match token {
             Ok(token) => {
-                let end = self.last_pos.take().unwrap_or_else(|| self.input.cur_pos());
+                let end = self
+                    .override_pos
+                    .take()
+                    .unwrap_or_else(|| self.input.last_pos());
                 let span = Span::new(self.start_pos, end, Default::default());
 
                 let token_and_span = TokenAndSpan { span, token };
@@ -141,12 +127,12 @@ where
     type State = LexerState;
 
     fn start_pos(&mut self) -> BytePos {
-        self.input.cur_pos()
+        self.input.last_pos()
     }
 
     fn state(&mut self) -> Self::State {
         LexerState {
-            pos: self.input.cur_pos(),
+            pos: self.input.last_pos(),
         }
     }
 
@@ -204,13 +190,17 @@ where
     }
 
     #[inline(always)]
-    fn consume(&mut self) {
-        self.cur = self.input.cur();
-        self.cur_pos = self.input.cur_pos();
+    fn consume(&mut self) -> Option<char> {
+        let cur = self.input.cur();
 
-        if self.cur.is_some() {
+        self.cur = cur;
+        self.cur_pos = self.input.last_pos();
+
+        if cur.is_some() {
             self.input.bump();
         }
+
+        cur
     }
 
     #[inline(always)]
@@ -221,18 +211,17 @@ where
     #[cold]
     fn emit_error(&mut self, kind: ErrorKind) {
         self.errors.borrow_mut().push(Error::new(
-            Span::new(self.cur_pos, self.input.cur_pos(), Default::default()),
+            Span::new(self.cur_pos, self.input.last_pos(), Default::default()),
             kind,
         ));
     }
 
     fn consume_token(&mut self) -> LexResult<Token> {
         self.read_comments();
-        self.start_pos = self.input.cur_pos();
-        self.consume();
+        self.start_pos = self.input.last_pos();
 
         // Consume the next input code point.
-        match self.cur() {
+        match self.consume() {
             // whitespace
             // Consume as much whitespace as possible. Return a <whitespace-token>.
             Some(c) if is_whitespace(c) => self.with_buf(|l, buf| {
@@ -268,48 +257,25 @@ where
                 // If the next input code point is a name code point or the next two input code
                 // points are a valid escape, then:
                 if (first.is_some() && is_name(first.unwrap()))
-                    || self.is_valid_escape(first, second)?
+                    || self.is_valid_escape(first, second)
                 {
                     // Create a <hash-token>.
-                    let mut hash_token = Token::Hash {
-                        is_id: Default::default(),
-                        value: Default::default(),
-                        raw: Default::default(),
-                    };
 
                     // If the next 3 input code points would start an identifier, set the
                     // <hash-token>’s type flag to "id".
                     let third = self.next_next_next();
-                    let is_would_start_ident = self.would_start_ident(first, second, third)?;
+                    let is_would_start_ident = self.would_start_ident(first, second, third);
 
-                    match hash_token {
-                        Token::Hash { ref mut is_id, .. } => {
-                            *is_id = is_would_start_ident;
-                        }
-                        _ => {
-                            unreachable!();
-                        }
-                    }
-
-                    // Consume a name, and set the <hash-token>’s value to the returned string.
+                    // Consume an ident sequence, and set the <hash-token>’s value to the returned
+                    // string.
                     let ident_sequence = self.read_ident_sequence()?;
 
-                    match hash_token {
-                        Token::Hash {
-                            ref mut value,
-                            ref mut raw,
-                            ..
-                        } => {
-                            *value = ident_sequence.0;
-                            *raw = ident_sequence.1;
-                        }
-                        _ => {
-                            unreachable!();
-                        }
-                    }
-
                     // Return the <hash-token>.
-                    return Ok(hash_token);
+                    return Ok(Token::Hash {
+                        is_id: is_would_start_ident,
+                        value: ident_sequence.0,
+                        raw: ident_sequence.1,
+                    });
                 }
 
                 Ok(Token::Delim { value: '#' })
@@ -327,7 +293,7 @@ where
             Some('+') => {
                 // If the input stream starts with a number, reconsume the current input code
                 // point, consume a numeric token and return it.
-                if self.would_start_number(None, None, None)? {
+                if self.would_start_number(None, None, None) {
                     self.reconsume();
 
                     return self.read_numeric();
@@ -335,7 +301,7 @@ where
 
                 // Otherwise, return a <delim-token> with its value set to the current input
                 // code point.
-                Ok(Token::Delim { value: '+' })
+                Ok(tok!("+"))
             }
             // U+002C COMMA (,)
             // Return a <comma-token>.
@@ -344,7 +310,7 @@ where
             Some('-') => {
                 // If the input stream starts with a number, reconsume the current input code
                 // point, consume a numeric token, and return it.
-                if self.would_start_number(None, None, None)? {
+                if self.would_start_number(None, None, None) {
                     self.reconsume();
 
                     return self.read_numeric();
@@ -359,7 +325,7 @@ where
                 }
                 // Otherwise, if the input stream starts with an identifier, reconsume the current
                 // input code point, consume an ident-like token, and return it.
-                else if self.would_start_ident(None, None, None)? {
+                else if self.would_start_ident(None, None, None) {
                     self.reconsume();
 
                     return self.read_ident_like();
@@ -367,13 +333,13 @@ where
 
                 // Otherwise, return a <delim-token> with its value set to the current input
                 // code point.
-                Ok(Token::Delim { value: '-' })
+                Ok(tok!("-"))
             }
             // U+002E FULL STOP (.)
             Some('.') => {
                 // If the input stream starts with a number, reconsume the current input code
                 // point, consume a numeric token, and return it.
-                if self.would_start_number(None, None, None)? {
+                if self.would_start_number(None, None, None) {
                     self.reconsume();
 
                     return self.read_numeric();
@@ -381,7 +347,7 @@ where
 
                 // Otherwise, return a <delim-token> with its value set to the current input
                 // code point.
-                Ok(Token::Delim { value: '.' })
+                Ok(tok!("."))
             }
             // U+003A COLON (:)
             // Return a <colon-token>.
@@ -407,7 +373,7 @@ where
 
                 // Otherwise, return a <delim-token> with its value set to the current input
                 // code point.
-                Ok(Token::Delim { value: '<' })
+                Ok(tok!("<"))
             }
             // U+0040 COMMERCIAL AT (@)
             Some('@') => {
@@ -418,7 +384,7 @@ where
                 // If the next 3 input code points would start an identifier, consume a name,
                 // create an <at-keyword-token> with its value set to the returned value, and
                 // return it.
-                if self.would_start_ident(first, second, third)? {
+                if self.would_start_ident(first, second, third) {
                     let ident_sequence = self.read_ident_sequence()?;
 
                     return Ok(Token::AtKeyword {
@@ -438,7 +404,7 @@ where
             Some('\\') => {
                 // If the input stream starts with a valid escape, reconsume the current input
                 // code point, consume an ident-like token, and return it.
-                if self.is_valid_escape(None, None)? {
+                if self.is_valid_escape(None, None) {
                     self.reconsume();
 
                     return self.read_ident_like();
@@ -497,17 +463,18 @@ where
                 self.consume(); // '/'
 
                 loop {
-                    self.consume();
-
-                    match self.cur() {
+                    match self.consume() {
                         Some('*') if self.next() == Some('/') => {
                             self.consume(); // '/'
 
                             break;
                         }
                         None => {
-                            let end = self.last_pos.take().unwrap_or_else(|| self.input.cur_pos());
-                            let span = Span::new(self.start_pos, end, Default::default());
+                            let span = Span::new(
+                                self.start_pos,
+                                self.input.last_pos(),
+                                Default::default(),
+                            );
 
                             self.errors
                                 .borrow_mut()
@@ -528,9 +495,7 @@ where
                 self.consume(); // '/'
 
                 loop {
-                    self.consume();
-
-                    match self.cur() {
+                    match self.consume() {
                         Some(c) if is_newline(c) => {
                             break;
                         }
@@ -554,33 +519,20 @@ where
         let next_third = self.next_next_next();
 
         // If the next 3 input code points would start an identifier, then:
-        if self.would_start_ident(next_first, next_second, next_third)? {
-            // Create a <dimension-token> with the same value and type flag as number, and a
-            // unit set initially to the empty string.
-            let mut token = Token::Dimension {
-                value: number.0,
-                raw_value: number.1,
-                unit: js_word!(""),
-                raw_unit: "".into(),
-                type_flag: number.2,
-            };
-
+        if self.would_start_ident(next_first, next_second, next_third) {
+            // Swap logic to avoid create empty strings, because it doesn't make sense
+            //
             // Consume a name. Set the <dimension-token>’s unit to the returned value.
             let ident_sequence = self.read_ident_sequence()?;
-
-            match token {
-                Token::Dimension {
-                    ref mut unit,
-                    ref mut raw_unit,
-                    ..
-                } => {
-                    *unit = ident_sequence.0;
-                    *raw_unit = ident_sequence.1;
-                }
-                _ => {
-                    unreachable!();
-                }
-            }
+            // Create a <dimension-token> with the same value and type flag as number, and a
+            // unit set initially to the empty string.
+            let token = Token::Dimension(Box::new(DimensionToken {
+                value: number.0,
+                raw_value: number.1,
+                unit: ident_sequence.0,
+                raw_unit: ident_sequence.1,
+                type_flag: number.2,
+            }));
 
             // Return the <dimension-token>.
             return Ok(token);
@@ -614,10 +566,12 @@ where
 
         // If string’s value is an ASCII case-insensitive match for "url", and the next
         // input code point is U+0028 LEFT PARENTHESIS ((), consume it.
-        if ident_sequence.0.to_ascii_lowercase() == js_word!("url") && self.next() == Some('(') {
+        if matches_eq_ignore_ascii_case!(ident_sequence.0, js_word!("url"))
+            && self.next() == Some('(')
+        {
             self.consume();
 
-            let start_whitespace = self.input.cur_pos();
+            let start_whitespace = self.input.last_pos();
 
             // While the next two input code points are whitespace, consume the next input
             // code point.
@@ -646,7 +600,7 @@ where
                 {
                     // Override last position because we consumed whitespaces, but they
                     // should not be part of token
-                    self.last_pos = Some(start_whitespace);
+                    self.override_pos = Some(start_whitespace);
 
                     return Ok(Token::Function {
                         value: ident_sequence.0,
@@ -700,9 +654,7 @@ where
 
             // Repeatedly consume the next input code point from the stream:
             loop {
-                l.consume();
-
-                match l.cur() {
+                match l.consume() {
                     // ending code point
                     // Return the <string-token>.
                     Some(c) if c == ending_code_point.unwrap() => {
@@ -730,7 +682,7 @@ where
                         l.reconsume();
 
                         return Ok(Token::BadString {
-                            raw_value: (&**raw).into(),
+                            raw: (&**raw).into(),
                         });
                     }
 
@@ -752,7 +704,7 @@ where
                         // Otherwise, (the stream starts with a valid escape) consume an escaped
                         // code point and append the returned code point to
                         // the <string-token>’s value.
-                        else if l.is_valid_escape(None, None)? {
+                        else if l.is_valid_escape(None, None) {
                             let escape = l.read_escape()?;
 
                             buf.push(escape.0);
@@ -797,17 +749,13 @@ where
 
             // Repeatedly consume the next input code point from the stream:
             loop {
-                l.consume();
-
-                match l.cur() {
+                match l.consume() {
                     // U+0029 RIGHT PARENTHESIS ())
                     // Return the <url-token>.
                     Some(')') => {
                         return Ok(Token::Url {
-                            name: name.0,
-                            raw_name: name.1,
                             value: (&**out).into(),
-                            raw_value: (&**raw).into(),
+                            raw: Box::new((name.1, (&**raw).into())),
                         });
                     }
 
@@ -817,10 +765,8 @@ where
                         l.emit_error(ErrorKind::UnterminatedUrl);
 
                         return Ok(Token::Url {
-                            name: name.0,
-                            raw_name: name.1,
                             value: (&**out).into(),
-                            raw_value: (&**raw).into(),
+                            raw: Box::new((name.1, (&**raw).into())),
                         });
                     }
 
@@ -853,10 +799,8 @@ where
                                 raw.push_str(&whitespaces);
 
                                 return Ok(Token::Url {
-                                    name: name.0,
-                                    raw_name: name.1,
                                     value: (&**out).into(),
-                                    raw_value: (&**raw).into(),
+                                    raw: Box::new((name.1, (&**raw).into())),
                                 });
                             }
                             None => {
@@ -865,10 +809,8 @@ where
                                 raw.push_str(&whitespaces);
 
                                 return Ok(Token::Url {
-                                    name: name.0,
-                                    raw_name: name.1,
                                     value: (&**out).into(),
-                                    raw_value: (&**raw).into(),
+                                    raw: Box::new((name.1, (&**raw).into())),
                                 });
                             }
                             _ => {}
@@ -876,18 +818,14 @@ where
 
                         // otherwise, consume the remnants of a bad url, create a <bad-url-token>,
                         // and return it.
-                        out.push_str(&whitespaces);
                         raw.push_str(&whitespaces);
 
                         let remnants = l.read_bad_url_remnants()?;
 
-                        out.push_str(&remnants.0);
-                        raw.push_str(&remnants.1);
+                        raw.push_str(&remnants);
 
                         return Ok(Token::BadUrl {
-                            name: name.0,
-                            raw_name: name.1,
-                            raw_value: (&**raw).into(),
+                            raw: Atom::new(format!("{}{}{}", name.1, "(", raw)),
                         });
                     }
 
@@ -902,15 +840,11 @@ where
 
                         let remnants = l.read_bad_url_remnants()?;
 
-                        out.push(c);
-                        out.push_str(&remnants.0);
                         raw.push(c);
-                        raw.push_str(&remnants.1);
+                        raw.push_str(&remnants);
 
                         return Ok(Token::BadUrl {
-                            name: name.0,
-                            raw_name: name.1,
-                            raw_value: (&**raw).into(),
+                            raw: Atom::new(format!("{}{}{}", name.1, "(", raw)),
                         });
                     }
 
@@ -919,7 +853,7 @@ where
                         // If the stream starts with a valid escape, consume an escaped code point
                         // and append the returned code point to the
                         // <url-token>’s value.
-                        if l.is_valid_escape(None, None)? {
+                        if l.is_valid_escape(None, None) {
                             let escaped = l.read_escape()?;
 
                             out.push(escaped.0);
@@ -933,15 +867,11 @@ where
 
                             let remnants = l.read_bad_url_remnants()?;
 
-                            out.push(c);
-                            out.push_str(&remnants.0);
                             raw.push(c);
-                            raw.push_str(&remnants.1);
+                            raw.push_str(&remnants);
 
                             return Ok(Token::BadUrl {
-                                name: name.0,
-                                raw_name: name.1,
-                                raw_value: (&**raw).into(),
+                                raw: Atom::new(format!("{}{}{}", name.1, "(", raw)),
                             });
                         }
                     }
@@ -965,9 +895,7 @@ where
     fn read_escape(&mut self) -> LexResult<(char, String)> {
         self.with_sub_buf(|l, buf| {
             // Consume the next input code point.
-            l.consume();
-
-            match l.cur() {
+            match l.consume() {
                 // hex digit
                 Some(c) if is_hex_digit(c) => {
                     let mut hex = c.to_digit(16).unwrap();
@@ -1044,21 +972,17 @@ where
     // or can be called with the input stream itself. In the latter case, the two
     // code points in question are the current input code point and the next input
     // code point, in that order.
-    fn is_valid_escape(
-        &mut self,
-        maybe_first: Option<char>,
-        maybe_second: Option<char>,
-    ) -> LexResult<bool> {
+    fn is_valid_escape(&mut self, maybe_first: Option<char>, maybe_second: Option<char>) -> bool {
         // If the first code point is not U+005C REVERSE SOLIDUS (\), return false.
         if maybe_first.or_else(|| self.cur()) != Some('\\') {
-            return Ok(false);
+            return false;
         }
 
         match maybe_second.or_else(|| self.next()) {
             // Otherwise, if the second code point is a newline, return false.
-            Some(second) => Ok(!is_newline(second)),
+            Some(second) => !is_newline(second),
             // Otherwise, return true.
-            None => Ok(false),
+            None => false,
         }
     }
 
@@ -1073,7 +997,7 @@ where
         maybe_first: Option<char>,
         maybe_second: Option<char>,
         maybe_third: Option<char>,
-    ) -> LexResult<bool> {
+    ) -> bool {
         // Look at the first code point:
         let first = maybe_first.or_else(|| self.cur());
 
@@ -1085,10 +1009,10 @@ where
                 match second {
                     // If the second code point is a name-start code point
                     // return true.
-                    Some(c) if is_name_start(c) => Ok(true),
+                    Some(c) if is_name_start(c) => true,
                     // or a U+002D HYPHEN-MINUS,
                     // return true.
-                    Some('-') => Ok(true),
+                    Some('-') => true,
                     // or the second and third code points are a valid escape
                     // return true.
                     Some(_) => {
@@ -1097,21 +1021,21 @@ where
                         self.is_valid_escape(second, third)
                     }
                     // Otherwise, return false.
-                    _ => Ok(false),
+                    _ => false,
                 }
             }
             // name-start code point
             // Return true.
-            Some(c) if is_name_start(c) => Ok(true),
+            Some(c) if is_name_start(c) => true,
             // U+005C REVERSE SOLIDUS (\)
             // If the first and second code points are a valid escape, return true. Otherwise,
             // return false.
             Some('\\') => {
                 let second = maybe_second.or_else(|| self.next());
 
-                Ok(self.is_valid_escape(first, second)?)
+                self.is_valid_escape(first, second)
             }
-            _ => Ok(false),
+            _ => false,
         }
     }
 
@@ -1127,7 +1051,7 @@ where
         maybe_first: Option<char>,
         maybe_second: Option<char>,
         maybe_third: Option<char>,
-    ) -> LexResult<bool> {
+    ) -> bool {
         // Look at the first code point:
         let first = maybe_first.or_else(|| self.cur());
 
@@ -1137,20 +1061,20 @@ where
             Some('+') | Some('-') => {
                 match maybe_second.or_else(|| self.next()) {
                     // If the second code point is a digit, return true.
-                    Some(second) if second.is_ascii_digit() => return Ok(true),
+                    Some(second) if second.is_ascii_digit() => return true,
                     // Otherwise, if the second code point is a U+002E FULL STOP (.) and the
                     // third code point is a digit, return true.
                     Some('.') => {
                         if let Some(third) = maybe_third.or_else(|| self.next_next()) {
                             if third.is_ascii_digit() {
-                                return Ok(true);
+                                return true;
                             }
                         }
 
-                        return Ok(false);
+                        return false;
                     }
                     // Otherwise, return false.
-                    _ => return Ok(false),
+                    _ => return false,
                 };
             }
             // U+002E FULL STOP (.)
@@ -1158,19 +1082,19 @@ where
                 // If the second code point is a digit, return true.
                 if let Some(second) = self.next() {
                     if second.is_ascii_digit() {
-                        return Ok(true);
+                        return true;
                     }
                 }
 
                 // Otherwise, return false.
-                Ok(false)
+                false
             }
             // digit
             // Return true.
-            Some(first) if first.is_ascii_digit() => Ok(true),
+            Some(first) if first.is_ascii_digit() => true,
             // anything else
             // Return false.
-            _ => Ok(false),
+            _ => false,
         }
     }
 
@@ -1185,9 +1109,7 @@ where
 
             // Repeatedly consume the next input code point from the stream:
             loop {
-                l.consume();
-
-                match l.cur() {
+                match l.consume() {
                     // name code point
                     // Append the code point to result.
                     Some(c) if is_name(c) => {
@@ -1196,7 +1118,7 @@ where
                     }
                     // the stream starts with a valid escape
                     // Consume an escaped code point. Append the returned code point to result.
-                    Some(c) if l.is_valid_escape(None, None)? => {
+                    Some(c) if l.is_valid_escape(None, None) => {
                         let escaped = l.read_escape()?;
 
                         buf.push(escaped.0);
@@ -1337,42 +1259,40 @@ where
     // its sole use is to consume enough of the input stream to reach a recovery
     // point where normal tokenizing can resume. But for recovery purpose we return
     // bad URL remnants.
-    fn read_bad_url_remnants(&mut self) -> LexResult<(String, String)> {
-        self.with_sub_buf_and_raw_buf(|l, buf, raw| {
+    fn read_bad_url_remnants(&mut self) -> LexResult<String> {
+        self.with_sub_buf(|l, raw| {
             // Repeatedly consume the next input code point from the stream:
             loop {
-                l.consume();
-
-                match l.cur() {
+                match l.consume() {
                     // U+0029 RIGHT PARENTHESIS ())
                     // EOF
                     // Return.
-                    Some(')') => {
+                    Some(c @ ')') => {
+                        raw.push(c);
+
                         break;
                     }
                     None => {
                         break;
                     }
                     // the input stream starts with a valid escape
-                    Some(c) if l.is_valid_escape(None, None) == Ok(true) => {
+                    Some(c) if l.is_valid_escape(None, None) => {
                         // Consume an escaped code point. This allows an escaped right parenthesis
                         // ("\)") to be encountered without ending the <bad-url-token>.
                         let escaped = l.read_escape()?;
 
-                        buf.push(escaped.0);
                         raw.push(c);
                         raw.push_str(&escaped.1);
                     }
                     // anything else
                     // Do nothing.
                     Some(c) => {
-                        buf.push(c);
                         raw.push(c);
                     }
                 }
             }
 
-            Ok(((&**buf).into(), (&**raw).into()))
+            Ok((&**raw).into())
         })
     }
 }

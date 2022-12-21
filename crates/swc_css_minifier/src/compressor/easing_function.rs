@@ -6,110 +6,126 @@ use super::Compressor;
 impl Compressor {
     pub(super) fn compress_easing_function(&mut self, component_value: &mut ComponentValue) {
         match component_value {
-            ComponentValue::Function(Function {
+            ComponentValue::Function(box Function {
                 name,
                 value: function_value,
                 span,
-            }) if name.value.to_ascii_lowercase() == js_word!("cubic-bezier")
-                && function_value.len() == 7 =>
-            {
+            }) if name == &js_word!("cubic-bezier") && function_value.len() == 7 => {
                 if let (
-                    ComponentValue::Number(Number { value: first, .. }),
-                    ComponentValue::Number(Number { value: second, .. }),
-                    ComponentValue::Number(Number { value: third, .. }),
-                    ComponentValue::Number(Number { value: fourth, .. }),
+                    first,
+                    second,
+                    third,
+                    ComponentValue::Integer(box Integer { value: fourth, .. }),
                 ) = (
                     &function_value[0],
                     &function_value[2],
                     &function_value[4],
                     &function_value[6],
                 ) {
-                    if *first == 0.0 && *second == 0.0 && *third == 1.0 && *fourth == 1.0 {
-                        *component_value = ComponentValue::Ident(Ident {
+                    if matches!(first, ComponentValue::Integer(box Integer { value, .. }) if *value == 0)
+                        && matches!(second, ComponentValue::Integer(box Integer { value, .. }) if *value == 0)
+                        && matches!(third, ComponentValue::Integer(box Integer { value, .. }) if *value == 1)
+                        && *fourth == 1
+                    {
+                        *component_value = ComponentValue::Ident(Box::new(Ident {
                             span: *span,
                             value: js_word!("linear"),
                             raw: None,
-                        })
-                    } else if *first == 0.25 && *second == 0.1 && *third == 0.25 && *fourth == 1.0 {
-                        *component_value = ComponentValue::Ident(Ident {
+                        }))
+                    } else if matches!(first, ComponentValue::Number(box Number { value, .. }) if *value == 0.25)
+                        && matches!(second, ComponentValue::Number(box Number { value, .. }) if *value == 0.1)
+                        && matches!(third, ComponentValue::Number(box Number { value, .. }) if *value == 0.25)
+                        && *fourth == 1
+                    {
+                        *component_value = ComponentValue::Ident(Box::new(Ident {
                             span: *span,
                             value: js_word!("ease"),
                             raw: None,
-                        })
-                    } else if *first == 0.42 && *second == 0.0 && *third == 1.0 && *fourth == 1.0 {
-                        *component_value = ComponentValue::Ident(Ident {
+                        }))
+                    } else if matches!(first, ComponentValue::Number(box Number { value: first, .. }) if *first == 0.42)
+                        && matches!(second, ComponentValue::Integer(box Integer { value, .. }) if *value == 0)
+                        && matches!(third, ComponentValue::Integer(box Integer { value, .. }) if *value == 1)
+                        && *fourth == 1
+                    {
+                        *component_value = ComponentValue::Ident(Box::new(Ident {
                             span: *span,
                             value: js_word!("ease-in"),
                             raw: None,
-                        })
-                    } else if *first == 0.0 && *second == 0.0 && *third == 0.58 && *fourth == 1.0 {
-                        *component_value = ComponentValue::Ident(Ident {
+                        }))
+                    } else if matches!(first, ComponentValue::Integer(box Integer { value: first, .. }) if *first == 0)
+                        && matches!(second, ComponentValue::Integer(box Integer { value, .. }) if *value == 0)
+                        && matches!(third, ComponentValue::Number(box Number { value, .. }) if *value == 0.58)
+                        && *fourth == 1
+                    {
+                        *component_value = ComponentValue::Ident(Box::new(Ident {
                             span: *span,
                             value: js_word!("ease-out"),
                             raw: None,
-                        })
-                    } else if *first == 0.42 && *second == 0.0 && *third == 0.58 && *fourth == 1.0 {
-                        *component_value = ComponentValue::Ident(Ident {
+                        }))
+                    } else if matches!(first, ComponentValue::Number(box Number { value: first, .. }) if *first == 0.42)
+                        && matches!(second, ComponentValue::Integer(box Integer { value, .. }) if *value == 0)
+                        && matches!(third, ComponentValue::Number(box Number { value, .. }) if *value == 0.58)
+                        && *fourth == 1
+                    {
+                        *component_value = ComponentValue::Ident(Box::new(Ident {
                             span: *span,
                             value: js_word!("ease-in-out"),
                             raw: None,
-                        })
+                        }))
                     }
                 }
             }
-            ComponentValue::Function(Function {
+            ComponentValue::Function(box Function {
                 name,
                 value: function_value,
                 span,
-            }) if name.value.to_ascii_lowercase() == js_word!("steps")
-                && function_value.len() == 3 =>
-            {
+            }) if name == &js_word!("steps") && function_value.len() == 3 => {
                 match (&function_value[0], &function_value[2]) {
                     (
-                        ComponentValue::Number(Number {
+                        ComponentValue::Integer(box Integer {
                             value: number_value,
                             ..
                         }),
-                        ComponentValue::Ident(Ident {
+                        ComponentValue::Ident(box Ident {
                             value: ident_value, ..
                         }),
-                    ) if *number_value == 1.0 => match ident_value.to_ascii_lowercase() {
+                    ) if *number_value == 1 => match ident_value.to_ascii_lowercase() {
                         js_word!("start") | js_word!("jump-start") => {
-                            *component_value = ComponentValue::Ident(Ident {
+                            *component_value = ComponentValue::Ident(Box::new(Ident {
                                 span: *span,
                                 value: js_word!("step-start"),
                                 raw: None,
-                            })
+                            }))
                         }
                         js_word!("end") | js_word!("jump-end") => {
-                            *component_value = ComponentValue::Ident(Ident {
+                            *component_value = ComponentValue::Ident(Box::new(Ident {
                                 span: *span,
                                 value: js_word!("step-end"),
                                 raw: None,
-                            })
+                            }))
                         }
                         _ => {}
                     },
                     (
-                        ComponentValue::Number(Number { .. }),
-                        ComponentValue::Ident(Ident {
+                        ComponentValue::Integer(box Integer { .. }),
+                        ComponentValue::Ident(box Ident {
                             value: ident_value, ..
                         }),
-                    ) if ident_value.to_ascii_lowercase() == js_word!("jump-start") => {
-                        function_value[2] = ComponentValue::Ident(Ident {
+                    ) if ident_value.eq_ignore_ascii_case(&js_word!("jump-start")) => {
+                        function_value[2] = ComponentValue::Ident(Box::new(Ident {
                             span: *span,
                             value: js_word!("start"),
                             raw: None,
-                        })
+                        }))
                     }
                     (
-                        ComponentValue::Number(number),
-                        ComponentValue::Ident(Ident {
+                        ComponentValue::Integer(number),
+                        ComponentValue::Ident(box Ident {
                             value: ident_value, ..
                         }),
                     ) => match ident_value.to_ascii_lowercase() {
                         js_word!("end") | js_word!("jump-end") => {
-                            *function_value = vec![ComponentValue::Number(number.clone())];
+                            *function_value = vec![ComponentValue::Integer(number.clone())];
                         }
                         _ => {}
                     },

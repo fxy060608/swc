@@ -10,7 +10,7 @@ impl Compressor {
                 if is_calc_function_name(name) && value.len() == 1 =>
             {
                 match &value[0] {
-                    ComponentValue::CalcSum(CalcSum {
+                    ComponentValue::CalcSum(box CalcSum {
                         expressions: calc_sum_expressions,
                         ..
                     }) if calc_sum_expressions.len() == 1 => match &calc_sum_expressions[0] {
@@ -23,13 +23,13 @@ impl Compressor {
                             {
                                 match transform_calc_value_into_component_value(calc_value) {
                                     Some(ComponentValue::Function(function)) => {
-                                        *n = SizeFeatureValue::Function(function);
+                                        *n = SizeFeatureValue::Function(*function);
                                     }
                                     Some(ComponentValue::Dimension(dimension)) => {
-                                        *n = SizeFeatureValue::Dimension(dimension);
+                                        *n = SizeFeatureValue::Dimension(*dimension);
                                     }
                                     Some(ComponentValue::Number(number)) => {
-                                        *n = SizeFeatureValue::Number(number);
+                                        *n = SizeFeatureValue::Number(*number);
                                     }
                                     _ => {}
                                 }
@@ -45,8 +45,8 @@ impl Compressor {
     }
 
     pub(super) fn compress_size_feature_value_length(&mut self, n: &mut SizeFeatureValue) {
-        if let SizeFeatureValue::Dimension(dimension) = n {
-            if let Some(number) = self.length_to_zero(dimension) {
+        if let SizeFeatureValue::Dimension(Dimension::Length(length)) = n {
+            if let Some(number) = self.length_to_zero(length) {
                 *n = SizeFeatureValue::Number(number)
             }
         }

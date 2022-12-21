@@ -40,10 +40,6 @@ pub enum Token {
         tag_name: JsWord,
         attributes: Vec<AttributeToken>,
     },
-    ShortTag {
-        tag_name: JsWord,
-        attributes: Vec<AttributeToken>,
-    },
     EmptyTag {
         tag_name: JsWord,
         attributes: Vec<AttributeToken>,
@@ -59,6 +55,10 @@ pub enum Token {
     ProcessingInstruction {
         target: JsWord,
         data: JsWord,
+    },
+    Cdata {
+        data: JsWord,
+        raw: JsWord,
     },
     Eof,
 }

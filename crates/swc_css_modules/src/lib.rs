@@ -1,12 +1,13 @@
+#![feature(box_patterns)]
+
 use rustc_hash::FxHashMap;
 use serde::Serialize;
 use swc_atoms::{js_word, JsWord};
 use swc_common::util::take::Take;
 use swc_css_ast::{
     ComplexSelector, ComplexSelectorChildren, ComponentValue, Declaration, DeclarationName,
-    DeclarationOrAtRule, Delimiter, DelimiterValue, Ident, KeyframesName,
-    PseudoClassSelectorChildren, QualifiedRule, QualifiedRulePrelude, StyleBlock, Stylesheet,
-    SubclassSelector,
+    Delimiter, DelimiterValue, Ident, KeyframesName, PseudoClassSelectorChildren, QualifiedRule,
+    QualifiedRulePrelude, Stylesheet, SubclassSelector,
 };
 use swc_css_visit::{VisitMut, VisitMutWith};
 
@@ -233,8 +234,7 @@ where
         n.visit_mut_children_with(self);
 
         n.retain(|v| match v {
-            ComponentValue::StyleBlock(StyleBlock::Declaration(d))
-            | ComponentValue::DeclarationOrAtRule(DeclarationOrAtRule::Declaration(d)) => {
+            ComponentValue::Declaration(d) => {
                 if let DeclarationName::Ident(ident) = &d.name {
                     if &*ident.value == "composes" {
                         return false;
@@ -254,18 +254,20 @@ where
         if let Some(composes_for_current) = &mut self.data.composes_for_current {
             if let DeclarationName::Ident(name) = &n.name {
                 if &*name.value == "composes" {
-                    // comoses: name from 'foo.css'
+                    // composes: name from 'foo.css'
                     if n.value.len() >= 3 {
                         match (&n.value[n.value.len() - 2], &n.value[n.value.len() - 1]) {
                             (
-                                ComponentValue::Ident(Ident {
+                                ComponentValue::Ident(box Ident {
                                     value: js_word!("from"),
                                     ..
                                 }),
                                 ComponentValue::Str(import_source),
                             ) => {
                                 for class_name in n.value.iter().take(n.value.len() - 2) {
-                                    if let ComponentValue::Ident(Ident { value, .. }) = class_name {
+                                    if let ComponentValue::Ident(box Ident { value, .. }) =
+                                        class_name
+                                    {
                                         composes_for_current.push(CssClassName::Import {
                                             name: value.clone(),
                                             from: import_source.value.clone(),
@@ -276,17 +278,19 @@ where
                                 return;
                             }
                             (
-                                ComponentValue::Ident(Ident {
+                                ComponentValue::Ident(box Ident {
                                     value: js_word!("from"),
                                     ..
                                 }),
-                                ComponentValue::Ident(Ident {
+                                ComponentValue::Ident(box Ident {
                                     value: js_word!("global"),
                                     ..
                                 }),
                             ) => {
                                 for class_name in n.value.iter().take(n.value.len() - 2) {
-                                    if let ComponentValue::Ident(Ident { value, .. }) = class_name {
+                                    if let ComponentValue::Ident(box Ident { value, .. }) =
+                                        class_name
+                                    {
                                         composes_for_current.push(CssClassName::Global {
                                             name: value.clone(),
                                         });
@@ -299,7 +303,7 @@ where
                     }
 
                     for class_name in n.value.iter() {
-                        if let ComponentValue::Ident(Ident { value, .. }) = class_name {
+                        if let ComponentValue::Ident(box Ident { value, .. }) = class_name {
                             if let Some(value) = self.data.orig_to_renamed.get(value) {
                                 composes_for_current.push(CssClassName::Local {
                                     name: value.clone(),
@@ -312,13 +316,13 @@ where
         }
 
         if let DeclarationName::Ident(name) = &n.name {
-            match name.value.to_ascii_lowercase() {
+            match name.value {
                 js_word!("animation") => {
                     let mut can_change = true;
 
                     for v in &mut n.value {
                         if can_change {
-                            if let ComponentValue::Ident(Ident { value, raw, .. }) = v {
+                            if let ComponentValue::Ident(box Ident { value, raw, .. }) = v {
                                 *raw = None;
 
                                 rename(
@@ -330,18 +334,22 @@ where
                                 );
                                 can_change = false;
                             }
-                        } else if let ComponentValue::Delimiter(Delimiter {
-                            value: DelimiterValue::Comma,
-                            ..
-                        }) = v
-                        {
-                            can_change = true;
+                        } else if let ComponentValue::Delimiter(delimiter) = v {
+                            if matches!(
+                                &**delimiter,
+                                Delimiter {
+                                    value: DelimiterValue::Comma,
+                                    ..
+                                }
+                            ) {
+                                can_change = true;
+                            }
                         }
                     }
                 }
                 js_word!("animation-name") => {
                     for v in &mut n.value {
-                        if let ComponentValue::Ident(Ident { value, raw, .. }) = v {
+                        if let ComponentValue::Ident(box Ident { value, raw, .. }) = v {
                             *raw = None;
 
                             rename(

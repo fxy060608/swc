@@ -1,13 +1,31 @@
-use swc_atoms::js_word;
+use swc_atoms::{js_word, JsWord};
 use swc_common::DUMMY_SP;
 use swc_css_ast::*;
-use swc_css_utils::NAMED_COLORS;
+use swc_css_utils::{angle_to_deg, hsl_to_rgb, hwb_to_rgb, to_rgb255, NAMED_COLORS};
 
-use super::{
-    angle::{get_angle_type, to_deg},
-    Compressor,
-};
+use super::Compressor;
 use crate::compressor::alpha_value::compress_alpha_value;
+
+fn compress_alpha_in_hex(value: &JsWord) -> Option<&str> {
+    let length = value.len();
+
+    if length == 3 || length == 6 {
+        return None;
+    }
+
+    let chars = value.as_bytes();
+
+    if length == 8
+        && (chars[6] == b'f' || chars[6] == b'F')
+        && (chars[7] == b'f' || chars[7] == b'F')
+    {
+        return Some(&value[0..6]);
+    } else if length == 4 && chars[3] == b'f' || chars[3] == b'F' {
+        return Some(&value[0..3]);
+    }
+
+    None
+}
 
 fn get_short_hex(v: u32) -> u32 {
     ((v & 0x0ff00000) >> 12) | ((v & 0x00000ff0) >> 4)
@@ -61,62 +79,6 @@ fn get_named_color_by_hex(v: u32) -> Option<&'static str> {
     Some(s)
 }
 
-fn hsl_to_rgb(hsl: [f64; 3]) -> [f64; 3] {
-    let [h, s, l] = hsl;
-
-    let r;
-    let g;
-    let b;
-
-    if s == 0.0 {
-        r = l;
-        g = l;
-        b = l;
-    } else {
-        let f = |n: f64| -> f64 {
-            let k = (n + h / 30.0) % 12.0;
-            let a = s * f64::min(l, 1.0 - l);
-
-            l - a * f64::max(-1.0, f64::min(f64::min(k - 3.0, 9.0 - k), 1.0))
-        };
-
-        r = f(0.0);
-        g = f(8.0);
-        b = f(4.0);
-    }
-
-    [r, g, b]
-}
-
-fn hwb_to_rgb(hwb: [f64; 3]) -> [f64; 3] {
-    let [h, w, b] = hwb;
-
-    if w + b >= 1.0 {
-        let gray = w / (w + b);
-
-        return [gray, gray, gray];
-    }
-
-    let mut rgb = hsl_to_rgb([h, 1.0, 0.5]);
-
-    for item in &mut rgb {
-        *item *= 1.0 - w - b;
-        *item += w;
-    }
-
-    [rgb[0], rgb[1], rgb[2]]
-}
-
-fn to_rgb255(abc: [f64; 3]) -> [f64; 3] {
-    let mut abc255 = abc;
-
-    for item in &mut abc255 {
-        *item *= 255.0;
-    }
-
-    abc255
-}
-
 macro_rules! make_color {
     ($span:expr,$r:expr,$g:expr,$b:expr, $a:expr) => {{
         let need_alpha_value = $a != 1.0;
@@ -130,8 +92,9 @@ macro_rules! make_color {
             let is_alpha_hex_supported = false;
 
             if is_alpha_hex_supported {
+                let alpha = (($a * 255.0) as f64).round().max(0.0).min(255.0) as u8;
                 let hex: u32 =
-                    ((r as u32) << 24) | ((g as u32) << 16) | ((b as u32) << 8) | ($a as u32);
+                    ((r as u32) << 24) | ((g as u32) << 16) | ((b as u32) << 8) | (alpha as u32);
 
                 let compact = get_short_hex(hex);
                 let value = if hex == get_long_hex(compact) {
@@ -156,40 +119,40 @@ macro_rules! make_color {
 
                 Color::AbsoluteColorBase(AbsoluteColorBase::Function(Function {
                     span: $span,
-                    name: Ident {
+                    name: FunctionName::Ident(Ident {
                         span: DUMMY_SP,
                         value: js_word!("rgba"),
                         raw: None,
-                    },
+                    }),
                     value: vec![
-                        ComponentValue::Number(Number {
+                        ComponentValue::Number(Box::new(Number {
                             span: DUMMY_SP,
                             value: r,
                             raw: None,
-                        }),
-                        ComponentValue::Delimiter(Delimiter {
+                        })),
+                        ComponentValue::Delimiter(Box::new(Delimiter {
                             span: DUMMY_SP,
                             value: DelimiterValue::Comma,
-                        }),
-                        ComponentValue::Number(Number {
+                        })),
+                        ComponentValue::Number(Box::new(Number {
                             span: DUMMY_SP,
                             value: g,
                             raw: None,
-                        }),
-                        ComponentValue::Delimiter(Delimiter {
+                        })),
+                        ComponentValue::Delimiter(Box::new(Delimiter {
                             span: DUMMY_SP,
                             value: DelimiterValue::Comma,
-                        }),
-                        ComponentValue::Number(Number {
+                        })),
+                        ComponentValue::Number(Box::new(Number {
                             span: DUMMY_SP,
                             value: b,
                             raw: None,
-                        }),
-                        ComponentValue::Delimiter(Delimiter {
+                        })),
+                        ComponentValue::Delimiter(Box::new(Delimiter {
                             span: DUMMY_SP,
                             value: DelimiterValue::Comma,
-                        }),
-                        ComponentValue::AlphaValue(alpha_value),
+                        })),
+                        ComponentValue::AlphaValue(Box::new(alpha_value)),
                     ],
                 }))
             }
@@ -262,7 +225,7 @@ impl Compressor {
 
     fn get_alpha_value(&self, alpha_value: Option<&&ComponentValue>) -> Option<f64> {
         match alpha_value {
-            Some(ComponentValue::AlphaValue(AlphaValue::Number(Number { value, .. }))) => {
+            Some(ComponentValue::AlphaValue(box AlphaValue::Number(Number { value, .. }))) => {
                 if *value > 1.0 {
                     return Some(1.0);
                 } else if *value < 0.0 {
@@ -271,7 +234,7 @@ impl Compressor {
 
                 Some(*value)
             }
-            Some(ComponentValue::AlphaValue(AlphaValue::Percentage(Percentage {
+            Some(ComponentValue::AlphaValue(box AlphaValue::Percentage(Percentage {
                 value: Number { value, .. },
                 ..
             }))) => {
@@ -283,8 +246,8 @@ impl Compressor {
 
                 Some(*value / 100.0)
             }
-            Some(ComponentValue::Ident(Ident { value, .. }))
-                if value.to_ascii_lowercase() == js_word!("none") =>
+            Some(ComponentValue::Ident(box Ident { value, .. }))
+                if value.eq_ignore_ascii_case(&js_word!("none")) =>
             {
                 Some(0.0)
             }
@@ -295,21 +258,14 @@ impl Compressor {
 
     fn get_hue(&self, hue: Option<&&ComponentValue>) -> Option<f64> {
         match hue {
-            Some(ComponentValue::Hue(hue)) => {
+            Some(ComponentValue::Hue(box hue)) => {
                 let mut value = match hue {
                     Hue::Number(Number { value, .. }) => *value,
                     Hue::Angle(Angle {
                         value: Number { value, .. },
                         unit: Ident { value: unit, .. },
                         ..
-                    }) => {
-                        let angel_type = match get_angle_type(&unit.to_ascii_lowercase()) {
-                            Some(angel_type) => angel_type,
-                            _ => return None,
-                        };
-
-                        to_deg(*value, angel_type)
-                    }
+                    }) => angle_to_deg(*value, unit),
                 };
 
                 value %= 360.0;
@@ -320,8 +276,8 @@ impl Compressor {
 
                 Some(value)
             }
-            Some(ComponentValue::Ident(Ident { value, .. }))
-                if value.to_ascii_lowercase() == js_word!("none") =>
+            Some(ComponentValue::Ident(box Ident { value, .. }))
+                if value.eq_ignore_ascii_case(&js_word!("none")) =>
             {
                 Some(0.0)
             }
@@ -331,7 +287,7 @@ impl Compressor {
 
     fn get_percentage(&self, percentage: Option<&&ComponentValue>) -> Option<f64> {
         match percentage {
-            Some(ComponentValue::Percentage(Percentage {
+            Some(ComponentValue::Percentage(box Percentage {
                 value: Number { value, .. },
                 ..
             })) => {
@@ -343,8 +299,8 @@ impl Compressor {
 
                 Some(*value / 100.0)
             }
-            Some(ComponentValue::Ident(Ident { value, .. }))
-                if value.to_ascii_lowercase() == js_word!("none") =>
+            Some(ComponentValue::Ident(box Ident { value, .. }))
+                if value.eq_ignore_ascii_case(&js_word!("none")) =>
             {
                 Some(0.0)
             }
@@ -357,7 +313,7 @@ impl Compressor {
         number_or_percentage: Option<&&ComponentValue>,
     ) -> Option<f64> {
         match number_or_percentage {
-            Some(ComponentValue::Number(Number { value, .. })) => {
+            Some(ComponentValue::Number(box Number { value, .. })) => {
                 if *value > 255.0 {
                     return Some(255.0);
                 } else if *value < 0.0 {
@@ -366,7 +322,7 @@ impl Compressor {
 
                 Some(*value)
             }
-            Some(ComponentValue::Percentage(Percentage {
+            Some(ComponentValue::Percentage(box Percentage {
                 value: Number { value, .. },
                 ..
             })) => {
@@ -378,8 +334,8 @@ impl Compressor {
 
                 Some((2.55 * *value).round())
             }
-            Some(ComponentValue::Ident(Ident { value, .. }))
-                if value.to_ascii_lowercase() == js_word!("none") =>
+            Some(ComponentValue::Ident(box Ident { value, .. }))
+                if value.eq_ignore_ascii_case(&js_word!("none")) =>
             {
                 Some(0.0)
             }
@@ -414,7 +370,7 @@ impl Compressor {
             Color::AbsoluteColorBase(AbsoluteColorBase::HexColor(HexColor {
                 span, value, ..
             })) => {
-                if let Some(value) = self.get_named_color_by_hex(&value.to_ascii_lowercase()) {
+                if let Some(value) = self.get_named_color_by_hex(value) {
                     *color = Color::AbsoluteColorBase(AbsoluteColorBase::NamedColorOrTransparent(
                         Ident {
                             span: *span,
@@ -422,6 +378,8 @@ impl Compressor {
                             raw: None,
                         },
                     ));
+                } else if let Some(new_value) = compress_alpha_in_hex(value) {
+                    *value = new_value.into();
                 }
             }
             Color::AbsoluteColorBase(AbsoluteColorBase::Function(Function {
@@ -429,13 +387,13 @@ impl Compressor {
                 name,
                 value,
                 ..
-            })) if matches!(&*name.value, "rgb" | "rgba") => {
+            })) if name == &js_word!("rgb") || name == &js_word!("rgba") => {
                 let rgba: Vec<_> = value
                     .iter()
                     .filter(|n| {
                         !matches!(
                             n,
-                            ComponentValue::Delimiter(Delimiter {
+                            ComponentValue::Delimiter(box Delimiter {
                                 value: DelimiterValue::Comma | DelimiterValue::Solidus,
                                 ..
                             })
@@ -467,13 +425,13 @@ impl Compressor {
                 name,
                 value,
                 ..
-            })) if matches!(&*name.value, "hsl" | "hsla") => {
+            })) if name == &js_word!("hsl") || name == &js_word!("hsla") => {
                 let hsla: Vec<_> = value
                     .iter()
                     .filter(|n| {
                         !matches!(
                             n,
-                            ComponentValue::Delimiter(Delimiter {
+                            ComponentValue::Delimiter(box Delimiter {
                                 value: DelimiterValue::Comma | DelimiterValue::Solidus,
                                 ..
                             })
@@ -507,33 +465,20 @@ impl Compressor {
                 name,
                 value,
                 ..
-            })) if matches!(&*name.value, "hwb") => {
-                let hsla: Vec<_> = value
-                    .iter()
-                    .filter(|n| {
-                        !matches!(
-                            n,
-                            ComponentValue::Delimiter(Delimiter {
-                                value: DelimiterValue::Comma | DelimiterValue::Solidus,
-                                ..
-                            })
-                        )
-                    })
-                    .collect();
-
-                let h = match self.get_hue(hsla.get(0)) {
+            })) if name == &js_word!("hwb") => {
+                let h = match self.get_hue(value.get(0).as_ref()) {
                     Some(value) => value,
                     _ => return,
                 };
-                let w = match self.get_percentage(hsla.get(1)) {
+                let w = match self.get_percentage(value.get(1).as_ref()) {
                     Some(value) => value,
                     _ => return,
                 };
-                let b = match self.get_percentage(hsla.get(2)) {
+                let b = match self.get_percentage(value.get(2).as_ref()) {
                     Some(value) => value,
                     _ => return,
                 };
-                let a = match self.get_alpha_value(hsla.get(3)) {
+                let a = match self.get_alpha_value(value.get(4).as_ref()) {
                     Some(value) => value,
                     _ => return,
                 };

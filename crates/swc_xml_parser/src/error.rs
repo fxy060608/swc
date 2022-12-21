@@ -57,6 +57,7 @@ impl Error {
                 "Invalid character of processing instruction".into()
             }
             ErrorKind::InvalidCharacterInTag => "Invalid character in tag".into(),
+            ErrorKind::InvalidEntityCharacter => "Invalid entity character".into(),
             ErrorKind::MissingDoctypeName => "Missing doctype name".into(),
             ErrorKind::MissingDoctypePublicIdentifier => "Missing doctype public identifier".into(),
             ErrorKind::MissingQuoteBeforeDoctypePublicIdentifier => {
@@ -80,6 +81,14 @@ impl Error {
             ErrorKind::MissingWhitespaceBetweenDoctypePublicAndSystemIdentifiers => {
                 "Missing whitespace between doctype public and system identifiers".into()
             }
+            ErrorKind::MissingEndTagName => "Missing end tag name".into(),
+            ErrorKind::MissingQuoteBeforeAttributeValue => {
+                "Missing quote before attribute value".into()
+            }
+            ErrorKind::MissingEqualAfterAttributeName => {
+                "Missing equal after attribute name".into()
+            }
+            ErrorKind::MissingSpaceBetweenAttributes => "Missing space between attributes".into(),
             ErrorKind::NestedComment => "Nested comment".into(),
             ErrorKind::DoubleHyphenWithInComment => "Double hyper within comment".into(),
             ErrorKind::NoncharacterInInputStream => "Noncharacter in input stream".into(),
@@ -95,6 +104,9 @@ impl Error {
             ErrorKind::NoTargetNameInProcessingInstruction => "No target name".into(),
             ErrorKind::MissingWhitespaceBeforeQuestionInProcessingInstruction => {
                 "Missing whitespace before '?'".into()
+            }
+            ErrorKind::UnescapedCharacterInAttributeValue(c) => {
+                format!("Unescaped \"{}\" not allowed in attribute values", c).into()
             }
 
             // Parser errors
@@ -141,6 +153,7 @@ pub enum ErrorKind {
     InvalidFirstCharacterOfTagName,
     InvalidCharacterOfProcessingInstruction,
     InvalidCharacterInTag,
+    InvalidEntityCharacter,
     MissingDoctypeName,
     MissingDoctypePublicIdentifier,
     MissingQuoteBeforeDoctypePublicIdentifier,
@@ -150,6 +163,10 @@ pub enum ErrorKind {
     MissingWhitespaceAfterDoctypeSystemKeyword,
     MissingWhitespaceBeforeDoctypeName,
     MissingWhitespaceBetweenDoctypePublicAndSystemIdentifiers,
+    MissingEndTagName,
+    MissingQuoteBeforeAttributeValue,
+    MissingEqualAfterAttributeName,
+    MissingSpaceBetweenAttributes,
     NestedComment,
     DoubleHyphenWithInComment,
     NoncharacterInInputStream,
@@ -160,6 +177,7 @@ pub enum ErrorKind {
     UnexpectedSolidusInTag,
     NoTargetNameInProcessingInstruction,
     MissingWhitespaceBeforeQuestionInProcessingInstruction,
+    UnescapedCharacterInAttributeValue(char),
 
     // Parser errors
     UnexpectedTokenInStartPhase,

@@ -43,28 +43,6 @@ macro_rules! tok_pat {
     };
 }
 
-macro_rules! can_ignore_ws {
-    ("{") => {
-        true
-    };
-    ("}") => {
-        true
-    };
-    ("(") => {
-        true
-    };
-    (")") => {
-        true
-    };
-    (":") => {
-        true
-    };
-
-    ($tt:tt) => {
-        false
-    };
-}
-
 macro_rules! cur {
     ($parser:expr) => {
         match $parser.input.cur() {
@@ -95,7 +73,7 @@ macro_rules! is_case_insensitive_ident {
     ($parser:expr, $tt:tt) => {{
         match $parser.input.cur() {
             Some(swc_css_ast::Token::Ident { value, .. })
-                if &*value.to_ascii_lowercase() == $tt =>
+                if (&**value).eq_ignore_ascii_case($tt) =>
             {
                 true
             }
@@ -108,9 +86,7 @@ macro_rules! is_one_of_case_insensitive_ident {
     ($parser:expr, $($tt:tt),+) => {
         match $parser.input.cur() {
             Some(swc_css_ast::Token::Ident { value, .. }) => {
-                let lowercased = &*value.to_ascii_lowercase();
-
-                if $(lowercased == $tt)||* {
+                if $((&**value).eq_ignore_ascii_case($tt))||* {
                     true
                 } else {
                     false
@@ -182,10 +158,6 @@ macro_rules! eat {
 
 macro_rules! expect {
     ($parser:expr, $tt:tt) => {
-        if can_ignore_ws!($tt) {
-            $parser.input.skip_ws()
-        }
-
         if !eat!($parser, $tt) {
             let span = $parser.input.cur_span();
             return Err(crate::error::Error::new(

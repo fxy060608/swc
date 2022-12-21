@@ -3275,6 +3275,27 @@
       "firefox": "15"
     }
   ],
+  "calc-nested": [
+    {
+      "chrome": "4",
+      "edge": "12",
+      "safari": "3.1",
+      "firefox": "2",
+      "opera": "10",
+      "ie": "6",
+      "ios": "3.2",
+      "samsung": "4"
+    },
+    {
+      "chrome": "50",
+      "edge": "15",
+      "safari": "10.1",
+      "firefox": "47",
+      "opera": "37",
+      "ios": "10.3",
+      "samsung": "4"
+    }
+  ],
 
   "-webkit-image-set()": [
     {
@@ -3873,5 +3894,144 @@
       "firefox": "3"
     },
     {}
+  ],
+
+  "place-content": [
+    {
+      "chrome": "4",
+      "edge": "12",
+      "safari": "3.1",
+      "firefox": "2",
+      "opera": "10",
+      "ie": "6",
+      "ios": "3.2",
+      "samsung": "4",
+      "android": "2.1"
+    },
+    {
+      "chrome": "58",
+      "edge": "18",
+      "safari": "8",
+      "firefox": "44",
+      "opera": "45",
+      "ie": "11",
+      "ios": "8.4",
+      "android": "4.4.4",
+      "samsung": "6.4"
+    }
+  ],
+  "place-items": [
+    {
+      "chrome": "4"
+    },
+    {
+      "chrome": "58"
+    }
+  ],
+  "place-self": [
+    {
+      "chrome": "4"
+    },
+    {
+      "chrome": "58"
+    }
+  ],
+
+  "opacity": [
+    {
+      "chrome": "4",
+      "edge": "12",
+      "firefox": "2",
+      "samsung": "4",
+      "ios": "3.2",
+      "opera": "10",
+      "safari": "3.1",
+      "ie": "6"
+    },
+    {
+      "chrome": "77",
+      "edge": "78",
+      "firefox": "69",
+      "samsung": "11.2"
+    }
+  ],
+  "overflow": [
+    {
+      "chrome": "4",
+      "edge": "12",
+      "safari": "3.1",
+      "firefox": "2",
+      "opera": "10",
+      "ie": "6",
+      "ios": "3.2",
+      "samsung": "4",
+      "android": "2.1"
+    },
+    {
+      "chrome": "67",
+      "edge": "17",
+      "safari": "13",
+      "firefox": "60",
+      "opera": "54",
+      "ie": "11",
+      "ios": "13.3",
+      "samsung": "14.0",
+      "android": "4.4.4"
+    }
+  ],
+  "display:multi-keyword-values": [
+    {
+      "chrome": "4",
+      "edge": "12",
+      "samsung": "4",
+      "opera": "10",
+      "ie": "6",
+      "safari": "3.1",
+      "ios": "3.2",
+      "firefox": "2"
+    },
+    {
+      "safari": "14.1",
+      "ios": "14.8",
+      "firefox": "69"
+    }
+  ],
+  "font-face-format-ident": [
+    {
+      "chrome": "4",
+      "edge": "12",
+      "firefox": "2",
+      "samsung": "4",
+      "ios": "3.2",
+      "opera": "10",
+      "safari": "3.1",
+      "ie": "6"
+    },
+    {
+      "safari": "3.2",
+      "ios": "4.3"
+    }
+  ],
+  "word-wrap": [
+    {
+      "chrome": "4",
+      "edge": "12",
+      "safari": "3.1",
+      "firefox": "3.5",
+      "opera": "11.5",
+      "ie": "6",
+      "ios": "3.2",
+      "android": "2.1"
+    },
+    {
+      "chrome": "22",
+      "edge": "17",
+      "safari": "6",
+      "firefox": "48",
+      "opera": "11.5",
+      "ie": "11",
+      "ios": "6.1",
+      "android": "4.3.0"
+    }
   ]
 }

@@ -1,4 +1,5 @@
 use swc_atoms::js_word;
+use swc_common::Spanned;
 use swc_css_ast::*;
 
 use super::Compressor;
@@ -6,89 +7,83 @@ use super::Compressor;
 impl Compressor {
     pub(super) fn compress_transform_function(&self, component_value: &mut ComponentValue) {
         match component_value {
-            ComponentValue::Function(Function {
+            ComponentValue::Function(box Function {
                 name,
                 value: function_value,
                 ..
-            }) if name.value.to_ascii_lowercase() == js_word!("translate")
-                && function_value.len() == 3 =>
-            {
+            }) if name == &js_word!("translate") && function_value.len() == 3 => {
                 match (function_value.get(0), function_value.get(2)) {
                     (
                         Some(first),
-                        Some(ComponentValue::Number(Number {
+                        Some(ComponentValue::Integer(box Integer {
                             value: second_number,
                             ..
                         })),
-                    ) if *second_number == 0.0 => {
+                    ) if *second_number == 0 => {
                         *function_value = vec![first.clone()];
                     }
                     (
-                        Some(ComponentValue::Number(Number {
+                        Some(ComponentValue::Integer(box Integer {
                             value: first_number,
                             ..
                         })),
                         Some(second),
-                    ) if *first_number == 0.0 => {
-                        *name = Ident {
-                            span: name.span,
-                            value: js_word!("translateY"),
+                    ) if *first_number == 0 => {
+                        *name = FunctionName::Ident(Ident {
+                            span: name.span(),
+                            value: js_word!("translatey"),
                             raw: None,
-                        };
+                        });
                         *function_value = vec![second.clone()];
                     }
                     _ => {}
                 }
             }
-            ComponentValue::Function(Function {
+            ComponentValue::Function(box Function {
                 name,
                 value: function_value,
                 ..
-            }) if name.value.to_ascii_lowercase() == js_word!("translate3d")
-                && function_value.len() == 5 =>
-            {
+            }) if name == &js_word!("translate3d") && function_value.len() == 5 => {
                 match (
                     function_value.get(0),
                     function_value.get(2),
                     function_value.get(4),
                 ) {
                     (
-                        Some(ComponentValue::Number(Number {
+                        Some(ComponentValue::Integer(box Integer {
                             value: first_number,
                             ..
                         })),
-                        Some(ComponentValue::Number(Number {
+                        Some(ComponentValue::Integer(box Integer {
                             value: second_number,
                             ..
                         })),
                         Some(third),
-                    ) if *first_number == 0.0 && *second_number == 0.0 => {
-                        *name = Ident {
-                            span: name.span,
-                            value: js_word!("translateZ"),
+                    ) if *first_number == 0 && *second_number == 0 => {
+                        *name = FunctionName::Ident(Ident {
+                            span: name.span(),
+                            value: js_word!("translatez"),
                             raw: None,
-                        };
+                        });
                         *function_value = vec![third.clone()];
                     }
                     _ => {}
                 }
             }
-            ComponentValue::Function(Function {
+            ComponentValue::Function(box Function {
                 name,
                 value: function_value,
                 ..
-            }) if name.value.to_ascii_lowercase() == js_word!("scale")
-                && function_value.len() == 3 =>
-            {
+            }) if name == &js_word!("scale") && function_value.len() == 3 => {
                 match (function_value.get(0), function_value.get(2)) {
                     (
                         Some(
-                            first @ ComponentValue::Number(Number {
+                            first @ ComponentValue::Integer(box Integer {
                                 value: first_number,
                                 ..
                             }),
                         ),
-                        Some(ComponentValue::Number(Number {
+                        Some(ComponentValue::Integer(box Integer {
                             value: second_number,
                             ..
                         })),
@@ -97,42 +92,40 @@ impl Compressor {
                     }
                     (
                         Some(first),
-                        Some(ComponentValue::Number(Number {
+                        Some(ComponentValue::Integer(box Integer {
                             value: second_number,
                             ..
                         })),
-                    ) if *second_number == 1.0 => {
-                        *name = Ident {
-                            span: name.span,
-                            value: js_word!("scaleX"),
+                    ) if *second_number == 1 => {
+                        *name = FunctionName::Ident(Ident {
+                            span: name.span(),
+                            value: js_word!("scalex"),
                             raw: None,
-                        };
+                        });
                         *function_value = vec![first.clone()];
                     }
                     (
-                        Some(ComponentValue::Number(Number {
+                        Some(ComponentValue::Integer(box Integer {
                             value: first_number,
                             ..
                         })),
                         Some(second),
-                    ) if *first_number == 1.0 => {
-                        *name = Ident {
-                            span: name.span,
-                            value: js_word!("scaleY"),
+                    ) if *first_number == 1 => {
+                        *name = FunctionName::Ident(Ident {
+                            span: name.span(),
+                            value: js_word!("scaley"),
                             raw: None,
-                        };
+                        });
                         *function_value = vec![second.clone()];
                     }
                     _ => {}
                 }
             }
-            ComponentValue::Function(Function {
+            ComponentValue::Function(box Function {
                 name,
                 value: function_value,
                 ..
-            }) if name.value.to_ascii_lowercase() == js_word!("scale3d")
-                && function_value.len() == 5 =>
-            {
+            }) if name == &js_word!("scale3d") && function_value.len() == 5 => {
                 match (
                     function_value.get(0),
                     function_value.get(2),
@@ -140,68 +133,66 @@ impl Compressor {
                 ) {
                     (
                         Some(first),
-                        Some(ComponentValue::Number(Number {
+                        Some(ComponentValue::Integer(box Integer {
                             value: second_number,
                             ..
                         })),
-                        Some(ComponentValue::Number(Number {
+                        Some(ComponentValue::Integer(box Integer {
                             value: third_number,
                             ..
                         })),
-                    ) if *second_number == 1.0 && *third_number == 1.0 => {
-                        *name = Ident {
-                            span: name.span,
-                            value: js_word!("scaleX"),
+                    ) if *second_number == 1 && *third_number == 1 => {
+                        *name = FunctionName::Ident(Ident {
+                            span: name.span(),
+                            value: js_word!("scalex"),
                             raw: None,
-                        };
+                        });
                         *function_value = vec![first.clone()];
                     }
                     (
-                        Some(ComponentValue::Number(Number {
+                        Some(ComponentValue::Integer(box Integer {
                             value: first_number,
                             ..
                         })),
                         Some(second),
-                        Some(ComponentValue::Number(Number {
+                        Some(ComponentValue::Integer(box Integer {
                             value: third_number,
                             ..
                         })),
-                    ) if *first_number == 1.0 && *third_number == 1.0 => {
-                        *name = Ident {
-                            span: name.span,
-                            value: js_word!("scaleY"),
+                    ) if *first_number == 1 && *third_number == 1 => {
+                        *name = FunctionName::Ident(Ident {
+                            span: name.span(),
+                            value: js_word!("scaley"),
                             raw: None,
-                        };
+                        });
                         *function_value = vec![second.clone()];
                     }
                     (
-                        Some(ComponentValue::Number(Number {
+                        Some(ComponentValue::Integer(box Integer {
                             value: first_number,
                             ..
                         })),
-                        Some(ComponentValue::Number(Number {
+                        Some(ComponentValue::Integer(box Integer {
                             value: second_number,
                             ..
                         })),
                         Some(third),
-                    ) if *first_number == 1.0 && *second_number == 1.0 => {
-                        *name = Ident {
-                            span: name.span,
-                            value: js_word!("scaleZ"),
+                    ) if *first_number == 1 && *second_number == 1 => {
+                        *name = FunctionName::Ident(Ident {
+                            span: name.span(),
+                            value: js_word!("scalez"),
                             raw: None,
-                        };
+                        });
                         *function_value = vec![third.clone()];
                     }
                     _ => {}
                 }
             }
-            ComponentValue::Function(Function {
+            ComponentValue::Function(box Function {
                 name,
                 value: function_value,
                 ..
-            }) if name.value.to_ascii_lowercase() == js_word!("matrix3d")
-                && function_value.len() == 31 =>
-            {
+            }) if name == &js_word!("matrix3d") && function_value.len() == 31 => {
                 match (
                     function_value.get(0),
                     function_value.get(1),
@@ -230,11 +221,11 @@ impl Compressor {
                         Some(first_comma),
                         Some(second),
                         Some(second_comma),
-                        Some(ComponentValue::Number(Number {
+                        Some(ComponentValue::Integer(box Integer {
                             value: third_number,
                             ..
                         })),
-                        Some(ComponentValue::Number(Number {
+                        Some(ComponentValue::Integer(box Integer {
                             value: fourth_number,
                             ..
                         })),
@@ -242,57 +233,57 @@ impl Compressor {
                         Some(fifth_comma),
                         Some(sixth),
                         Some(sixth_comma),
-                        Some(ComponentValue::Number(Number {
+                        Some(ComponentValue::Integer(box Integer {
                             value: seventh_number,
                             ..
                         })),
-                        Some(ComponentValue::Number(Number {
+                        Some(ComponentValue::Integer(box Integer {
                             value: eighth_number,
                             ..
                         })),
-                        Some(ComponentValue::Number(Number {
+                        Some(ComponentValue::Integer(box Integer {
                             value: ninth_number,
                             ..
                         })),
-                        Some(ComponentValue::Number(Number {
+                        Some(ComponentValue::Integer(box Integer {
                             value: tenth_number,
                             ..
                         })),
-                        Some(ComponentValue::Number(Number {
+                        Some(ComponentValue::Integer(box Integer {
                             value: eleventh_number,
                             ..
                         })),
-                        Some(ComponentValue::Number(Number {
+                        Some(ComponentValue::Integer(box Integer {
                             value: twelfth_number,
                             ..
                         })),
                         Some(thirteenth),
                         Some(thirteenth_comma),
                         Some(fourteenth),
-                        Some(ComponentValue::Number(Number {
+                        Some(ComponentValue::Integer(box Integer {
                             value: fifteenth_number,
                             ..
                         })),
-                        Some(ComponentValue::Number(Number {
+                        Some(ComponentValue::Integer(box Integer {
                             value: sixteenth_number,
                             ..
                         })),
-                    ) if *third_number == 0.0
-                        && *fourth_number == 0.0
-                        && *seventh_number == 0.0
-                        && *eighth_number == 0.0
-                        && *ninth_number == 0.0
-                        && *tenth_number == 0.0
-                        && *eleventh_number == 1.0
-                        && *twelfth_number == 0.0
-                        && *fifteenth_number == 0.0
-                        && *sixteenth_number == 1.0 =>
+                    ) if *third_number == 0
+                        && *fourth_number == 0
+                        && *seventh_number == 0
+                        && *eighth_number == 0
+                        && *ninth_number == 0
+                        && *tenth_number == 0
+                        && *eleventh_number == 1
+                        && *twelfth_number == 0
+                        && *fifteenth_number == 0
+                        && *sixteenth_number == 1 =>
                     {
-                        *name = Ident {
-                            span: name.span,
+                        *name = FunctionName::Ident(Ident {
+                            span: name.span(),
                             value: js_word!("matrix"),
                             raw: None,
-                        };
+                        });
                         *function_value = vec![
                             first.clone(),
                             first_comma.clone(),
@@ -310,13 +301,11 @@ impl Compressor {
                     _ => {}
                 }
             }
-            ComponentValue::Function(Function {
+            ComponentValue::Function(box Function {
                 name,
                 value: function_value,
                 ..
-            }) if name.value.to_ascii_lowercase() == js_word!("rotate3d")
-                && function_value.len() == 7 =>
-            {
+            }) if name == &js_word!("rotate3d") && function_value.len() == 7 => {
                 match (
                     function_value.get(0),
                     function_value.get(2),
@@ -324,123 +313,119 @@ impl Compressor {
                     function_value.get(6),
                 ) {
                     (
-                        Some(ComponentValue::Number(Number {
+                        Some(ComponentValue::Integer(box Integer {
                             value: first_number,
                             ..
                         })),
-                        Some(ComponentValue::Number(Number {
+                        Some(ComponentValue::Integer(box Integer {
                             value: second_number,
                             ..
                         })),
-                        Some(ComponentValue::Number(Number {
+                        Some(ComponentValue::Integer(box Integer {
                             value: third_number,
                             ..
                         })),
                         Some(fourth_value),
-                    ) if *first_number == 1.0 && *second_number == 0.0 && *third_number == 0.0 => {
-                        *name = Ident {
-                            span: name.span,
-                            value: js_word!("rotateX"),
+                    ) if *first_number == 1 && *second_number == 0 && *third_number == 0 => {
+                        *name = FunctionName::Ident(Ident {
+                            span: name.span(),
+                            value: js_word!("rotatex"),
                             raw: None,
-                        };
+                        });
                         *function_value = vec![fourth_value.clone()];
                     }
                     (
-                        Some(ComponentValue::Number(Number {
+                        Some(ComponentValue::Integer(box Integer {
                             value: first_number,
                             ..
                         })),
-                        Some(ComponentValue::Number(Number {
+                        Some(ComponentValue::Integer(box Integer {
                             value: second_number,
                             ..
                         })),
-                        Some(ComponentValue::Number(Number {
+                        Some(ComponentValue::Integer(box Integer {
                             value: third_number,
                             ..
                         })),
                         Some(fourth_value),
-                    ) if *first_number == 0.0 && *second_number == 1.0 && *third_number == 0.0 => {
-                        *name = Ident {
-                            span: name.span,
-                            value: js_word!("rotateY"),
+                    ) if *first_number == 0 && *second_number == 1 && *third_number == 0 => {
+                        *name = FunctionName::Ident(Ident {
+                            span: name.span(),
+                            value: js_word!("rotatey"),
                             raw: None,
-                        };
+                        });
                         *function_value = vec![fourth_value.clone()];
                     }
                     (
-                        Some(ComponentValue::Number(Number {
+                        Some(ComponentValue::Integer(box Integer {
                             value: first_number,
                             ..
                         })),
-                        Some(ComponentValue::Number(Number {
+                        Some(ComponentValue::Integer(box Integer {
                             value: second_number,
                             ..
                         })),
-                        Some(ComponentValue::Number(Number {
+                        Some(ComponentValue::Integer(box Integer {
                             value: third_number,
                             ..
                         })),
                         Some(fourth_value),
-                    ) if *first_number == 0.0 && *second_number == 0.0 && *third_number == 1.0 => {
-                        *name = Ident {
-                            span: name.span,
+                    ) if *first_number == 0 && *second_number == 0 && *third_number == 1 => {
+                        *name = FunctionName::Ident(Ident {
+                            span: name.span(),
                             value: js_word!("rotate"),
                             raw: None,
-                        };
+                        });
                         *function_value = vec![fourth_value.clone()];
                     }
                     _ => {}
                 }
             }
-            ComponentValue::Function(Function {
+            ComponentValue::Function(box Function {
                 name,
                 value: function_value,
                 ..
-            }) if name.value.to_ascii_lowercase() == js_word!("rotatez")
-                && function_value.len() == 1 =>
-            {
-                *name = Ident {
-                    span: name.span,
+            }) if name == &js_word!("rotatez") && function_value.len() == 1 => {
+                *name = FunctionName::Ident(Ident {
+                    span: name.span(),
                     value: js_word!("rotate"),
                     raw: None,
-                };
+                });
             }
 
-            ComponentValue::Function(Function {
+            ComponentValue::Function(box Function {
                 name,
                 value: function_value,
                 ..
-            }) if name.value.to_ascii_lowercase() == js_word!("skew")
-                && function_value.len() == 3 =>
-            {
+            }) if name == &js_word!("skew") && function_value.len() == 3 => {
                 match (function_value.get(0), function_value.get(2)) {
                     (
                         Some(first),
-                        Some(ComponentValue::Number(Number {
+                        Some(ComponentValue::Integer(box Integer {
                             value: second_number,
                             ..
                         })),
-                    ) if *second_number == 0.0 => {
-                        *name = Ident {
-                            span: name.span,
-                            value: js_word!("skewX"),
+                    ) if *second_number == 0 => {
+                        *name = FunctionName::Ident(Ident {
+                            span: name.span(),
+                            value: js_word!("skewx"),
                             raw: None,
-                        };
+                        });
                         *function_value = vec![first.clone()];
                     }
 
                     (
-                        Some(ComponentValue::Number(Number {
+                        Some(ComponentValue::Integer(box Integer {
                             value: first_number,
                             ..
                         })),
                         Some(second),
-                    ) if *first_number == 0.0 => {
-                        *name = Ident {
-                            span: name.span,
-                            value: js_word!("skewY"),
+                    ) if *first_number == 0 => {
+                        *name = FunctionName::Ident(Ident {
+                            span: name.span(),
+                            value: js_word!("skewy"),
                             raw: None,
-                        };
+                        });
                         *function_value = vec![second.clone()];
                     }
                     _ => {}

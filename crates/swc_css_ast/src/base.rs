@@ -1,10 +1,12 @@
 use is_macro::Is;
-use swc_common::{ast_node, EqIgnoreSpan, Span};
+use swc_atoms::JsWord;
+use swc_common::{ast_node, util::take::Take, EqIgnoreSpan, Span};
 
 use crate::{
-    AlphaValue, AtRule, CalcSum, CmykComponent, Color, ComplexSelector, DashedIdent, Delimiter,
-    Dimension, Hue, Ident, Integer, KeyframeBlock, LayerName, Number, Percentage, Ratio,
-    RelativeSelectorList, SelectorList, Str, SupportsCondition, TokenAndSpan, UnicodeRange, Url,
+    AlphaValue, AnglePercentage, AtRule, CalcSum, CmykComponent, Color, ComplexSelector,
+    DashedIdent, Delimiter, Dimension, FrequencyPercentage, Hue, Ident, Integer, KeyframeBlock,
+    LayerName, LengthPercentage, Number, Percentage, Ratio, RelativeSelectorList, SelectorList,
+    Str, SupportsCondition, TimePercentage, TokenAndSpan, UnicodeRange, Url,
 };
 
 #[ast_node("Stylesheet")]
@@ -27,12 +29,28 @@ pub enum Rule {
     ListOfComponentValues(Box<ListOfComponentValues>),
 }
 
+impl Take for Rule {
+    fn dummy() -> Self {
+        Self::QualifiedRule(Take::dummy())
+    }
+}
+
 #[ast_node("QualifiedRule")]
 #[derive(Eq, Hash, EqIgnoreSpan)]
 pub struct QualifiedRule {
     pub span: Span,
     pub prelude: QualifiedRulePrelude,
     pub block: SimpleBlock,
+}
+
+impl Take for QualifiedRule {
+    fn dummy() -> Self {
+        Self {
+            span: Take::dummy(),
+            prelude: Take::dummy(),
+            block: Take::dummy(),
+        }
+    }
 }
 
 #[ast_node]
@@ -44,6 +62,12 @@ pub enum QualifiedRulePrelude {
     RelativeSelectorList(RelativeSelectorList),
     #[tag("ListOfComponentValues")]
     ListOfComponentValues(ListOfComponentValues),
+}
+
+impl Take for QualifiedRulePrelude {
+    fn dummy() -> Self {
+        Self::SelectorList(Take::dummy())
+    }
 }
 
 #[ast_node]
@@ -67,12 +91,49 @@ pub struct SimpleBlock {
     pub value: Vec<ComponentValue>,
 }
 
+impl Take for SimpleBlock {
+    fn dummy() -> Self {
+        Self {
+            span: Take::dummy(),
+            name: Take::dummy(),
+            value: Take::dummy(),
+        }
+    }
+}
+
+#[ast_node]
+#[derive(Eq, Hash, Is, EqIgnoreSpan)]
+pub enum FunctionName {
+    #[tag("Ident")]
+    Ident(Ident),
+    #[tag("DashedIdent")]
+    DashedIdent(DashedIdent),
+}
+
+impl PartialEq<str> for FunctionName {
+    fn eq(&self, other: &str) -> bool {
+        match self {
+            FunctionName::DashedIdent(v) => *v == *other,
+            FunctionName::Ident(v) => *v == *other,
+        }
+    }
+}
+
+impl PartialEq<JsWord> for FunctionName {
+    fn eq(&self, other: &JsWord) -> bool {
+        match self {
+            FunctionName::DashedIdent(v) => v.value == *other,
+            FunctionName::Ident(v) => v.value == *other,
+        }
+    }
+}
+
 #[ast_node("Function")]
 #[derive(Eq, Hash, EqIgnoreSpan)]
 pub struct Function {
     /// Span starting from the `lo` of identifier and to the end of `)`.
     pub span: Span,
-    pub name: Ident,
+    pub name: FunctionName,
     pub value: Vec<ComponentValue>,
 }
 
@@ -88,65 +149,119 @@ pub struct ListOfComponentValues {
 pub enum ComponentValue {
     // No grammar
     #[tag("TokenAndSpan")]
-    PreservedToken(TokenAndSpan),
+    PreservedToken(Box<TokenAndSpan>),
     #[tag("Function")]
-    Function(Function),
+    Function(Box<Function>),
     #[tag("SimpleBlock")]
-    SimpleBlock(SimpleBlock),
+    SimpleBlock(Box<SimpleBlock>),
 
-    // Block Contents grammar
-    #[tag("DeclarationOrAtRule")]
-    DeclarationOrAtRule(DeclarationOrAtRule),
-    #[tag("Rule")]
-    Rule(Rule),
-    #[tag("StyleBlock")]
-    StyleBlock(StyleBlock),
+    #[tag("AtRule")]
+    AtRule(Box<AtRule>),
+
+    #[tag("QualifiedRule")]
+    QualifiedRule(Box<QualifiedRule>),
+
+    #[tag("ListOfComponentValues")]
+    ListOfComponentValues(Box<ListOfComponentValues>),
+
     #[tag("KeyframeBlock")]
-    KeyframeBlock(KeyframeBlock),
+    KeyframeBlock(Box<KeyframeBlock>),
 
     // Arbitrary Contents grammar
     #[tag("Ident")]
-    Ident(Ident),
+    Ident(Box<Ident>),
     #[tag("DashedIdent")]
-    DashedIdent(DashedIdent),
+    DashedIdent(Box<DashedIdent>),
     #[tag("String")]
-    Str(Str),
+    Str(Box<Str>),
     #[tag("Url")]
-    Url(Url),
+    Url(Box<Url>),
     #[tag("Integer")]
-    Integer(Integer),
+    Integer(Box<Integer>),
     #[tag("Number")]
-    Number(Number),
+    Number(Box<Number>),
     #[tag("Percentage")]
-    Percentage(Percentage),
+    Percentage(Box<Percentage>),
     #[tag("Dimension")]
-    Dimension(Dimension),
+    Dimension(Box<Dimension>),
+    #[tag("LengthPercentage")]
+    LengthPercentage(Box<LengthPercentage>),
+    #[tag("FrequencyPercentage")]
+    FrequencyPercentage(Box<FrequencyPercentage>),
+    #[tag("AnglePercentage")]
+    AnglePercentage(Box<AnglePercentage>),
+    #[tag("TimePercentage")]
+    TimePercentage(Box<TimePercentage>),
     #[tag("Ratio")]
-    Ratio(Ratio),
+    Ratio(Box<Ratio>),
     #[tag("UnicodeRange")]
-    UnicodeRange(UnicodeRange),
+    UnicodeRange(Box<UnicodeRange>),
     #[tag("Color")]
-    Color(Color),
+    Color(Box<Color>),
     #[tag("AlphaValue")]
-    AlphaValue(AlphaValue),
+    AlphaValue(Box<AlphaValue>),
     #[tag("Hue")]
-    Hue(Hue),
+    Hue(Box<Hue>),
     #[tag("CmykComponent")]
-    CmykComponent(CmykComponent),
+    CmykComponent(Box<CmykComponent>),
     #[tag("Delimiter")]
-    Delimiter(Delimiter),
+    Delimiter(Box<Delimiter>),
 
     // Special function Contents grammar
     #[tag("CalcSum")]
-    CalcSum(CalcSum),
+    CalcSum(Box<CalcSum>),
     #[tag("ComplexSelector")]
-    ComplexSelector(ComplexSelector),
+    ComplexSelector(Box<ComplexSelector>),
     #[tag("LayerName")]
-    LayerName(LayerName),
+    LayerName(Box<LayerName>),
     #[tag("SupportsCondition")]
-    SupportsCondition(SupportsCondition),
+    SupportsCondition(Box<SupportsCondition>),
     #[tag("Declaration")]
-    Declaration(Declaration),
+    Declaration(Box<Declaration>),
+}
+
+impl From<StyleBlock> for ComponentValue {
+    #[inline]
+    fn from(block: StyleBlock) -> Self {
+        match block {
+            StyleBlock::AtRule(at_rule) => ComponentValue::AtRule(at_rule),
+            StyleBlock::Declaration(declaration) => ComponentValue::Declaration(declaration),
+            StyleBlock::QualifiedRule(qualified_rule) => {
+                ComponentValue::QualifiedRule(qualified_rule)
+            }
+            StyleBlock::ListOfComponentValues(list_of_component_values) => {
+                ComponentValue::ListOfComponentValues(list_of_component_values)
+            }
+        }
+    }
+}
+
+impl From<DeclarationOrAtRule> for ComponentValue {
+    #[inline]
+    fn from(rule: DeclarationOrAtRule) -> Self {
+        match rule {
+            DeclarationOrAtRule::Declaration(declaration) => {
+                ComponentValue::Declaration(declaration)
+            }
+            DeclarationOrAtRule::AtRule(at_rule) => ComponentValue::AtRule(at_rule),
+            DeclarationOrAtRule::ListOfComponentValues(list_of_component_values) => {
+                ComponentValue::ListOfComponentValues(list_of_component_values)
+            }
+        }
+    }
+}
+
+impl From<Rule> for ComponentValue {
+    #[inline]
+    fn from(rule: Rule) -> Self {
+        match rule {
+            Rule::AtRule(at_rule) => ComponentValue::AtRule(at_rule),
+            Rule::QualifiedRule(qualified_rule) => ComponentValue::QualifiedRule(qualified_rule),
+            Rule::ListOfComponentValues(list_of_component_values) => {
+                ComponentValue::ListOfComponentValues(list_of_component_values)
+            }
+        }
+    }
 }
 
 #[ast_node]
@@ -178,6 +293,24 @@ pub enum DeclarationName {
     Ident(Ident),
     #[tag("DashedIdent")]
     DashedIdent(DashedIdent),
+}
+
+impl PartialEq<str> for DeclarationName {
+    fn eq(&self, other: &str) -> bool {
+        match self {
+            DeclarationName::DashedIdent(v) => *v == *other,
+            DeclarationName::Ident(v) => *v == *other,
+        }
+    }
+}
+
+impl PartialEq<JsWord> for DeclarationName {
+    fn eq(&self, other: &JsWord) -> bool {
+        match self {
+            DeclarationName::DashedIdent(v) => v.value == *other,
+            DeclarationName::Ident(v) => v.value == *other,
+        }
+    }
 }
 
 #[ast_node("ImportantFlag")]

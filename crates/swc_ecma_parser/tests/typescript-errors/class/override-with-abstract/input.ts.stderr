@@ -1,6 +1,0 @@
-
-  x 'abstract' modifier must precede 'override' modifier.
-   ,-[$DIR/tests/typescript-errors/class/override-with-abstract/input.ts:2:3]
- 2 | override abstract show(): void
-   :          ^^^^^^^^
-   `----

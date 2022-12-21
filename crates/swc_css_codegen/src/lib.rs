@@ -1,8 +1,9 @@
+#![feature(box_patterns)]
 #![deny(clippy::all)]
 #![allow(clippy::needless_update)]
 
 pub use std::fmt::Result;
-use std::{str, str::from_utf8};
+use std::{borrow::Cow, str, str::from_utf8};
 
 use serde::{Deserialize, Serialize};
 use swc_atoms::*;
@@ -1159,32 +1160,68 @@ where
                 let need_delim = match node {
                     ComponentValue::SimpleBlock(_)
                     | ComponentValue::Function(_)
-                    | ComponentValue::Color(Color::Function(_))
-                    | ComponentValue::Color(Color::AbsoluteColorBase(
-                        AbsoluteColorBase::Function(_),
-                    ))
                     | ComponentValue::Delimiter(_)
                     | ComponentValue::Str(_)
                     | ComponentValue::Url(_)
-                    | ComponentValue::Percentage(_) => match next {
-                        Some(ComponentValue::Delimiter(Delimiter {
-                            value: DelimiterValue::Comma,
-                            ..
-                        })) => false,
-                        _ => !self.config.minify,
-                    },
+                    | ComponentValue::Percentage(_)
+                    | ComponentValue::LengthPercentage(box LengthPercentage::Percentage(_))
+                    | ComponentValue::FrequencyPercentage(box FrequencyPercentage::Percentage(_))
+                    | ComponentValue::AnglePercentage(box AnglePercentage::Percentage(_))
+                    | ComponentValue::TimePercentage(box TimePercentage::Percentage(_)) => {
+                        match next {
+                            Some(ComponentValue::Delimiter(delimiter))
+                                if matches!(
+                                    **delimiter,
+                                    Delimiter {
+                                        value: DelimiterValue::Comma,
+                                        ..
+                                    }
+                                ) =>
+                            {
+                                false
+                            }
+                            _ => !self.config.minify,
+                        }
+                    }
+                    ComponentValue::Color(color)
+                        if matches!(
+                            **color,
+                            Color::AbsoluteColorBase(AbsoluteColorBase::Function(_))
+                                | Color::Function(_)
+                        ) =>
+                    {
+                        match next {
+                            Some(ComponentValue::Delimiter(delimiter))
+                                if matches!(
+                                    **delimiter,
+                                    Delimiter {
+                                        value: DelimiterValue::Comma,
+                                        ..
+                                    }
+                                ) =>
+                            {
+                                false
+                            }
+                            _ => !self.config.minify,
+                        }
+                    }
                     ComponentValue::Ident(_) | ComponentValue::DashedIdent(_) => match next {
-                        Some(ComponentValue::SimpleBlock(SimpleBlock { name, .. })) => {
-                            if name.token == Token::LParen {
+                        Some(ComponentValue::SimpleBlock(simple_block)) => {
+                            if simple_block.name.token == Token::LParen {
                                 true
                             } else {
                                 !self.config.minify
                             }
                         }
-                        Some(ComponentValue::Color(Color::AbsoluteColorBase(
-                            AbsoluteColorBase::HexColor(_),
-                        )))
-                        | Some(ComponentValue::Str(_)) => !self.config.minify,
+                        Some(ComponentValue::Color(color))
+                            if matches!(
+                                **color,
+                                Color::AbsoluteColorBase(AbsoluteColorBase::HexColor(_),)
+                            ) =>
+                        {
+                            !self.config.minify
+                        }
+                        Some(ComponentValue::Str(_)) => !self.config.minify,
                         Some(ComponentValue::Delimiter(_)) => false,
                         Some(ComponentValue::Number(n)) => {
                             if self.config.minify {
@@ -1195,9 +1232,30 @@ where
                                 true
                             }
                         }
+                        Some(ComponentValue::LengthPercentage(box LengthPercentage::Length(
+                            Length { value, .. },
+                        )))
+                        | Some(ComponentValue::FrequencyPercentage(
+                            box FrequencyPercentage::Frequency(Frequency { value, .. }),
+                        ))
+                        | Some(ComponentValue::AnglePercentage(box AnglePercentage::Angle(
+                            Angle { value, .. },
+                        )))
+                        | Some(ComponentValue::TimePercentage(box TimePercentage::Time(Time {
+                            value,
+                            ..
+                        }))) => {
+                            if self.config.minify {
+                                let minified = minify_numeric(value.value);
+
+                                !minified.starts_with('.')
+                            } else {
+                                true
+                            }
+                        }
                         Some(ComponentValue::Dimension(dimension)) => {
                             if self.config.minify {
-                                let value = match dimension {
+                                let value = match &**dimension {
                                     Dimension::Length(i) => i.value.value,
                                     Dimension::Angle(i) => i.value.value,
                                     Dimension::Time(i) => i.value.value,
@@ -1217,10 +1275,15 @@ where
                         _ => true,
                     },
                     _ => match next {
-                        Some(ComponentValue::SimpleBlock(_))
-                        | Some(ComponentValue::Color(Color::AbsoluteColorBase(
-                            AbsoluteColorBase::HexColor(_),
-                        ))) => !self.config.minify,
+                        Some(ComponentValue::SimpleBlock(_)) => !self.config.minify,
+                        Some(ComponentValue::Color(color))
+                            if matches!(
+                                &**color,
+                                Color::AbsoluteColorBase(AbsoluteColorBase::HexColor(_))
+                            ) =>
+                        {
+                            !self.config.minify
+                        }
                         Some(ComponentValue::Delimiter(_)) => false,
                         _ => true,
                     },
@@ -1250,6 +1313,14 @@ where
             ListFormat::SpaceDelimited | ListFormat::SingleLine,
         )?;
         write_raw!(self, ")");
+    }
+
+    #[emitter]
+    fn emit_function_name(&mut self, n: &FunctionName) -> Result {
+        match n {
+            FunctionName::Ident(n) => emit!(self, n),
+            FunctionName::DashedIdent(n) => emit!(self, n),
+        }
     }
 
     #[emitter]
@@ -1292,53 +1363,57 @@ where
 
         for (idx, node) in n.value.iter().enumerate() {
             match node {
-                ComponentValue::StyleBlock(_) => {
+                ComponentValue::ListOfComponentValues(_) | ComponentValue::Declaration(_) => {
                     if idx == 0 {
                         formatting_newline!(self);
                     }
 
                     increase_indent!(self);
                 }
-                ComponentValue::Rule(_) | ComponentValue::KeyframeBlock(_) => {
+                ComponentValue::AtRule(_)
+                | ComponentValue::QualifiedRule(_)
+                | ComponentValue::KeyframeBlock(_) => {
                     formatting_newline!(self);
                     increase_indent!(self);
                 }
-                ComponentValue::DeclarationOrAtRule(_) => {
-                    if idx == 0 {
-                        formatting_newline!(self);
-                    }
 
-                    increase_indent!(self);
-                }
                 _ => {}
             }
 
-            emit!(self, node);
+            match node {
+                ComponentValue::ListOfComponentValues(node) => {
+                    emit!(
+                        &mut *self.with_ctx(Ctx {
+                            in_list_of_component_values: true,
+                            ..self.ctx
+                        }),
+                        node
+                    );
+                }
+                _ => {
+                    emit!(self, node);
+                }
+            }
 
             match node {
-                ComponentValue::Rule(_) => {
+                ComponentValue::AtRule(_) | ComponentValue::QualifiedRule(_) => {
                     formatting_newline!(self);
                     decrease_indent!(self);
                 }
-                ComponentValue::StyleBlock(i) => {
-                    match i {
-                        StyleBlock::AtRule(_) | StyleBlock::QualifiedRule(_) => {
-                            formatting_newline!(self);
-                        }
-                        StyleBlock::Declaration(_) => {
-                            if idx != len - 1 {
-                                semi!(self);
-                            } else {
-                                formatting_semi!(self);
-                            }
-
-                            formatting_newline!(self);
-                        }
-                        StyleBlock::ListOfComponentValues(_) => {}
+                ComponentValue::Declaration(_) => {
+                    if idx != len - 1 {
+                        semi!(self);
+                    } else {
+                        formatting_semi!(self);
                     }
 
+                    formatting_newline!(self);
                     decrease_indent!(self);
                 }
+                ComponentValue::ListOfComponentValues(_) => {
+                    decrease_indent!(self);
+                }
+
                 ComponentValue::KeyframeBlock(_) => {
                     if idx == len - 1 {
                         formatting_newline!(self);
@@ -1346,25 +1421,7 @@ where
 
                     decrease_indent!(self);
                 }
-                ComponentValue::DeclarationOrAtRule(i) => {
-                    match i {
-                        DeclarationOrAtRule::AtRule(_) => {
-                            formatting_newline!(self);
-                        }
-                        DeclarationOrAtRule::Declaration(_) => {
-                            if idx != len - 1 {
-                                semi!(self);
-                            } else {
-                                formatting_semi!(self);
-                            }
 
-                            formatting_newline!(self);
-                        }
-                        DeclarationOrAtRule::ListOfComponentValues(_) => {}
-                    }
-
-                    decrease_indent!(self);
-                }
                 _ => {
                     if !self.ctx.in_list_of_component_values && ending == "]" && idx != len - 1 {
                         space!(self);
@@ -1383,9 +1440,9 @@ where
             ComponentValue::Function(n) => emit!(self, n),
             ComponentValue::SimpleBlock(n) => emit!(self, n),
 
-            ComponentValue::StyleBlock(n) => emit!(self, n),
-            ComponentValue::DeclarationOrAtRule(n) => emit!(self, n),
-            ComponentValue::Rule(n) => emit!(self, n),
+            ComponentValue::ListOfComponentValues(n) => emit!(self, n),
+            ComponentValue::QualifiedRule(n) => emit!(self, n),
+            ComponentValue::AtRule(n) => emit!(self, n),
             ComponentValue::KeyframeBlock(n) => emit!(self, n),
 
             ComponentValue::Ident(n) => emit!(self, n),
@@ -1396,6 +1453,10 @@ where
             ComponentValue::Number(n) => emit!(self, n),
             ComponentValue::Percentage(n) => emit!(self, n),
             ComponentValue::Dimension(n) => emit!(self, n),
+            ComponentValue::LengthPercentage(n) => emit!(self, n),
+            ComponentValue::FrequencyPercentage(n) => emit!(self, n),
+            ComponentValue::AnglePercentage(n) => emit!(self, n),
+            ComponentValue::TimePercentage(n) => emit!(self, n),
             ComponentValue::Ratio(n) => emit!(self, n),
             ComponentValue::UnicodeRange(n) => emit!(self, n),
             ComponentValue::Color(n) => emit!(self, n),
@@ -1530,9 +1591,9 @@ where
     fn emit_ident(&mut self, n: &Ident) -> Result {
         if self.config.minify {
             let value = if self.ctx.allow_to_lowercase && self.config.minify {
-                n.value.to_lowercase()
+                Cow::Owned(n.value.to_ascii_lowercase())
             } else {
-                n.value.to_string()
+                Cow::Borrowed(&n.value)
             };
             let serialized = serialize_ident(&value, n.raw.as_deref(), true);
 
@@ -1634,7 +1695,7 @@ where
     }
 
     #[emitter]
-    fn emit_frequency_cercentage(&mut self, n: &FrequencyPercentage) -> Result {
+    fn emit_frequency_percentage(&mut self, n: &FrequencyPercentage) -> Result {
         match n {
             FrequencyPercentage::Frequency(n) => emit!(self, n),
             FrequencyPercentage::Percentage(n) => emit!(self, n),
@@ -1955,15 +2016,12 @@ where
 
                 write_raw!(self, span, &percentage);
             }
-            Token::Dimension {
-                raw_value,
-                raw_unit,
-                ..
-            } => {
-                let mut dimension = String::with_capacity(raw_value.len() + raw_unit.len());
+            Token::Dimension(token) => {
+                let mut dimension =
+                    String::with_capacity(token.raw_value.len() + token.raw_unit.len());
 
-                dimension.push_str(raw_value);
-                dimension.push_str(raw_unit);
+                dimension.push_str(&token.raw_value);
+                dimension.push_str(&token.raw_unit);
 
                 write_raw!(self, span, &dimension);
             }
@@ -1978,39 +2036,24 @@ where
 
                 write_raw!(self, span, &function);
             }
-            Token::BadString { raw_value } => {
-                write_str!(self, span, raw_value);
+            Token::BadString { raw } => {
+                write_str!(self, span, raw);
             }
             Token::String { raw, .. } => {
                 write_str!(self, span, raw);
             }
-            Token::Url {
-                raw_name,
-                raw_value,
-                ..
-            } => {
-                let mut url = String::with_capacity(raw_name.len() + raw_value.len() + 2);
+            Token::Url { raw, .. } => {
+                let mut url = String::with_capacity(raw.0.len() + raw.1.len() + 2);
 
-                url.push_str(raw_name);
+                url.push_str(&raw.0);
                 url.push('(');
-                url.push_str(raw_value);
+                url.push_str(&raw.1);
                 url.push(')');
 
                 write_str!(self, span, &url);
             }
-            Token::BadUrl {
-                raw_name,
-                raw_value,
-                ..
-            } => {
-                let mut bad_url = String::with_capacity(raw_value.len() + 2);
-
-                bad_url.push_str(raw_name);
-                bad_url.push('(');
-                bad_url.push_str(raw_value);
-                bad_url.push(')');
-
-                write_str!(self, span, &bad_url);
+            Token::BadUrl { raw, .. } => {
+                write_str!(self, span, raw);
             }
             Token::Comma => {
                 write_raw!(self, span, ",");
@@ -2035,7 +2078,7 @@ where
 
                 write_raw!(self, span, &hash);
             }
-            Token::WhiteSpace { value, .. } => {
+            Token::WhiteSpace { value } => {
                 write_str!(self, span, value);
             }
             Token::CDC => {
@@ -2728,9 +2771,9 @@ fn minify_hex_color(value: &str) -> String {
             if length == 6 || chars[6] == b'f' && chars[7] == b'f' {
                 let mut minified = String::with_capacity(3);
 
-                minified.push((chars[0] as char).to_ascii_lowercase());
-                minified.push((chars[2] as char).to_ascii_lowercase());
-                minified.push((chars[4] as char).to_ascii_lowercase());
+                minified.push(chars[0] as char);
+                minified.push(chars[2] as char);
+                minified.push(chars[4] as char);
 
                 return minified;
             }
@@ -2738,17 +2781,17 @@ fn minify_hex_color(value: &str) -> String {
             else if length == 8 && chars[6] == chars[7] {
                 let mut minified = String::with_capacity(4);
 
-                minified.push((chars[0] as char).to_ascii_lowercase());
-                minified.push((chars[2] as char).to_ascii_lowercase());
-                minified.push((chars[4] as char).to_ascii_lowercase());
-                minified.push((chars[6] as char).to_ascii_lowercase());
+                minified.push(chars[0] as char);
+                minified.push(chars[2] as char);
+                minified.push(chars[4] as char);
+                minified.push(chars[6] as char);
 
                 return minified;
             }
         }
     }
 
-    value.to_ascii_lowercase()
+    value.to_string()
 }
 
 fn serialize_string(value: &str) -> String {

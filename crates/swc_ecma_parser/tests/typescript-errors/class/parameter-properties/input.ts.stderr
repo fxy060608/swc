@@ -1,6 +1,0 @@
-
-  x Parameter cannot have question mark and initializer
-    ,-[$DIR/tests/typescript-errors/class/parameter-properties/input.ts:10:9]
- 10 | public y?: number = 0) {}
-    :        ^^^^^^^^^^
-    `----

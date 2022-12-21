@@ -728,6 +728,17 @@ where
             }
         }
 
+        // Abort on eval.
+        // See https://github.com/swc-project/swc/pull/6478
+        //
+        // We completetly abort on eval, because we cannot know whether a variable in
+        // upper scope will be afftected by eval.
+        // https://github.com/swc-project/swc/issues/6628
+        if self.data.top.has_eval_call {
+            log_abort!("iife: [x] Aborting because of eval");
+            return false;
+        }
+
         if self.ctx.executed_multiple_time {
             if !param_ids.is_empty() {
                 let captured = idents_captured_by(body);

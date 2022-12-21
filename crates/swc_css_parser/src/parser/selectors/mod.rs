@@ -1,3 +1,4 @@
+use swc_atoms::js_word;
 use swc_common::{BytePos, Span, Spanned};
 use swc_css_ast::*;
 
@@ -70,7 +71,8 @@ where
 
                         while !is_one_of!(parser, EOF, ",", ")") {
                             if let Some(token_and_span) = parser.input.bump() {
-                                children.push(ComponentValue::PreservedToken(token_and_span));
+                                children
+                                    .push(ComponentValue::PreservedToken(Box::new(token_and_span)));
                             }
                         }
 
@@ -224,7 +226,8 @@ where
 
                         while !is_one_of!(parser, EOF, ",", ")") {
                             if let Some(token_and_span) = parser.input.bump() {
-                                children.push(ComponentValue::PreservedToken(token_and_span));
+                                children
+                                    .push(ComponentValue::PreservedToken(Box::new(token_and_span)));
                             }
                         }
 
@@ -485,7 +488,9 @@ where
 
         match cur!(self) {
             tok!("ident") => {
-                let value = self.parse()?;
+                let mut value: Ident = self.parse()?;
+
+                value.value = value.value.to_ascii_lowercase();
 
                 return Ok(TypeSelector::TagName(TagNameSelector {
                     span: span!(self, span.lo),
@@ -622,7 +627,7 @@ where
                 if !is_id {
                     return Err(Error::new(
                         span,
-                        ErrorKind::Expected("identifier in id selector"),
+                        ErrorKind::Unexpected("characters in ID selector"),
                     ));
                 }
 
@@ -818,7 +823,9 @@ where
 
         match cur!(self) {
             tok!("ident") => {
-                let value = self.parse()?;
+                let mut value: Ident = self.parse()?;
+
+                value.value = value.value.to_ascii_lowercase();
 
                 Ok(AttributeSelectorModifier {
                     span: span!(self, span.lo),
@@ -843,7 +850,7 @@ where
             let fn_span = self.input.cur_span();
             let name = bump!(self);
             let names = match name {
-                Token::Function { value, raw } => (value, raw),
+                Token::Function { value, raw } => (value.to_ascii_lowercase(), raw),
                 _ => unreachable!(),
             };
             let state = self.input.state();
@@ -851,8 +858,8 @@ where
                 || -> PResult<Vec<PseudoClassSelectorChildren>> {
                     let mut children = vec![];
 
-                    match &*names.0.to_ascii_lowercase() {
-                        "local" | "global" if self.config.css_modules => {
+                    match names.0 {
+                        js_word!("local") | js_word!("global") if self.config.css_modules => {
                             self.input.skip_ws();
 
                             let selector_list = self.parse()?;
@@ -862,7 +869,7 @@ where
                             children
                                 .push(PseudoClassSelectorChildren::ComplexSelector(selector_list));
                         }
-                        "-moz-any" | "-webkit-any" => {
+                        js_word!("-moz-any") | js_word!("-webkit-any") => {
                             self.input.skip_ws();
 
                             let compound_selector_list = self.parse()?;
@@ -873,16 +880,18 @@ where
                                 compound_selector_list,
                             ));
                         }
-                        "dir" => {
+                        js_word!("dir") => {
                             self.input.skip_ws();
 
-                            let ident = self.parse()?;
+                            let mut ident: Ident = self.parse()?;
+
+                            ident.value = ident.value.to_ascii_lowercase();
 
                             self.input.skip_ws();
 
                             children.push(PseudoClassSelectorChildren::Ident(ident));
                         }
-                        "lang" => {
+                        js_word!("lang") => {
                             self.input.skip_ws();
 
                             let child = match cur!(self) {
@@ -929,7 +938,7 @@ where
                                 children.push(child);
                             }
                         }
-                        "current" | "past" | "future" => {
+                        js_word!("current") | js_word!("past") | js_word!("future") => {
                             self.input.skip_ws();
 
                             let compound_selector_list = self.parse()?;
@@ -940,7 +949,7 @@ where
                                 compound_selector_list,
                             ));
                         }
-                        "not" | "matches" => {
+                        js_word!("not") | js_word!("matches") => {
                             self.input.skip_ws();
 
                             let selector_list = self.parse()?;
@@ -949,14 +958,14 @@ where
 
                             children.push(PseudoClassSelectorChildren::SelectorList(selector_list));
                         }
-                        "is" | "where" => {
+                        js_word!("is") | js_word!("where") => {
                             let forgiving_selector_list = self.parse()?;
 
                             children.push(PseudoClassSelectorChildren::ForgivingSelectorList(
                                 forgiving_selector_list,
                             ));
                         }
-                        "has" => {
+                        js_word!("has") => {
                             let forgiving_relative_selector_list = self.parse()?;
 
                             children.push(
@@ -965,8 +974,12 @@ where
                                 ),
                             );
                         }
-                        "nth-child" | "nth-last-child" | "nth-of-type" | "nth-last-of-type"
-                        | "nth-col" | "nth-last-col" => {
+                        js_word!("nth-child")
+                        | js_word!("nth-last-child")
+                        | js_word!("nth-of-type")
+                        | js_word!("nth-last-of-type")
+                        | js_word!("nth-col")
+                        | js_word!("nth-last-col") => {
                             self.input.skip_ws();
 
                             let an_plus_b = self.parse()?;
@@ -976,7 +989,9 @@ where
                             self.input.skip_ws();
 
                             if is!(self, "ident") {
-                                let of = self.parse()?;
+                                let mut of: Ident = self.parse()?;
+
+                                of.value = of.value.to_ascii_lowercase();
 
                                 children.push(PseudoClassSelectorChildren::Ident(of));
 
@@ -990,7 +1005,7 @@ where
                                     .push(PseudoClassSelectorChildren::SelectorList(selector_list));
                             }
                         }
-                        "host" | "host-context" => {
+                        js_word!("host") | js_word!("host-context") => {
                             self.input.skip_ws();
 
                             let compound_selector = self.parse()?;
@@ -1039,7 +1054,9 @@ where
                 children: Some(children),
             })
         } else if is!(self, Ident) {
-            let name = self.parse()?;
+            let mut name: Ident = self.parse()?;
+
+            name.value = name.value.to_ascii_lowercase();
 
             Ok(PseudoClassSelector {
                 span: span!(self, span.lo),
@@ -1071,16 +1088,17 @@ where
             let fn_span = self.input.cur_span();
             let name = bump!(self);
             let names = match name {
-                Token::Function { value, raw } => (value, raw),
+                Token::Function { value, raw } => (value.to_ascii_lowercase(), raw),
                 _ => unreachable!(),
             };
+
             let state = self.input.state();
             let mut parse_pseudo_element_children =
                 || -> PResult<Vec<PseudoElementSelectorChildren>> {
                     let mut children = vec![];
 
-                    match &*names.0.to_ascii_lowercase() {
-                        "cue" | "cue-region" => {
+                    match names.0 {
+                        js_word!("cue") | js_word!("cue-region") => {
                             self.input.skip_ws();
 
                             let compound_selector = self.parse()?;
@@ -1091,7 +1109,7 @@ where
 
                             self.input.skip_ws();
                         }
-                        "part" => {
+                        js_word!("part") => {
                             self.input.skip_ws();
 
                             let ident = self.parse()?;
@@ -1100,7 +1118,7 @@ where
 
                             self.input.skip_ws();
                         }
-                        "slotted" => {
+                        js_word!("slotted") => {
                             self.input.skip_ws();
 
                             let compound_selector = self.parse()?;
@@ -1111,7 +1129,7 @@ where
 
                             self.input.skip_ws();
                         }
-                        "highlight" => {
+                        js_word!("highlight") => {
                             self.input.skip_ws();
 
                             let custom_highlight_name = self.parse()?;
@@ -1160,7 +1178,9 @@ where
                 children: Some(children),
             })
         } else if is!(self, Ident) {
-            let name = self.parse()?;
+            let mut name: Ident = self.parse()?;
+
+            name.value = name.value.to_ascii_lowercase();
 
             Ok(PseudoElementSelector {
                 span: span!(self, span.lo),
@@ -1185,10 +1205,13 @@ where
         match cur!(self) {
             //  odd | even
             Token::Ident { value, .. }
-            if &(*value).to_ascii_lowercase() == "odd"
-                || &(*value).to_ascii_lowercase() == "even" =>
+                if matches_eq_ignore_ascii_case!(value, js_word!("odd"), js_word!("even")) =>
                 {
-                    Ok(AnPlusB::Ident(self.parse()?))
+                    let mut ident: Ident = self.parse()?;
+
+                    ident.value = ident.value.to_ascii_lowercase();
+
+                    Ok(AnPlusB::Ident(ident))
                 }
             // <integer>
             tok!("number") => {
@@ -1266,7 +1289,7 @@ where
                     }
                     tok!("dimension") => {
                         let dimension = match bump!(self) {
-                            Token::Dimension { value, raw_value, unit, .. } => (value, raw_value, unit),
+                            Token::Dimension(box DimensionToken { value, raw_value, unit, .. }) => (value, raw_value, unit),
                             _ => {
                                 unreachable!();
                             }
@@ -1283,7 +1306,6 @@ where
 
                         a = Some(dimension.0 as i32);
                         a_raw = Some(dimension.1);
-
                         n_value =  (*dimension.2).to_string();
                     }
                     _ => {
@@ -1418,7 +1440,7 @@ where
         }
 
         match bump!(self) {
-            Token::Ident { value, raw } => Ok(CustomHighlightName {
+            Token::Ident { value, raw, .. } => Ok(CustomHighlightName {
                 span,
                 value,
                 raw: Some(raw),
