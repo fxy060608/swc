@@ -414,9 +414,7 @@ impl Compiler {
             })?;
 
             if error {
-                return Err(anyhow::anyhow!("Syntax Error").context(
-                    "error was recoverable, but proceeding would result in wrong codegen",
-                ));
+                return Err(anyhow::anyhow!("Syntax Error"));
             }
 
             Ok(program)
@@ -923,7 +921,6 @@ impl Compiler {
 
             self.process_js_inner(handler, orig.as_ref(), config)
         })
-        .context("failed to process input file")
     }
 
     #[tracing::instrument(level = "info", skip(self, handler, opts))]
@@ -1009,7 +1006,9 @@ impl Compiler {
                 }
 
                 if let Some(opts) = &mut min_opts.mangle {
-                    opts.top_level = true;
+                    if opts.top_level.is_none() {
+                        opts.top_level = Some(true);
+                    }
                 }
             }
 

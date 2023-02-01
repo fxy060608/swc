@@ -11,9 +11,12 @@ use std::{
 
 use anyhow::{Context, Error};
 use swc::{
-    config::{Config, InputSourceMap, IsModule, ModuleConfig, Options, SourceMapsConfig},
+    config::{
+        Config, InputSourceMap, IsModule, JscConfig, ModuleConfig, Options, SourceMapsConfig,
+    },
     Compiler,
 };
+use swc_ecma_parser::Syntax;
 use testing::{assert_eq, NormalizedOutput, StdErr, Tester};
 use walkdir::WalkDir;
 
@@ -30,7 +33,6 @@ fn file(f: &str, config: Config) -> Result<(), StdErr> {
                 &handler,
                 &Options {
                     config: Config {
-                        is_module: IsModule::Bool(true),
                         inline_sources_content: true.into(),
                         ..config
                     },
@@ -85,7 +87,6 @@ fn inline(f: &str) -> Result<(), StdErr> {
                 &handler,
                 &Options {
                     config: Config {
-                        is_module: IsModule::Bool(true),
                         inline_sources_content: true.into(),
                         ..Default::default()
                     },
@@ -326,7 +327,6 @@ fn should_work_with_emit_source_map_columns() {
                 swcrc: false,
                 source_maps: Some(SourceMapsConfig::Bool(true)),
                 config: Config {
-                    is_module: IsModule::Bool(true),
                     inline_sources_content: true.into(),
                     emit_source_map_columns: true.into(),
                     ..Default::default()
@@ -381,7 +381,6 @@ fn should_work_with_emit_source_map_columns() {
                 swcrc: false,
                 source_maps: Some(SourceMapsConfig::Bool(true)),
                 config: Config {
-                    is_module: IsModule::Bool(true),
                     inline_sources_content: true.into(),
                     emit_source_map_columns: false.into(),
                     ..Default::default()
@@ -423,4 +422,87 @@ fn issue_4578() {
         },
     )
     .unwrap();
+}
+
+#[test]
+fn issue_6694() {
+    Tester::new().print_errors(|cm, handler| {
+        let c = Compiler::new(cm.clone());
+        let fm = cm.new_source_file(
+            swc_common::FileName::Real("./app.js".into()),
+            r#"/**
+ * foo
+ * @param data foo
+ * @returns foo
+ */
+export const fixupRiskConfigData = (data: any): types.RiskConfigType => {
+  if (x) {
+    return 123;
+  } else {
+    return 456;
+  }
+};"#
+            .replace('\n', "\r\n"),
+        );
+        let result = c.process_js_file(
+            fm,
+            &handler,
+            &Options {
+                swcrc: false,
+                source_maps: Some(SourceMapsConfig::Bool(true)),
+                config: Config {
+                    jsc: JscConfig {
+                        target: Some(swc_ecma_ast::EsVersion::Es5),
+                        syntax: Some(Syntax::Typescript(Default::default())),
+                        ..Default::default()
+                    },
+                    inline_sources_content: true.into(),
+                    emit_source_map_columns: true.into(),
+                    ..Default::default()
+                },
+                ..Default::default()
+            },
+        );
+
+        fn line_col(needle: &str, haystack: &str) -> Option<(u32, u32)> {
+            let lines = haystack.lines().enumerate();
+            for (i, line) in lines {
+                if let Some(c) = line.find(needle) {
+                    return Some((i as _, c as _));
+                }
+            }
+
+            None
+        }
+
+        match result {
+            Ok(result) => {
+                assert!(result.map.is_some());
+                let map = result.map.unwrap();
+
+                let source_map = sourcemap::SourceMap::from_slice(map.as_bytes())
+                    .expect("failed to deserialize sourcemap");
+
+                // "export"
+                let export_line_col =
+                    line_col("export", &result.code).expect("failed to find `export`");
+                let token = source_map
+                    .lookup_token(export_line_col.0, export_line_col.1)
+                    .expect("failed to find token");
+                assert_eq!(token.get_src(), (5, 0));
+
+                // "if"
+                let if_line_col = line_col("if", &result.code).expect("failed to find `export`");
+                let token = source_map
+                    .lookup_token(if_line_col.0, export_line_col.1)
+                    .expect("failed to find token");
+                assert_eq!(token.get_src(), (6, 2));
+            }
+            Err(err) => {
+                panic!("Error: {:#?}", err);
+            }
+        }
+
+        Ok(())
+    });
 }

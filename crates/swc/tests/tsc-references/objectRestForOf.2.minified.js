@@ -9,7 +9,7 @@ for (let _ref of array){
         "x"
     ]);
 }
-for (var _ref2 of array)_object_without_properties(_ref1 = _ref2, [
+for (var _ref of array)_object_without_properties(_ref1 = _ref, [
     "x"
 ]), { x: xx  } = _ref1;
 for (let norest of array.map((a)=>_object_spread_props(_object_spread({}, a), {

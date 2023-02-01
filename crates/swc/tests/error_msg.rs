@@ -17,10 +17,6 @@ fn file(f: impl AsRef<Path>) -> NormalizedOutput {
                 fm,
                 &handler,
                 &Options {
-                    config: Config {
-                        is_module: IsModule::Bool(true),
-                        ..Default::default()
-                    },
                     swcrc: true,
                     ..Default::default()
                 },
@@ -38,14 +34,6 @@ fn file(f: impl AsRef<Path>) -> NormalizedOutput {
 fn swcrc_simple() {
     let f = file("tests/swcrc_errors/simple/foo.js");
     println!("{}", f);
-}
-
-#[test]
-fn issue_1532() {
-    let f = file("tests/swcrc_errors/issue-1532/index.js");
-    println!("{}", f);
-
-    assert!(f.contains("unknown variant `esnext`"))
 }
 
 #[testing::fixture("tests/errors/**/input.js")]
@@ -72,7 +60,7 @@ fn fixture(input: PathBuf) {
                     handler,
                     &Options {
                         config: Config {
-                            is_module: IsModule::Unknown,
+                            is_module: Some(IsModule::Unknown),
                             ..Default::default()
                         },
                         swcrc: true,

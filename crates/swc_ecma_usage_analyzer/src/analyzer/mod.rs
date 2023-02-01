@@ -79,7 +79,10 @@ where
         let mut child = UsageAnalyzer {
             data: Default::default(),
             marks: self.marks,
-            ctx: self.ctx,
+            ctx: Ctx {
+                is_top_level: false,
+                ..self.ctx
+            },
             scope: Default::default(),
             used_recursively: self.used_recursively.clone(),
         };
@@ -117,7 +120,7 @@ where
             }
 
             if in_left_of_for_loop {
-                v.mark_reassigned_with_assign();
+                v.mark_reassigned();
                 v.mark_mutated();
             }
         } else {
@@ -296,7 +299,7 @@ where
     fn visit_block_stmt(&mut self, n: &BlockStmt) {
         self.with_child(n.span.ctxt, ScopeKind::Block, |child| {
             n.visit_children_with(child);
-        })
+        });
     }
 
     #[cfg_attr(feature = "debug", tracing::instrument(skip(self, n)))]
@@ -849,6 +852,7 @@ where
     fn visit_module(&mut self, n: &Module) {
         let ctx = Ctx {
             skip_standalone: true,
+            is_top_level: true,
             ..self.ctx
         };
         n.visit_children_with(&mut *self.with_ctx(ctx))
@@ -857,6 +861,7 @@ where
     fn visit_script(&mut self, n: &Script) {
         let ctx = Ctx {
             skip_standalone: true,
+            is_top_level: true,
             ..self.ctx
         };
         n.visit_children_with(&mut *self.with_ctx(ctx))

@@ -29,7 +29,7 @@ where
         &mut self,
         ident: &mut Ident,
         init: &mut Expr,
-        should_preserve: bool,
+        mut should_preserve: bool,
         can_drop: bool,
     ) {
         trace_op!(
@@ -58,6 +58,7 @@ where
             if !usage.var_initialized {
                 return;
             }
+
             if self.data.top.used_arguments && usage.declared_as_fn_param {
                 return;
             }
@@ -76,7 +77,7 @@ where
                 return;
             }
 
-            if usage.cond_init || usage.used_above_decl {
+            if usage.used_above_decl {
                 log_abort!("inline: [x] It's cond init or used before decl",);
                 return;
             }
@@ -94,6 +95,8 @@ where
 
             let is_inline_enabled =
                 self.options.reduce_vars || self.options.collapse_vars || self.options.inline != 0;
+
+            should_preserve |= !self.options.top_level() && usage.is_top_level;
 
             self.vars.inline_with_multi_replacer(init);
 
@@ -356,8 +359,8 @@ where
                     }
 
                     Expr::Ident(id) if !id.eq_ignore_span(ident) => {
-                        if let Some(v_usage) = self.data.vars.get(&id.to_id()) {
-                            if v_usage.reassigned() || !v_usage.declared {
+                        if let Some(init_usage) = self.data.vars.get(&id.to_id()) {
+                            if init_usage.reassigned() || !init_usage.declared {
                                 return;
                             }
                         }

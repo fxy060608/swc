@@ -307,7 +307,7 @@ impl Options {
             cfg.adjust(base);
         }
 
-        let is_module = self.config.is_module;
+        let is_module = cfg.is_module.unwrap_or_default();
 
         let mut source_maps = self.source_maps.clone();
         source_maps.merge(cfg.source_maps.clone());
@@ -393,7 +393,9 @@ impl Options {
                         _ => None,
                     })
                     .map(|mut c| {
-                        c.top_level = true;
+                        if c.top_level.is_none() {
+                            c.top_level = Some(true);
+                        }
 
                         c
                     })
@@ -501,7 +503,10 @@ impl Options {
         .hygiene(if self.disable_hygiene {
             None
         } else {
-            Some(hygiene::Config { keep_class_names })
+            Some(hygiene::Config {
+                keep_class_names,
+                ..Default::default()
+            })
         })
         .fixer(!self.disable_fixer)
         .preset_env(cfg.env)
@@ -856,7 +861,7 @@ pub struct Config {
     pub error: ErrorConfig,
 
     #[serde(default)]
-    pub is_module: IsModule,
+    pub is_module: Option<IsModule>,
 
     #[serde(rename = "$schema")]
     pub schema: Option<String>,
@@ -1309,9 +1314,11 @@ impl ModuleConfig {
         available_features: FeatureFlag,
     ) -> Box<dyn swc_ecma_visit::Fold + 'cmt> {
         let base = match base {
-            FileName::Real(path) if !paths.is_empty() && !path.is_absolute() => {
-                FileName::Real(std::env::current_dir().unwrap().join(path))
-            }
+            FileName::Real(path) if !paths.is_empty() && !path.is_absolute() => FileName::Real(
+                std::env::current_dir()
+                    .map(|v| v.join(path))
+                    .unwrap_or_else(|_| path.to_path_buf()),
+            ),
             _ => base.to_owned(),
         };
 
