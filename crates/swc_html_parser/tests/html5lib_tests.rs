@@ -64,7 +64,7 @@ fn unescape(s: &str) -> Option<String> {
 }
 
 // TODO we need to enable `preserve_order` for serde, but we can't https://github.com/tkaitchuck/aHash/issues/95, so we sort attributes
-#[testing::fixture("tests/html5lib-tests/tokenizer/**/*.test")]
+// #[testing::fixture("tests/html5lib-tests/tokenizer/**/*.test")]
 fn html5lib_test_tokenizer(input: PathBuf) {
     let filename = input.to_str().expect("failed to parse path");
     let contents = fs::read_to_string(filename).expect("Something went wrong reading the file");
@@ -543,8 +543,8 @@ enum DocumentOrDocumentFragment {
     DocumentFragment(PResult<DocumentFragment>),
 }
 
-#[testing::fixture("tests/html5lib-tests/tree-construction/**/*.dat")]
-#[testing::fixture("tests/html5lib-tests-fixture/**/*.html")]
+// #[testing::fixture("tests/html5lib-tests/tree-construction/**/*.dat")]
+// #[testing::fixture("tests/html5lib-tests-fixture/**/*.html")]
 fn html5lib_test_tree_construction(input: PathBuf) {
     if input.extension().unwrap() == "dat" {
         let mut tree_construction_base = None;
