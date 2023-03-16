@@ -10,7 +10,6 @@ use anyhow::{bail, Context, Error};
 use path_clean::PathClean;
 use reqwest::Url;
 use sha1::{Digest, Sha1};
-use swc_bundler::{Load, ModuleData, Resolve};
 use swc_common::{
     comments::SingleThreadedComments,
     errors::{ColorConfig, Handler},
@@ -27,6 +26,8 @@ use swc_ecma_transforms_proposal::decorators;
 use swc_ecma_transforms_react::react;
 use swc_ecma_transforms_typescript::strip;
 use swc_ecma_visit::FoldWith;
+
+use crate::{Load, ModuleData, Resolve};
 
 pub struct Loader {
     pub cm: Lrc<SourceMap>,

@@ -19,4 +19,8 @@ mod inline;
 mod load;
 mod modules;
 mod resolve;
+
+#[cfg(test)]
+mod tests;
+
 mod util;
