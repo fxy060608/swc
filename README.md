@@ -46,7 +46,7 @@ Also, SWC tries to ensure that
 
 for rust users.
 
-MSRV of crates named `swc_ecma_*` is the current stable, and nightly for others.
+MSRV of crates is currently nightly, but we will support stable rustc again in the future.
 
 ---
 
@@ -67,17 +67,8 @@ Please see [benchmark results](https://swc.rs/docs/benchmark-transform) on the w
 <h2 align="center">Supporting swc</h2>
 
 <p align="center">
-  <a href="#backers">
-    <img alt="Backers on Open Collective" src="https://opencollective.com/swc/tiers/backer/badge.svg?label=backer&color=brightgreen" />
-  </a>
-  <a href="#gold-sponsors">
-    <img alt="Gold sponsors on Open Collective" src="https://opencollective.com/swc/tiers/gold-sponsors/badge.svg?label=Gold%20sponsors&color=brightgreen"/>
-  </a>
-  <a href="#silver-sponsors">
-    <img alt="Silver sponsors on Open Collective" src="https://opencollective.com/swc/tiers/silver-sponsors/badge.svg?label=Silver%20sponsors&color=brightgreen"/>
-  </a>
-  <a href="#bronze-sponsors">
-    <img alt="Bronze sponsors on Open Collective" src="https://opencollective.com/swc/tiers/bronze-sponsors/badge.svg?label=Bronze%20sponsors&color=brightgreen"/>
+  <a href="https://opencollective.com/swc">
+    <img src="https://raw.githubusercontent.com/swc-project/swc-sponsor-images/main/sponsors.svg" alt="Sponsors">
   </a>
 </p>
 

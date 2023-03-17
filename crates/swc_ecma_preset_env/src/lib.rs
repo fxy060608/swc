@@ -14,6 +14,7 @@ use swc_ecma_ast::*;
 use swc_ecma_transforms::{
     compat::{
         bugfixes,
+        class_fields_use_set::class_fields_use_set,
         es2015::{self, generator::generator},
         es2016, es2017, es2018, es2019, es2020, es2021, es2022, es3,
         regexp::{self, regexp},
@@ -84,6 +85,14 @@ where
         }};
     }
 
+    let pass = chain!(
+        pass,
+        Optional::new(
+            class_fields_use_set(assumptions.pure_getters),
+            assumptions.set_public_class_fields
+        )
+    );
+
     let pass = {
         let enable_dot_all_regex = should_enable!(DotAllRegex, false);
         let enable_named_capturing_groups_regex = should_enable!(NamedCapturingGroupsRegex, false);
@@ -121,7 +130,12 @@ where
     // ES2022
     // static block needs to be placed before class property
     // because it transforms into private static property
-    let pass = add!(pass, ClassStaticBlock, es2022::static_blocks());
+    let static_blocks_mark = Mark::new();
+    let pass = add!(
+        pass,
+        ClassStaticBlock,
+        es2022::static_blocks(static_blocks_mark)
+    );
     let pass = add!(
         pass,
         ClassProperties,
@@ -131,7 +145,8 @@ where
                 private_as_properties: loose || assumptions.private_fields_as_properties,
                 set_public_fields: loose || assumptions.set_public_class_fields,
                 constant_super: loose || assumptions.constant_super,
-                no_document_all: loose || assumptions.no_document_all
+                no_document_all: loose || assumptions.no_document_all,
+                static_blocks_mark,
             }
         )
     );

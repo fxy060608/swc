@@ -35,6 +35,23 @@ test!(
 
 test!(
     ::swc_ecma_parser::Syntax::default(),
+    |tester| tr(tester, &[("@ember/env-flags", &[("DEBUG", "true")])]),
+    imports_hoisted,
+    r#"
+        if (DEBUG) {
+            console.log('Foo!');
+        }
+        
+        import { DEBUG } from '@ember/env-flags';
+        "#,
+    r#"
+        if (true) {
+            console.log('Foo!');
+        }"#
+);
+
+test!(
+    ::swc_ecma_parser::Syntax::default(),
     |tester| tr(
         tester,
         &[
@@ -72,4 +89,61 @@ if (false) {
   woot = () => 'toow';
 }
 "
+);
+
+test!(
+    ::swc_ecma_parser::Syntax::default(),
+    |tester| tr(tester, &[("foo", &[("bar", "true")])]),
+    namespace_import,
+    r#"
+import * as foo from 'foo';
+console.log(foo.bar)
+"#,
+    r#"
+console.log(true);
+"#
+);
+
+test!(
+    ::swc_ecma_parser::Syntax::default(),
+    |tester| tr(tester, &[("foo", &[("bar", "true")])]),
+    namespace_import_computed,
+    r#"
+import * as foo from 'foo';
+console.log(foo["bar"])
+"#,
+    r#"
+console.log(true);
+"#
+);
+
+test!(
+    ::swc_ecma_parser::Syntax::default(),
+    |tester| tr(
+        tester,
+        &[("testModule", &[("testMap", "{ 'var': 'value' }")])]
+    ),
+    issue_7025,
+    r#"
+    import { testMap } from "testModule";
+    testMap['var'];
+"#,
+    r#"
+    ({
+        'var': 'value'
+    })['var'];
+    "#
+);
+
+test!(
+    ::swc_ecma_parser::Syntax::default(),
+    |tester| tr(tester, &[("foo", &[("bar", "true")])]),
+    use_as_object_prop_shorthand,
+    r#"
+import { bar } from 'foo';
+console.log({ bar });
+"#,
+    r#"
+console.log({ bar: true });
+"#
 );

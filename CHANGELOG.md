@@ -1,4 +1,227 @@
 # Changelog
+## [unreleased]
+
+### Bug Fixes
+
+
+
+- **(bindings/cli)** Change order of checking inputs to workaround a Windows issue (#7077) ([7bbec92](https://github.com/swc-project/swc/commit/7bbec92d234ddb47b51a014937d1ec7c1cb571c7))
+
+
+- **(css/codegen)** Respect `raw` of `Str` (#7078) ([7849a2d](https://github.com/swc-project/swc/commit/7849a2d75d57bf3b6242f5f472a06a30c9fb948d))
+
+
+- **(css/parser)** Fix parsing of `:global(> *)` (#7082) ([60f74ea](https://github.com/swc-project/swc/commit/60f74ea0769c2be764af8eb5320343f77ea78c1a))
+
+
+- **(es/minifier)** Preserve `delete` of unresolved variables (#7072) ([86295ba](https://github.com/swc-project/swc/commit/86295ba8f26fbe3829c2c08fd8034975f05f60b5))
+
+
+- **(es/react)** Align to `babel@8` behavior (#7081) ([7b491a6](https://github.com/swc-project/swc/commit/7b491a69a5ea80cd8aace9e7da3e73079c6a259f))
+
+
+- **(testing)** Ignore `non_snake_case` for generated test names (#7087) ([1c254b1](https://github.com/swc-project/swc/commit/1c254b1c44f72f5e66698f78d76796d5a7f66146))
+
+### Performance
+
+
+
+- **(es/lexer)** Use jump table for `skip_space` (#7073) ([f854d51](https://github.com/swc-project/swc/commit/f854d51343dcbdf43acd87f51e2288a052e39a0b))
+
+### Refactor
+- **general**: Fix lints using clippy from `nightly-2023-03-13` (#6920) ([963c460](https://github.com/swc-project/swc/commit/963c46061321fff3a2893da4953c1fd5ec649311))
+
+## [1.3.40] - 2023-03-13
+
+### Bug Fixes
+
+
+
+- **(bindings/cli)** Update `swc_ecma_ast` (#7060) ([1b40689](https://github.com/swc-project/swc/commit/1b40689c3a754ce4a038ea98d7e9f41b1e9cf7a7))
+
+
+- **(es)** Support stable rustc again (#7057) ([fbb3016](https://github.com/swc-project/swc/commit/fbb3016870cb6378743170b6833be6bbb7b4a73a))
+
+
+- **(es)** Respect the value of assumptions (#7065) ([11d4874](https://github.com/swc-project/swc/commit/11d4874a2ea173a43e0a1fcdf8a1390d4320b7ee))
+
+
+- **(es/ast)** Fix memory layout (#7062) ([085c6f3](https://github.com/swc-project/swc/commit/085c6f35f1f298a7863a99f3adfeb48b2dddbcb8))
+
+
+- **(es/compat)** Handle `useDefineForClassFields: false` (#7055) ([bb6dde7](https://github.com/swc-project/swc/commit/bb6dde794326838b2069c7f86fb900eee36027bc))
+
+
+- **(es/compat)** Insert the variable declaration nearest to the available statements (#7067) ([ae348e3](https://github.com/swc-project/swc/commit/ae348e32e18e07c277c358746e3ba3a78b9251c4))
+
+
+- **(es/parser)** Handle class members with `accessor` as the name (#7046) ([9acaf4d](https://github.com/swc-project/swc/commit/9acaf4deeb412d9d3966223acbda673e8e686f06))
+
+
+- **(es/preset-env)** Update data for core-js3 (#7023) ([3730463](https://github.com/swc-project/swc/commit/37304638742238c97d2c87d6ac2dc5f4347da973))
+
+### Features
+
+
+
+- **(es/compat)** Simplify static blocks in classes (#7056) ([b78ce8b](https://github.com/swc-project/swc/commit/b78ce8b7c20f7c62523a017f4066776ada9d779d))
+
+### Miscellaneous Tasks
+
+
+
+- **(ci)** Fix CI (#7070) ([97945d0](https://github.com/swc-project/swc/commit/97945d02b8ea7936d7b30142807999da53fec96b))
+
+### Performance
+
+
+
+- **(es/lexer)** Make lexer faster (#7052) ([d1d0607](https://github.com/swc-project/swc/commit/d1d0607158ab40463d1b123fed52cc526eba8385))
+
+
+- **(es/lexer)** Use jump table for `read_token` (#7058) ([9beefaa](https://github.com/swc-project/swc/commit/9beefaa1d5e711b63293d52a6c77e8aaf5e8f4c1))
+
+## [1.3.39] - 2023-03-10
+
+### Bug Fixes
+
+
+
+- **(es/minifier)** Bailout regex optimization on invalid flags (#7020) ([1318afe](https://github.com/swc-project/swc/commit/1318afe2b4a7a25233db5760b785605019b9f06b))
+
+
+- **(es/transforms)** Handle member object in missing else branch (#7027) ([5c7c8e0](https://github.com/swc-project/swc/commit/5c7c8e073634ff6347194fa0e3fae8c83b64718c))
+
+
+- **(es/transforms)** Handle object shorthand in `const_modules` (#7022) ([0314869](https://github.com/swc-project/swc/commit/0314869464f59748a6a44980ade4dc1eda39ac3b))
+
+### Documentation
+- **general**: MSRV ([32bc2f5](https://github.com/swc-project/swc/commit/32bc2f57be06997497d2ad43c2168efb3daaa435))
+
+### Features
+
+
+
+- **(common)** Add an API to create a `SourceFile` without allocation (#7029) ([81495f5](https://github.com/swc-project/swc/commit/81495f5f21d56df7a187847337c9fdd2ff8ee73b))
+
+### Miscellaneous Tasks
+
+
+
+- **(ci)** Fix bot ([691a8c1](https://github.com/swc-project/swc/commit/691a8c1a5490cc6fa05ad2bb59cfc7c4d370056f))
+
+### Performance
+
+
+
+- **(atoms)** Update `string-cache` for per-bucket mutex (#6980) ([9841f0b](https://github.com/swc-project/swc/commit/9841f0b5d14736d780c9864eb9bf7609f9ff2840))
+
+
+- **(es/ast)** Shrink size of `Expr` (#7041) ([a9fe1d2](https://github.com/swc-project/swc/commit/a9fe1d2d2228ba89fccb2a5d91f5ac4008f09d01))
+
+
+- **(es/lexer)** Use string searcher for lexing line comments (#7043) ([962b0fc](https://github.com/swc-project/swc/commit/962b0fc8af6084ade064d189ed7cd7f0e2b25ee8))
+
+
+- **(es/parser)** Use Cow for `_` in numeric literals (#7031) ([30546a2](https://github.com/swc-project/swc/commit/30546a28f21eb90bbbaef33ce4bc0448cd062a72))
+
+
+- **(es/parser)** Use `SmartString` as the buffer (#7033) ([f378a14](https://github.com/swc-project/swc/commit/f378a14888b5a6457ade3991e2754f235d4e3d85))
+
+
+- **(es/utils)** Introduce `NodeIgnoringSpan` (#7030) ([8bfef35](https://github.com/swc-project/swc/commit/8bfef35c1be5790b32fea253f28961271fe7f619))
+
+### Testing
+
+
+
+- **(es/quote)** Fix doctests (#7038) ([e698a34](https://github.com/swc-project/swc/commit/e698a348162e43b11347d2a6139910e096291f59))
+
+## [1.3.38] - 2023-03-06
+
+### Bug Fixes
+
+
+
+- **(bindings/node)** Fix `visitBindingIdentifier` (#7000) ([30cff01](https://github.com/swc-project/swc/commit/30cff016563d8925ef2b150a669ac4b6de968b82))
+
+
+- **(es)** Allow any kind of input source maps if it's enabled (#7002) ([da5367b](https://github.com/swc-project/swc/commit/da5367b3fbac2cf4ab7d7f4562d58be3cff0edf8))
+
+
+- **(es/minifier)** Don't skip expressions with side effects from seq inliner (#7007) ([cfeb088](https://github.com/swc-project/swc/commit/cfeb088c37bdc2a5df79f10d2b93ce84cb12542b))
+
+
+- **(es/minifier)** Don't create invalid property names (#7010) ([bb2486c](https://github.com/swc-project/swc/commit/bb2486c4592214c19ee6a1aa747dda5e58a1b07d))
+
+
+- **(es/parser)** Fix parsing of an array spread in tsx properties (#7011) ([6d6731f](https://github.com/swc-project/swc/commit/6d6731f355ed3bc314be31061b971f9317bea713))
+
+
+- **(es/preset-env)** Move `findLast` and `findLastIndex` to finished proposals (#7012) ([b46a724](https://github.com/swc-project/swc/commit/b46a7248c6ed220276f919748a5ebf84c622858a))
+
+
+- **(es/typescript)** Treat export default declarations as declarations (#7017) ([34f9ad3](https://github.com/swc-project/swc/commit/34f9ad3778527a40e6ede50e2e3e2f34f405ff11))
+
+### Features
+
+
+
+- **(es/minifier)** Optimize calls to `Boolean`/`Number`/`String`/`Symbol` (#7006) ([06cbb90](https://github.com/swc-project/swc/commit/06cbb9002da2bdc04440b6ace28432839f42ccdf))
+
+
+- **(es/parser)** Support auto accessors (#6981) ([37533a2](https://github.com/swc-project/swc/commit/37533a23fde30fe054bf321e7ca7a10a346c2f79))
+
+
+- **(es/parser)** Add an option to disallow ambiguous jsx (#6913) ([a6471f3](https://github.com/swc-project/swc/commit/a6471f34c0786bd0e80b3b4c5356929ebb0a8483))
+
+
+- **(es/transforms)** Add an option to drop unused imports (#6962) ([67d0a89](https://github.com/swc-project/swc/commit/67d0a89ae65d0efb07a43040b962735b5cc25ea8))
+
+
+- **(es/transforms)** Support namespace imports from `const_modules` (#7013) ([3cb03d5](https://github.com/swc-project/swc/commit/3cb03d5299d3c6be56f8b7f8c42ba86122640424))
+
+
+- **(es/typescript)** Support `export type * from "mod"` (#6867) ([beb38d3](https://github.com/swc-project/swc/commit/beb38d34a26016051eb0ed364ea1112f416955ac))
+
+### Miscellaneous Tasks
+
+
+
+- **(ci)** Fix CI (#7014) ([a431a3a](https://github.com/swc-project/swc/commit/a431a3a204faebd283cb7db8359b048d9fcc9a87))
+
+### Refactor
+
+
+
+- **(es/parser)** Make lexer not generic over `Input` (#6993) ([367ac82](https://github.com/swc-project/swc/commit/367ac825f6bfab65cf8bcb21e68500daef8ad177))
+
+## [1.3.37] - 2023-02-28
+
+### Bug Fixes
+
+
+
+- **(bindings/cli)** Implement `source-file-name` and `source-root` options (#6973) ([3e3e41a](https://github.com/swc-project/swc/commit/3e3e41a1756519515df193db903f6992995420e9))
+
+
+- **(css/utils)** Fix minification of class names with whitespace (#6983) ([cc1d9bd](https://github.com/swc-project/swc/commit/cc1d9bd567340203d5d2bd228a4d0b19f8052202))
+
+
+- **(es/decorator)** Preserve evaluation order (#6972) ([703b340](https://github.com/swc-project/swc/commit/703b340d39c3efb69f4a0d375ab6e5a2f9a4acd9))
+
+### Miscellaneous Tasks
+
+
+
+- **(es/parser)** Reduce pre-allocation to reduce memory usage (#6979) ([f1e7a2a](https://github.com/swc-project/swc/commit/f1e7a2a9cc74b19597e9d7105852daf4672514a2))
+
+### Testing
+
+
+
+- **(es/tsc)** Update tsc test suite (#6982) ([b887b30](https://github.com/swc-project/swc/commit/b887b30092c77ec67eedb7f1dd0b5570a1a16eea))
+
 ## [1.3.36] - 2023-02-21
 
 ### Bug Fixes

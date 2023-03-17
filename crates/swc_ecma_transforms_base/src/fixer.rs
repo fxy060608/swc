@@ -90,9 +90,7 @@ impl Fixer<'_> {
         let old = self.ctx;
         self.ctx = Context::ForcedExpr;
         args.visit_mut_with(self);
-        self.ctx = old;
 
-        let old = self.ctx;
         self.ctx = Context::Callee { is_new: false };
         callee.visit_mut_with(self);
 
@@ -127,7 +125,7 @@ impl VisitMut for Fixer<'_> {
         let old = self.ctx;
         self.ctx = Context::Default;
         node.visit_mut_children_with(self);
-        match &mut node.body {
+        match &mut *node.body {
             BlockStmtOrExpr::Expr(e) if e.is_seq() => {
                 self.wrap(e);
             }
@@ -493,7 +491,7 @@ impl VisitMut for Fixer<'_> {
     fn visit_mut_for_of_stmt(&mut self, s: &mut ForOfStmt) {
         s.visit_mut_children_with(self);
 
-        if s.await_token.is_none() {
+        if !s.is_await {
             match &s.left {
                 VarDeclOrPat::Pat(p)
                     if matches!(
@@ -628,7 +626,6 @@ impl VisitMut for Fixer<'_> {
         node.args.visit_mut_with(self);
         self.ctx = old;
 
-        let old = self.ctx;
         self.ctx = Context::Callee { is_new: true };
         node.callee.visit_mut_with(self);
         match *node.callee {
@@ -907,35 +904,44 @@ impl Fixer<'_> {
             Expr::Call(CallExpr {
                 callee: Callee::Expr(callee),
                 ..
-            })
-            | Expr::OptChain(OptChainExpr {
-                base: OptChainBase::Call(OptCall { callee, .. }),
-                ..
-            }) if callee.is_seq() => {
+            }) if callee.is_seq()
+                || callee.is_arrow()
+                || callee.is_await_expr()
+                || callee.is_assign() =>
+            {
                 *callee = Box::new(Expr::Paren(ParenExpr {
                     span: callee.span(),
                     expr: callee.take(),
                 }))
             }
+            Expr::OptChain(OptChainExpr { base, .. }) => match &mut **base {
+                OptChainBase::Call(OptCall { callee, .. })
+                    if callee.is_seq()
+                        || callee.is_arrow()
+                        || callee.is_await_expr()
+                        || callee.is_assign() =>
+                {
+                    *callee = Box::new(Expr::Paren(ParenExpr {
+                        span: callee.span(),
+                        expr: callee.take(),
+                    }))
+                }
 
-            Expr::Call(CallExpr {
-                callee: Callee::Expr(callee),
-                ..
-            })
-            | Expr::OptChain(OptChainExpr {
-                base: OptChainBase::Call(OptCall { callee, .. }),
-                ..
-            }) if callee.is_arrow() || callee.is_await_expr() || callee.is_assign() => {
-                self.wrap(callee);
-            }
+                OptChainBase::Call(OptCall { callee, .. }) if callee.is_fn_expr() => match self.ctx
+                {
+                    Context::ForcedExpr | Context::FreeExpr => {}
+
+                    Context::Callee { is_new: true } => self.wrap(e),
+
+                    _ => self.wrap(callee),
+                },
+
+                _ => {}
+            },
 
             // Function expression cannot start with `function`
             Expr::Call(CallExpr {
                 callee: Callee::Expr(callee),
-                ..
-            })
-            | Expr::OptChain(OptChainExpr {
-                base: OptChainBase::Call(OptCall { callee, .. }),
                 ..
             }) if callee.is_fn_expr() => match self.ctx {
                 Context::ForcedExpr | Context::FreeExpr => {}

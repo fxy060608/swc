@@ -439,10 +439,19 @@ impl<'a> VisitMut for PrivateAccessVisitor<'a> {
             }
 
             Expr::OptChain(OptChainExpr {
-                base: OptChainBase::Call(call),
+                base,
                 question_dot_token,
                 span,
-            }) if call.callee.is_member() => {
+            }) if match &**base {
+                OptChainBase::Call(call) => call.callee.is_member(),
+                _ => false,
+            } =>
+            {
+                let call = match &mut **base {
+                    OptChainBase::Call(call) => call,
+                    _ => unreachable!(),
+                };
+
                 let mut callee = call.callee.take().member().unwrap();
                 callee.visit_mut_with(self);
                 call.args.visit_mut_with(self);
@@ -455,11 +464,11 @@ impl<'a> VisitMut for PrivateAccessVisitor<'a> {
                         callee: OptChainExpr {
                             span: *span,
                             question_dot_token: *question_dot_token,
-                            base: OptChainBase::Member(MemberExpr {
+                            base: Box::new(OptChainBase::Member(MemberExpr {
                                 span: call.span,
                                 obj: Box::new(expr),
                                 prop: MemberProp::Ident(quote_ident!("call")),
-                            }),
+                            })),
                         }
                         .as_callee(),
                         args,
@@ -474,17 +483,26 @@ impl<'a> VisitMut for PrivateAccessVisitor<'a> {
                 member_expr.visit_mut_children_with(self);
                 *e = self.visit_mut_private_get(member_expr, None).0;
             }
-            Expr::OptChain(OptChainExpr {
-                base:
+            Expr::OptChain(OptChainExpr { base, span, .. })
+                if matches!(
+                    &**base,
+                    OptChainBase::Member(MemberExpr {
+                        prop: MemberProp::PrivateName(..),
+                        ..
+                    },)
+                ) =>
+            {
+                let member = match &mut **base {
                     OptChainBase::Member(
                         member @ MemberExpr {
                             prop: MemberProp::PrivateName(..),
                             ..
                         },
-                    ),
-                span,
-                ..
-            }) => {
+                    ) => member,
+                    _ => {
+                        unreachable!()
+                    }
+                };
                 member.visit_mut_children_with(self);
                 let (ident, aliased) = alias_if_required(&member.obj, "_ref");
                 if aliased {

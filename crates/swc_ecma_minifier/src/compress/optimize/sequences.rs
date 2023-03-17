@@ -1068,11 +1068,15 @@ where
 
         match e {
             Expr::Ident(e) => {
-                if e.span.ctxt == self.expr_ctx.unresolved_ctxt
-                    && !is_global_var_with_pure_property_access(&e.sym)
-                {
-                    log_abort!("Undeclared");
-                    return false;
+                if e.span.ctxt == self.expr_ctx.unresolved_ctxt {
+                    return if self.options.pristine_globals
+                        && is_global_var_with_pure_property_access(&e.sym)
+                    {
+                        true
+                    } else {
+                        log_abort!("Undeclared");
+                        return false;
+                    };
                 }
 
                 if let Some(a) = a {
@@ -1185,6 +1189,10 @@ where
             }
 
             Expr::Member(MemberExpr { obj, prop, .. }) => {
+                if !self.is_skippable_for_seq(a, obj) {
+                    return false;
+                }
+
                 if !self.should_preserve_property_access(
                     obj,
                     PropertyAccessOpts {
@@ -1400,7 +1408,7 @@ where
             Expr::Paren(e) => self.is_skippable_for_seq(a, &e.expr),
             Expr::Unary(e) => self.is_skippable_for_seq(a, &e.arg),
 
-            Expr::OptChain(OptChainExpr { base, .. }) => match base {
+            Expr::OptChain(OptChainExpr { base, .. }) => match &**base {
                 OptChainBase::Member(e) => {
                     if !self.should_preserve_property_access(
                         &e.obj,
@@ -1479,13 +1487,18 @@ where
             )
         };
 
-        if b.is_lit()
-            || b.is_class()
-            || b.is_fn_expr()
-            || b.is_arrow()
-            || b.is_await_expr()
-            || b.is_yield_expr()
-        {
+        if match &*b {
+            Expr::Arrow(..)
+            | Expr::Fn(..)
+            | Expr::Class(..)
+            | Expr::Lit(..)
+            | Expr::Await(..)
+            | Expr::Yield(..) => true,
+            Expr::Unary(UnaryExpr {
+                op: op!("delete"), ..
+            }) => true,
+            _ => false,
+        } {
             return Ok(false);
         }
 

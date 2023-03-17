@@ -9,7 +9,7 @@ pub type SourceFileInput<'a> = StringInput<'a>;
 /// Implementation of [Input].
 #[derive(Clone)]
 pub struct StringInput<'a> {
-    cur_pos: BytePos,
+    start_pos_of_iter: BytePos,
     last_pos: BytePos,
     /// Current cursor
     iter: str::CharIndices<'a>,
@@ -31,12 +31,22 @@ impl<'a> StringInput<'a> {
         assert!(start <= end);
 
         StringInput {
-            cur_pos: start,
+            start_pos_of_iter: start,
             last_pos: start,
             orig: src,
             iter: src.char_indices(),
             orig_start: start,
         }
+    }
+
+    #[inline(always)]
+    pub fn as_str(&self) -> &str {
+        self.iter.as_str()
+    }
+
+    #[inline]
+    pub fn bump_bytes(&mut self, n: usize) {
+        self.reset_to(self.last_pos + BytePos(n as u32));
     }
 }
 
@@ -68,27 +78,23 @@ impl<'a> Input for StringInput<'a> {
     }
 
     #[inline]
-    fn is_str(&self, s: &str) -> bool {
-        let mut s_iter = s.as_bytes().iter();
-        let mut p_iter = self.iter.clone().map(|i| i.1);
-
-        while let (Some(expected), Some(actual)) = (s_iter.next(), p_iter.next()) {
-            if *expected as char != actual {
-                return false;
-            }
-        }
-
-        s_iter.next().is_none()
-    }
-
-    #[inline]
     fn bump(&mut self) {
         if let Some((i, c)) = self.iter.next() {
-            self.last_pos = self.cur_pos + BytePos((i + c.len_utf8()) as u32);
+            self.last_pos = self.start_pos_of_iter + BytePos((i + c.len_utf8()) as u32);
         } else {
             unsafe {
                 debug_unreachable!("bump should not be called when cur() == None");
             }
+        }
+    }
+
+    #[inline]
+    fn cur_as_ascii(&mut self) -> Option<u8> {
+        let first_byte = *self.as_str().as_bytes().first()?;
+        if first_byte <= 0x7f {
+            Some(first_byte)
+        } else {
+            None
         }
     }
 
@@ -110,17 +116,19 @@ impl<'a> Input for StringInput<'a> {
 
     #[inline]
     fn slice(&mut self, start: BytePos, end: BytePos) -> &str {
-        assert!(start <= end, "Cannot slice {:?}..{:?}", start, end);
+        debug_assert!(start <= end, "Cannot slice {:?}..{:?}", start, end);
         let s = self.orig;
 
         let start_idx = (start - self.orig_start).0 as usize;
         let end_idx = (end - self.orig_start).0 as usize;
 
-        let ret = &s[start_idx..end_idx];
+        debug_assert!(end_idx <= s.len());
 
-        self.iter = s[end_idx..].char_indices();
+        let ret = unsafe { s.get_unchecked(start_idx..end_idx) };
+
+        self.iter = unsafe { s.get_unchecked(end_idx..) }.char_indices();
         self.last_pos = end;
-        self.cur_pos = end;
+        self.start_pos_of_iter = end;
 
         ret
     }
@@ -139,11 +147,12 @@ impl<'a> Input for StringInput<'a> {
                 break;
             }
         }
-        let ret = &s[..last];
+        debug_assert!(last <= s.len());
+        let ret = unsafe { s.get_unchecked(..last) };
 
         self.last_pos = self.last_pos + BytePos(last as _);
-        self.cur_pos = self.last_pos;
-        self.iter = s[last..].char_indices();
+        self.start_pos_of_iter = self.last_pos;
+        self.iter = unsafe { s.get_unchecked(last..) }.char_indices();
 
         ret
     }
@@ -165,9 +174,11 @@ impl<'a> Input for StringInput<'a> {
             return None;
         }
 
+        debug_assert!(last <= s.len());
+
         self.last_pos = self.last_pos + BytePos(last as _);
-        self.cur_pos = self.last_pos;
-        self.iter = s[last..].char_indices();
+        self.start_pos_of_iter = self.last_pos;
+        self.iter = unsafe { s.get_unchecked(last..) }.char_indices();
 
         Some(self.last_pos)
     }
@@ -177,9 +188,10 @@ impl<'a> Input for StringInput<'a> {
         let orig = self.orig;
         let idx = (to - self.orig_start).0 as usize;
 
-        let s = &orig[idx..];
+        debug_assert!(idx <= orig.len());
+        let s = unsafe { orig.get_unchecked(idx..) };
         self.iter = s.char_indices();
-        self.cur_pos = to;
+        self.start_pos_of_iter = to;
         self.last_pos = to;
     }
 
@@ -194,10 +206,15 @@ impl<'a> Input for StringInput<'a> {
     }
 
     #[inline]
+    fn is_str(&self, s: &str) -> bool {
+        self.as_str().starts_with(s)
+    }
+
+    #[inline]
     fn eat_byte(&mut self, c: u8) -> bool {
         if self.is_byte(c) {
             if let Some((i, _)) = self.iter.next() {
-                self.last_pos = self.cur_pos + BytePos((i + 1) as u32);
+                self.last_pos = self.start_pos_of_iter + BytePos((i + 1) as u32);
             } else {
                 unsafe {
                     debug_unreachable!(
@@ -304,13 +321,13 @@ mod tests {
         with_test_sess("foo/d", |mut i| {
             assert_eq!(i.slice(BytePos(1), BytePos(2)), "f");
             assert_eq!(i.last_pos, BytePos(2));
-            assert_eq!(i.cur_pos, BytePos(2));
+            assert_eq!(i.start_pos_of_iter, BytePos(2));
             assert_eq!(i.cur(), Some('o'));
 
             assert_eq!(i.slice(BytePos(2), BytePos(4)), "oo");
             assert_eq!(i.slice(BytePos(1), BytePos(4)), "foo");
             assert_eq!(i.last_pos, BytePos(4));
-            assert_eq!(i.cur_pos, BytePos(4));
+            assert_eq!(i.start_pos_of_iter, BytePos(4));
             assert_eq!(i.cur(), Some('/'));
         });
     }
@@ -320,13 +337,13 @@ mod tests {
         with_test_sess("load", |mut i| {
             assert_eq!(i.slice(BytePos(1), BytePos(3)), "lo");
             assert_eq!(i.last_pos, BytePos(3));
-            assert_eq!(i.cur_pos, BytePos(3));
+            assert_eq!(i.start_pos_of_iter, BytePos(3));
             assert_eq!(i.cur(), Some('a'));
             i.reset_to(BytePos(1));
 
             assert_eq!(i.cur(), Some('l'));
             assert_eq!(i.last_pos, BytePos(1));
-            assert_eq!(i.cur_pos, BytePos(1));
+            assert_eq!(i.start_pos_of_iter, BytePos(1));
         });
     }
 
@@ -335,12 +352,12 @@ mod tests {
         with_test_sess("foo/d", |mut i| {
             assert_eq!(i.cur_pos(), BytePos(1));
             assert_eq!(i.last_pos, BytePos(1));
-            assert_eq!(i.cur_pos, BytePos(1));
+            assert_eq!(i.start_pos_of_iter, BytePos(1));
             assert_eq!(i.uncons_while(|c| c.is_alphabetic()), "foo");
 
             // assert_eq!(i.cur_pos(), BytePos(4));
             assert_eq!(i.last_pos, BytePos(4));
-            assert_eq!(i.cur_pos, BytePos(4));
+            assert_eq!(i.start_pos_of_iter, BytePos(4));
             assert_eq!(i.cur(), Some('/'));
 
             i.bump();
@@ -358,10 +375,10 @@ mod tests {
         with_test_sess("foo/d", |mut i| {
             assert_eq!(i.cur_pos(), BytePos(1));
             assert_eq!(i.last_pos, BytePos(1));
-            assert_eq!(i.cur_pos, BytePos(1));
+            assert_eq!(i.start_pos_of_iter, BytePos(1));
 
             assert_eq!(i.find(|c| c == '/'), Some(BytePos(5)));
-            assert_eq!(i.cur_pos, BytePos(5));
+            assert_eq!(i.start_pos_of_iter, BytePos(5));
             assert_eq!(i.last_pos, BytePos(5));
             assert_eq!(i.cur(), Some('d'));
         });

@@ -435,6 +435,7 @@ impl Swcify for ExportAllDeclaration {
         ExportAll {
             span: ctx.span(&self.base),
             src: self.source.swcify(ctx).into(),
+            type_only: self.export_kind == Some(ExportKind::Type),
             asserts: self
                 .assertions
                 .swcify(ctx)
@@ -607,7 +608,7 @@ impl Swcify for ForOfStatement {
     fn swcify(self, ctx: &Context) -> Self::Output {
         ForOfStmt {
             span: ctx.span(&self.base),
-            await_token: None,
+            is_await: false,
             left: self.left.swcify(ctx),
             right: self.right.swcify(ctx),
             body: Box::new(self.body.swcify(ctx).expect_stmt()),
@@ -777,6 +778,7 @@ impl Swcify for DeclareExportAllDeclaration {
         ExportAll {
             span: ctx.span(&self.base),
             src: self.source.swcify(ctx).into(),
+            type_only: self.export_kind == Some(ExportKind::Type),
             asserts: Default::default(),
         }
     }

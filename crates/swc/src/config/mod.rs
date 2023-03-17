@@ -67,7 +67,12 @@ use swc_ecma_transforms::{
     Assumptions,
 };
 use swc_ecma_transforms_compat::es2015::regenerator;
-use swc_ecma_transforms_optimization::{inline_globals2, GlobalExprMap};
+use swc_ecma_transforms_optimization::{
+    inline_globals2,
+    simplify::{dce::Config as DceConfig, Config as SimplifyConfig},
+    GlobalExprMap,
+};
+use swc_ecma_utils::NodeIgnoringSpan;
 use swc_ecma_visit::{Fold, VisitMutWith};
 
 pub use crate::plugin::PluginConfig;
@@ -357,10 +362,10 @@ impl Options {
         // We do this before creating custom passes, so custom passses can use the
         // variable management system based on the syntax contexts.
         if syntax.typescript() {
-            assumptions.set_class_methods = !transform.use_define_for_class_fields.into_bool();
-            assumptions.set_public_class_fields =
-                !transform.use_define_for_class_fields.into_bool();
+            assumptions.set_class_methods |= !transform.use_define_for_class_fields.into_bool();
         }
+
+        assumptions.set_public_class_fields |= !transform.use_define_for_class_fields.into_bool();
 
         program.visit_mut_with(&mut resolver(
             unresolved_mark,
@@ -451,10 +456,32 @@ impl Options {
             }
         };
 
-        let enable_simplifier = optimizer
-            .as_ref()
-            .map(|v| v.simplify.into_bool())
-            .unwrap_or_default();
+        let simplifier_pass = {
+            if let Some(ref opts) = optimizer.as_ref().and_then(|o| o.simplify) {
+                match opts {
+                    SimplifyOption::Bool(allow_simplify) => {
+                        if *allow_simplify {
+                            Either::Left(simplifier(top_level_mark, Default::default()))
+                        } else {
+                            Either::Right(noop())
+                        }
+                    }
+                    SimplifyOption::Json(cfg) => Either::Left(simplifier(
+                        top_level_mark,
+                        SimplifyConfig {
+                            dce: DceConfig {
+                                preserve_imports_with_side_effects: cfg
+                                    .preserve_imports_with_side_effects,
+                                ..Default::default()
+                            },
+                            ..Default::default()
+                        },
+                    )),
+                }
+            } else {
+                Either::Right(noop())
+            }
+        };
 
         let optimization = {
             if let Some(opts) = optimizer.and_then(|o| o.globals) {
@@ -471,10 +498,7 @@ impl Options {
             const_modules,
             optimization,
             Optional::new(export_default_from(), syntax.export_default_from()),
-            Optional::new(
-                simplifier(top_level_mark, Default::default()),
-                enable_simplifier
-            ),
+            simplifier_pass,
             json_parse_pass
         );
 
@@ -645,7 +669,6 @@ impl Options {
                                 .into_bool(),
                             ts_enum_is_readonly: assumptions.ts_enum_is_readonly,
                         },
-                        use_define_for_class_fields: !assumptions.set_public_class_fields,
                         import_export_assign_config,
                         ..Default::default()
                     },
@@ -775,6 +798,7 @@ impl Default for Rc {
                 jsc: JscConfig {
                     syntax: Some(Syntax::Typescript(TsConfig {
                         tsx: false,
+                        disallow_ambiguous_jsx_like: true,
                         ..Default::default()
                     })),
                     ..Default::default()
@@ -1453,7 +1477,7 @@ pub struct TransformConfig {
     pub treat_const_enum_as_enum: BoolConfig<false>,
 
     #[serde(default)]
-    pub use_define_for_class_fields: BoolConfig<false>,
+    pub use_define_for_class_fields: BoolConfig<true>,
 }
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize, Merge)]
@@ -1477,10 +1501,34 @@ pub struct OptimizerConfig {
     pub globals: Option<GlobalPassOption>,
 
     #[serde(default)]
-    pub simplify: BoolConfig<true>,
+    pub simplify: Option<SimplifyOption>,
 
     #[serde(default)]
     pub jsonify: Option<JsonifyOption>,
+}
+
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum SimplifyOption {
+    Bool(bool),
+    Json(SimplifyJsonOption),
+}
+
+impl Default for SimplifyOption {
+    fn default() -> Self {
+        SimplifyOption::Bool(true)
+    }
+}
+
+#[derive(Debug, Default, Clone, Copy, Serialize, Deserialize)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+pub struct SimplifyJsonOption {
+    #[serde(default = "default_preserve_imports_with_side_effects")]
+    pub preserve_imports_with_side_effects: bool,
+}
+
+fn default_preserve_imports_with_side_effects() -> bool {
+    true
 }
 
 #[derive(Debug, Default, Clone, Copy, Serialize, Deserialize)]
@@ -1650,11 +1698,11 @@ impl GlobalPassOption {
                     .filter(|(k, _)| k.contains('.'))
                     .map(|(k, v)| {
                         (
-                            *expr(cm, handler, k.to_string()),
+                            NodeIgnoringSpan::owned(*expr(cm, handler, k.to_string())),
                             *expr(cm, handler, v.to_string()),
                         )
                     })
-                    .collect::<Vec<_>>();
+                    .collect::<AHashMap<_, _>>();
                 let map = Arc::new(map);
                 CACHE.insert(cache_key, map.clone());
                 map

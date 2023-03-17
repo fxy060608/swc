@@ -53,6 +53,9 @@ pub mod parallel;
 mod value;
 pub mod var;
 
+mod node_ignore_span;
+pub use node_ignore_span::NodeIgnoringSpan;
+
 // TODO: remove
 pub struct ThisVisitor {
     found: bool,
@@ -1344,6 +1347,9 @@ pub trait ExprExt {
                 .iter()
                 .filter_map(|e| e.as_ref())
                 .any(|e| e.spread.is_some() || e.expr.may_have_side_effects(ctx)),
+            Expr::Unary(UnaryExpr {
+                op: op!("delete"), ..
+            }) => true,
             Expr::Unary(UnaryExpr { ref arg, .. }) => arg.may_have_side_effects(ctx),
             Expr::Bin(BinExpr {
                 ref left,
@@ -1424,12 +1430,14 @@ pub trait ExprExt {
             | Expr::Yield(_)
             | Expr::Member(_)
             | Expr::SuperProp(_)
-            | Expr::OptChain(OptChainExpr {
-                base: OptChainBase::Member(_),
-                ..
-            })
             | Expr::Update(_)
             | Expr::Assign(_) => true,
+
+            Expr::OptChain(OptChainExpr { base, .. })
+                if matches!(&**base, OptChainBase::Member(_)) =>
+            {
+                true
+            }
 
             // TODO
             Expr::New(_) => true,
@@ -1438,24 +1446,24 @@ pub trait ExprExt {
                 callee: Callee::Expr(ref callee),
                 ref args,
                 ..
-            })
-            | Expr::OptChain(OptChainExpr {
-                base:
-                    OptChainBase::Call(OptCall {
-                        ref callee,
-                        ref args,
-                        ..
-                    }),
-                ..
             }) if callee.is_pure_callee(ctx) => {
                 args.iter().any(|arg| arg.expr.may_have_side_effects(ctx))
             }
+            Expr::OptChain(OptChainExpr { base, .. })
+                if matches!(&**base, OptChainBase::Call(..))
+                    && OptChainBase::as_call(base)
+                        .unwrap()
+                        .callee
+                        .is_pure_callee(ctx) =>
+            {
+                OptChainBase::as_call(base)
+                    .unwrap()
+                    .args
+                    .iter()
+                    .any(|arg| arg.expr.may_have_side_effects(ctx))
+            }
 
-            Expr::Call(_)
-            | Expr::OptChain(OptChainExpr {
-                base: OptChainBase::Call(_),
-                ..
-            }) => true,
+            Expr::Call(_) | Expr::OptChain(..) => true,
 
             Expr::Seq(SeqExpr { ref exprs, .. }) => {
                 exprs.iter().any(|e| e.may_have_side_effects(ctx))
@@ -1943,6 +1951,25 @@ impl Visit for LiteralVisitor {
     }
 }
 
+pub fn is_simple_pure_expr(expr: &Expr, pure_getters: bool) -> bool {
+    match expr {
+        Expr::Ident(..) | Expr::This(..) | Expr::Lit(..) => true,
+        Expr::Member(m) if pure_getters => is_simple_pure_member_expr(m, pure_getters),
+        _ => false,
+    }
+}
+
+pub fn is_simple_pure_member_expr(m: &MemberExpr, pure_getters: bool) -> bool {
+    match &m.prop {
+        MemberProp::Ident(..) | MemberProp::PrivateName(..) => {
+            is_simple_pure_expr(&m.obj, pure_getters)
+        }
+        MemberProp::Computed(c) => {
+            is_simple_pure_expr(&c.expr, pure_getters) && is_simple_pure_expr(&m.obj, pure_getters)
+        }
+    }
+}
+
 /// Used to determine super_class_ident
 pub fn alias_ident_for(expr: &Expr, default: &str) -> Ident {
     fn sym(expr: &Expr) -> Option<String> {
@@ -1958,11 +1985,26 @@ pub fn alias_ident_for(expr: &Expr, default: &str) -> Ident {
                 ident: Some(ident), ..
             }) => Some(ident.sym.to_string()),
 
-            Expr::OptChain(OptChainExpr {
-                base: OptChainBase::Call(OptCall { callee: expr, .. }),
-                ..
-            })
-            | Expr::Call(CallExpr {
+            Expr::OptChain(OptChainExpr { base, .. }) => match &**base {
+                OptChainBase::Call(OptCall { callee: expr, .. }) => sym(expr),
+                OptChainBase::Member(MemberExpr {
+                    prop: MemberProp::Ident(ident),
+                    obj,
+                    ..
+                }) => Some(format!("{}_{}", sym(obj).unwrap_or_default(), ident.sym)),
+
+                OptChainBase::Member(MemberExpr {
+                    prop: MemberProp::Computed(ComputedPropName { expr, .. }),
+                    obj,
+                    ..
+                }) => Some(format!(
+                    "{}_{}",
+                    sym(obj).unwrap_or_default(),
+                    sym(expr).unwrap_or_default()
+                )),
+                _ => None,
+            },
+            Expr::Call(CallExpr {
                 callee: Callee::Expr(expr),
                 ..
             }) => sym(expr),
@@ -1977,31 +2019,13 @@ pub fn alias_ident_for(expr: &Expr, default: &str) -> Ident {
                 ..
             }) => Some(format!("super_{}", sym(expr).unwrap_or_default())),
 
-            Expr::OptChain(OptChainExpr {
-                base:
-                    OptChainBase::Member(MemberExpr {
-                        prop: MemberProp::Ident(ident),
-                        obj,
-                        ..
-                    }),
-                ..
-            })
-            | Expr::Member(MemberExpr {
+            Expr::Member(MemberExpr {
                 prop: MemberProp::Ident(ident),
                 obj,
                 ..
             }) => Some(format!("{}_{}", sym(obj).unwrap_or_default(), ident.sym)),
 
-            Expr::OptChain(OptChainExpr {
-                base:
-                    OptChainBase::Member(MemberExpr {
-                        prop: MemberProp::Computed(ComputedPropName { expr, .. }),
-                        obj,
-                        ..
-                    }),
-                ..
-            })
-            | Expr::Member(MemberExpr {
+            Expr::Member(MemberExpr {
                 prop: MemberProp::Computed(ComputedPropName { expr, .. }),
                 obj,
                 ..
@@ -2061,6 +2085,25 @@ pub fn prop_name_to_expr_value(p: PropName) -> Expr {
         PropName::Num(n) => Expr::Lit(Lit::Num(n)),
         PropName::BigInt(b) => Expr::Lit(Lit::BigInt(b)),
         PropName::Computed(c) => *c.expr,
+    }
+}
+
+pub fn prop_name_to_member_prop(prop_name: PropName) -> MemberProp {
+    match prop_name {
+        PropName::Ident(i) => MemberProp::Ident(i),
+        PropName::Str(s) => MemberProp::Computed(ComputedPropName {
+            span: DUMMY_SP,
+            expr: s.into(),
+        }),
+        PropName::Num(n) => MemberProp::Computed(ComputedPropName {
+            span: DUMMY_SP,
+            expr: n.into(),
+        }),
+        PropName::Computed(c) => MemberProp::Computed(c),
+        PropName::BigInt(b) => MemberProp::Computed(ComputedPropName {
+            span: DUMMY_SP,
+            expr: b.into(),
+        }),
     }
 }
 
@@ -2227,7 +2270,7 @@ pub trait IsDirective {
     fn as_ref(&self) -> Option<&Stmt>;
     fn is_use_strict(&self) -> bool {
         match self.as_ref() {
-            Some(&Stmt::Expr(ref expr)) => match *expr.expr {
+            Some(Stmt::Expr(expr)) => match *expr.expr {
                 Expr::Lit(Lit::Str(Str { ref raw, .. })) => {
                     matches!(raw, Some(value) if value == "\"use strict\"" || value == "'use strict'")
                 }
@@ -2418,12 +2461,12 @@ impl ExprCtx {
 
                 to.push(Box::new(Expr::New(e)))
             }
-            Expr::Member(_)
-            | Expr::SuperProp(_)
-            | Expr::OptChain(OptChainExpr {
-                base: OptChainBase::Member(_),
-                ..
-            }) => to.push(Box::new(expr)),
+            Expr::Member(_) | Expr::SuperProp(_) => to.push(Box::new(expr)),
+            Expr::OptChain(OptChainExpr { ref base, .. })
+                if matches!(&**base, OptChainBase::Member(_)) =>
+            {
+                to.push(Box::new(expr))
+            }
 
             // We are at here because we could not determine value of test.
             //TODO: Drop values if it does not have side effects.
@@ -2519,14 +2562,10 @@ impl ExprCtx {
                 });
             }
 
-            Expr::TaggedTpl(TaggedTpl {
-                tag,
-                tpl: Tpl { exprs, .. },
-                ..
-            }) => {
+            Expr::TaggedTpl(TaggedTpl { tag, tpl, .. }) => {
                 self.extract_side_effects_to(to, *tag);
 
-                exprs
+                tpl.exprs
                     .into_iter()
                     .for_each(|e| self.extract_side_effects_to(to, *e));
             }
@@ -2552,7 +2591,7 @@ impl ExprCtx {
                 self.extract_side_effects_to(to, *expr)
             }
             Expr::OptChain(OptChainExpr { base: child, .. }) => {
-                self.extract_side_effects_to(to, child.into())
+                self.extract_side_effects_to(to, (*child).into())
             }
 
             Expr::Invalid(..) => unreachable!(),
@@ -2822,7 +2861,7 @@ impl Visit for TopLevelAwait {
     }
 
     fn visit_for_of_stmt(&mut self, for_of_stmt: &ForOfStmt) {
-        if for_of_stmt.await_token.is_some() {
+        if for_of_stmt.is_await {
             self.found = true;
             return;
         }

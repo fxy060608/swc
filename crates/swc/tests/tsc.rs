@@ -27,11 +27,13 @@ use testing::NormalizedOutput;
 #[testing::fixture(
     "../swc_ecma_parser/tests/tsc/**/*.ts",
     exclude(
+        "autoAccessor",
         "enumConstantMembers.ts",
         "privateNameAndAny.ts",
         "privateNameAndIndexSignature.ts",
         "privateNameImplicitDeclaration.ts",
         "privateNameStaticAccessorsDerivedClasses.ts",
+        "privateNameStaticAccessorssDerivedClasses.ts",
     )
 )]
 #[testing::fixture(
@@ -204,7 +206,7 @@ fn matrix(input: &Path) -> Vec<TestUnitData> {
     fn target(value: &str) -> AHashSet<EsVersion> {
         let mut versions = AHashSet::<EsVersion>::default();
 
-        value.split(',').into_iter().for_each(|v| {
+        value.split(',').for_each(|v| {
             let mut v = v.trim();
             match v {
                 "*" => {
@@ -252,7 +254,7 @@ fn matrix(input: &Path) -> Vec<TestUnitData> {
     fn module(value: &str) -> AHashSet<Module> {
         let mut modules = AHashSet::<Module>::default();
 
-        value.split(',').into_iter().for_each(|v| {
+        value.split(',').for_each(|v| {
             let v = v.trim();
             match v {
                 "es6" | "es2015" | "es2020" | "esnext" | "none" | "es2022" => {
@@ -378,6 +380,7 @@ fn matrix(input: &Path) -> Vec<TestUnitData> {
                                 decorators,
                                 dts: false,
                                 no_early_errors: false,
+                                disallow_ambiguous_jsx_like: false,
                             })),
                             external_helpers: true.into(),
                             target: Some(target),

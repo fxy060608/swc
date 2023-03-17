@@ -63,6 +63,9 @@ pub struct Config {
 
     /// Declarations with a symbol in this set will be preserved.
     pub top_retain: Vec<JsWord>,
+
+    /// If false, imports with side effects will be removed.
+    pub preserve_imports_with_side_effects: bool,
 }
 
 impl Default for Config {
@@ -71,6 +74,7 @@ impl Default for Config {
             module_mark: Default::default(),
             top_level: true,
             top_retain: Default::default(),
+            preserve_imports_with_side_effects: true,
         }
     }
 }
@@ -713,6 +717,13 @@ impl VisitMut for TreeShaker {
                                     .as_deref()
                                     .map_or(false, |e| e.may_have_side_effects(&self.expr_ctx))
                         }
+                        ClassMember::AutoAccessor(m) => {
+                            !matches!(m.key, Key::Public(PropName::Computed(..)))
+                                && !m
+                                    .value
+                                    .as_deref()
+                                    .map_or(false, |e| e.may_have_side_effects(&self.expr_ctx))
+                        }
 
                         ClassMember::PrivateProp(m) => !m
                             .value
@@ -904,7 +915,25 @@ impl VisitMut for TreeShaker {
     }
 
     fn visit_mut_module_item(&mut self, n: &mut ModuleItem) {
-        n.visit_mut_children_with(self);
+        match n {
+            ModuleItem::ModuleDecl(ModuleDecl::Import(i)) => {
+                let is_for_side_effect = i.specifiers.is_empty();
+
+                i.visit_mut_with(self);
+
+                if !self.config.preserve_imports_with_side_effects
+                    && !is_for_side_effect
+                    && i.specifiers.is_empty()
+                {
+                    debug!("Dropping an import because it's not used");
+                    self.changed = true;
+                    *n = ModuleItem::Stmt(Stmt::Empty(EmptyStmt { span: DUMMY_SP }));
+                }
+            }
+            _ => {
+                n.visit_mut_children_with(self);
+            }
+        }
         debug_assert_valid(n);
     }
 

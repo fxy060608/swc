@@ -36,6 +36,7 @@
 #![allow(clippy::only_used_in_recursion)]
 #![allow(unstable_name_collisions)]
 #![allow(clippy::match_like_matches_macro)]
+#![feature(box_patterns)]
 
 use once_cell::sync::Lazy;
 use swc_common::{comments::Comments, pass::Repeated, sync::Lrc, SourceMap, SyntaxContext};
@@ -304,6 +305,7 @@ fn perform_dce(m: &mut Program, options: &CompressOptions, extra: &ExtraOptions)
             module_mark: None,
             top_level: options.top_level(),
             top_retain: options.top_retain.clone(),
+            preserve_imports_with_side_effects: true,
         },
         extra.unresolved_mark,
     );

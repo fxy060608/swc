@@ -4,6 +4,7 @@
 //! [babylon/util/identifier.js]:https://github.com/babel/babel/blob/master/packages/babylon/src/util/identifier.js
 use std::char;
 
+use smartstring::{LazyCompact, SmartString};
 use swc_common::{
     comments::{Comment, CommentKind},
     BytePos, Span, SyntaxContext,
@@ -11,7 +12,10 @@ use swc_common::{
 use swc_ecma_ast::Ident;
 use tracing::warn;
 
-use super::{comments_buffer::BufferedComment, input::Input, Char, LexResult, Lexer};
+use super::{
+    comments_buffer::BufferedComment, input::Input, whitespace::SkipWhitespace, Char, LexResult,
+    Lexer,
+};
 use crate::{
     error::{Error, SyntaxError},
     lexer::comments_buffer::BufferedCommentKind,
@@ -21,7 +25,7 @@ use crate::{
 /// Collector for raw string.
 ///
 /// Methods of this struct is noop if the value is [None].
-pub(super) struct Raw(pub Option<String>);
+pub(super) struct Raw(pub Option<SmartString<LazyCompact>>);
 
 impl Raw {
     #[inline]
@@ -46,7 +50,7 @@ impl Raw {
 // pub const LINE_SEPARATOR: char = '\u{2028}';
 // pub const PARAGRAPH_SEPARATOR: char = '\u{2029}';
 
-impl<'a, I: Input> Lexer<'a, I> {
+impl<'a> Lexer<'a> {
     pub(super) fn span(&self, start: BytePos) -> Span {
         let end = self.last_pos();
         if cfg!(debug_assertions) && start > end {
@@ -63,38 +67,47 @@ impl<'a, I: Input> Lexer<'a, I> {
         }
     }
 
+    #[inline(always)]
     pub(super) fn bump(&mut self) {
         self.input.bump()
     }
 
+    #[inline(always)]
     pub(super) fn is(&mut self, c: u8) -> bool {
         self.input.is_byte(c)
     }
 
+    #[inline(always)]
     pub(super) fn is_str(&self, s: &str) -> bool {
         self.input.is_str(s)
     }
 
+    #[inline(always)]
     pub(super) fn eat(&mut self, c: u8) -> bool {
         self.input.eat_byte(c)
     }
 
+    #[inline(always)]
     pub(super) fn cur(&mut self) -> Option<char> {
         self.input.cur()
     }
 
+    #[inline(always)]
     pub(super) fn peek(&mut self) -> Option<char> {
         self.input.peek()
     }
 
+    #[inline(always)]
     pub(super) fn peek_ahead(&mut self) -> Option<char> {
         self.input.peek_ahead()
     }
 
+    #[inline(always)]
     pub(super) fn cur_pos(&mut self) -> BytePos {
         self.input.cur_pos()
     }
 
+    #[inline(always)]
     pub(super) fn last_pos(&self) -> BytePos {
         self.input.last_pos()
     }
@@ -172,22 +185,24 @@ impl<'a, I: Input> Lexer<'a, I> {
     /// Skip comments or whitespaces.
     ///
     /// See https://tc39.github.io/ecma262/#sec-white-space
-    pub(super) fn skip_space(&mut self, lex_comments: bool) -> LexResult<()> {
+    pub(super) fn skip_space<const LEX_COMMENTS: bool>(&mut self) -> LexResult<()> {
         loop {
-            let cur_b = self.input.cur_as_ascii();
+            let (offset, newline) = {
+                let mut skip = SkipWhitespace {
+                    input: self.input.as_str(),
+                    newline: false,
+                    offset: 0,
+                };
 
-            if matches!(cur_b, Some(b'\n' | b'\r')) {
-                self.input.bump();
-                self.state.had_line_break = true;
-                continue;
-            }
+                skip.scan();
 
-            if matches!(cur_b, Some(b'\x09' | b'\x0b' | b'\x0c' | b'\x20' | b'\xa0')) {
-                self.input.bump();
-                continue;
-            }
+                (skip.offset, skip.newline)
+            };
 
-            if lex_comments && self.input.is_byte(b'/') {
+            self.input.bump_bytes(offset);
+            self.state.had_line_break |= newline;
+
+            if LEX_COMMENTS && self.input.is_byte(b'/') {
                 if self.peek() == Some('/') {
                     self.skip_line_comment(2);
                     continue;
@@ -195,39 +210,18 @@ impl<'a, I: Input> Lexer<'a, I> {
                     self.skip_block_comment()?;
                     continue;
                 }
-                break;
             }
 
-            let c = self.cur();
-            let c = match c {
-                Some(v) => v,
-                None => break,
-            };
-
-            match c {
-                // white spaces
-                '\u{feff}' => {}
-                // line breaks
-                '\u{2028}' | '\u{2029}' => {
-                    self.state.had_line_break = true;
-                }
-
-                _ if c.is_whitespace() => {}
-
-                _ => break,
-            }
-
-            self.bump();
+            break;
         }
 
         Ok(())
     }
 
+    #[inline(never)]
     pub(super) fn skip_line_comment(&mut self, start_skip: usize) {
         let start = self.cur_pos();
-        for _ in 0..start_skip {
-            self.bump();
-        }
+        self.input.bump_bytes(start_skip);
         let slice_start = self.cur_pos();
 
         // foo // comment for foo
@@ -238,17 +232,18 @@ impl<'a, I: Input> Lexer<'a, I> {
         // bar
         //
         let is_for_next = self.state.had_line_break || !self.state.can_have_trailing_line_comment();
-        let mut end = self.cur_pos();
 
-        while let Some(c) = self.cur() {
-            self.bump();
-            if c.is_line_terminator() {
+        let idx = self
+            .input
+            .as_str()
+            .find(['\r', '\n', '\u{2028}', '\u{2029}'])
+            .map_or(self.input.as_str().len(), |v| {
                 self.state.had_line_break = true;
-                break;
-            } else {
-                end = self.cur_pos();
-            }
-        }
+                v
+            });
+
+        self.input.bump_bytes(idx);
+        let end = self.cur_pos();
 
         if let Some(comments) = self.comments_buffer.as_mut() {
             let s = self.input.slice(slice_start, end);
@@ -273,14 +268,14 @@ impl<'a, I: Input> Lexer<'a, I> {
     }
 
     /// Expects current char to be '/' and next char to be '*'.
+    #[inline(never)]
     pub(super) fn skip_block_comment(&mut self) -> LexResult<()> {
         let start = self.cur_pos();
 
         debug_assert_eq!(self.cur(), Some('/'));
         debug_assert_eq!(self.peek(), Some('*'));
 
-        self.bump();
-        self.bump();
+        self.input.bump_bytes(2);
 
         // jsdoc
         let slice_start = self.cur_pos();
@@ -300,7 +295,7 @@ impl<'a, I: Input> Lexer<'a, I> {
 
                 let end = self.cur_pos();
 
-                self.skip_space(false)?;
+                self.skip_space::<false>()?;
 
                 if self.input.is_byte(b';') {
                     is_for_next = false;

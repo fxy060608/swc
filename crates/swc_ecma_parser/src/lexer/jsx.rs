@@ -3,7 +3,7 @@ use swc_atoms::Atom;
 
 use super::*;
 
-impl<'a, I: Input> Lexer<'a, I> {
+impl<'a> Lexer<'a> {
     pub(super) fn read_jsx_token(&mut self) -> LexResult<Option<Token>> {
         debug_assert!(self.syntax.jsx());
 
@@ -26,7 +26,7 @@ impl<'a, I: Input> Lexer<'a, I> {
 
                     self.emit_error_span(span, SyntaxError::TS1185);
                     self.skip_line_comment(6);
-                    self.skip_space(true)?;
+                    self.skip_space::<true>()?;
                     return self.read_token();
                 }
                 '<' | '{' => {

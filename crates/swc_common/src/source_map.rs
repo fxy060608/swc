@@ -202,7 +202,17 @@ impl SourceMap {
 
     /// Creates a new source_file.
     /// This does not ensure that only one SourceFile exists per file name.
-    pub fn new_source_file(&self, filename: FileName, src: String) -> Lrc<SourceFile> {
+    pub fn new_source_file(&self, filename: FileName, mut src: String) -> Lrc<SourceFile> {
+        remove_bom(&mut src);
+
+        self.new_source_file_from(filename, Lrc::new(src))
+    }
+
+    /// Creates a new source_file.
+    /// This does not ensure that only one SourceFile exists per file name.
+    ///
+    /// `src` should not have UTF8 BOM
+    pub fn new_source_file_from(&self, filename: FileName, src: Lrc<String>) -> Lrc<SourceFile> {
         // The path is used to determine the directory for loading submodules and
         // include files, so it must be before remapping.
         // Note that filename may not be a valid path, eg it may be `<anon>` etc,
@@ -224,7 +234,7 @@ impl SourceMap {
 
         let start_pos = self.next_start_pos(src.len());
 
-        let source_file = Lrc::new(SourceFile::new(
+        let source_file = Lrc::new(SourceFile::new_from(
             filename,
             was_remapped,
             unmapped_path,
@@ -1214,7 +1224,7 @@ impl SourceMap {
         if let Some(orig) = orig {
             for src in orig.sources() {
                 let id = builder.add_source(src);
-                src_id = id as u32 + 1;
+                src_id = id + 1;
 
                 builder.set_source_contents(id, orig.get_source_contents(id));
             }
@@ -1401,7 +1411,7 @@ impl FilePathMapping {
         // NOTE: We are iterating over the mapping entries from last to first
         //       because entries specified later on the command line should
         //       take precedence.
-        for &(ref from, ref to) in self.mapping.iter().rev() {
+        for (from, to) in self.mapping.iter().rev() {
             if let Ok(rest) = path.strip_prefix(from) {
                 return (to.join(rest), true);
             }

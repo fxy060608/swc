@@ -517,6 +517,7 @@ define!({
         TsIndexSignature(TsIndexSignature),
         Empty(EmptyStmt),
         StaticBlock(StaticBlock),
+        AutoAccessor(AutoAccessor),
     }
 
     pub struct ClassProp {
@@ -760,7 +761,7 @@ define!({
     pub struct ArrowExpr {
         pub span: Span,
         pub params: Vec<Pat>,
-        pub body: BlockStmtOrExpr,
+        pub body: Box<BlockStmtOrExpr>,
         pub is_async: bool,
         pub is_generator: bool,
         pub type_params: Option<Box<TsTypeParamDecl>>,
@@ -792,7 +793,7 @@ define!({
         pub span: Span,
         pub tag: Box<Expr>,
         pub type_params: Option<Box<TsTypeParamInstantiation>>,
-        pub tpl: Tpl,
+        pub tpl: Box<Tpl>,
     }
     pub struct TplElement {
         pub span: Span,
@@ -830,7 +831,7 @@ define!({
     pub struct OptChainExpr {
         pub span: Span,
         pub question_dot_token: Span,
-        pub base: OptChainBase,
+        pub base: Box<OptChainBase>,
     }
     pub enum OptChainBase {
         Member(MemberExpr),
@@ -1058,6 +1059,7 @@ define!({
     pub struct ExportAll {
         pub span: Span,
         pub src: Box<Str>,
+        pub type_only: bool,
         pub asserts: Option<Box<ObjectLit>>,
     }
     pub struct NamedExport {
@@ -1369,7 +1371,7 @@ define!({
     }
     pub struct ForOfStmt {
         pub span: Span,
-        pub await_token: Option<Span>,
+        pub is_await: bool,
         pub left: VarDeclOrPat,
         pub right: Box<Expr>,
         pub body: Box<Stmt>,
@@ -1826,6 +1828,21 @@ define!({
     pub struct ReservedUnused {
         pub span: Span,
         pub body: Option<Vec<ModuleItem>>,
+    }
+
+    pub struct AutoAccessor {
+        pub span: Span,
+        pub key: Key,
+        pub value: Option<Box<Expr>>,
+        pub type_ann: Option<Box<TsTypeAnn>>,
+        pub is_static: bool,
+        pub decorators: Vec<Decorator>,
+        pub accessibility: Option<Accessibility>,
+    }
+
+    pub enum Key {
+        Private(PrivateName),
+        Public(PropName),
     }
 });
 

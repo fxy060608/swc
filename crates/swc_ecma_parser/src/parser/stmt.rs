@@ -1124,7 +1124,7 @@ impl<'a, I: Tokens> Parser<I> {
             }
             ForHead::ForOf { left, right } => Stmt::ForOf(ForOfStmt {
                 span,
-                await_token,
+                is_await: await_token.is_some(),
                 left,
                 right,
                 body,
@@ -1259,7 +1259,7 @@ pub(super) trait IsDirective {
     fn as_ref(&self) -> Option<&Stmt>;
     fn is_use_strict(&self) -> bool {
         match self.as_ref() {
-            Some(&Stmt::Expr(ref expr)) => match *expr.expr {
+            Some(Stmt::Expr(expr)) => match *expr.expr {
                 Expr::Lit(Lit::Str(Str { ref raw, .. })) => {
                     matches!(raw, Some(value) if value == "\"use strict\"" || value == "'use strict'")
                 }
@@ -1419,7 +1419,7 @@ mod tests {
             stmt("for await (const a of b) ;"),
             Stmt::ForOf(ForOfStmt {
                 span,
-                await_token: Some(span),
+                is_await: true,
                 left: VarDeclOrPat::VarDecl(Box::new(VarDecl {
                     span,
                     kind: VarDeclKind::Const,
@@ -2419,8 +2419,7 @@ export default function waitUntil(callback, options = {}) {
     }
 
     #[test]
-    #[should_panic(expected = "Only named exports may use 'export type'.")]
-    fn error_for_type_only_star_exports_with_name() {
+    fn type_only_star_exports_with_name() {
         let src = "export type * as bar from 'mod'";
         test_parser(src, Syntax::Typescript(Default::default()), |p| {
             p.parse_module()
@@ -2428,8 +2427,7 @@ export default function waitUntil(callback, options = {}) {
     }
 
     #[test]
-    #[should_panic(expected = "Only named exports may use 'export type'.")]
-    fn error_for_type_only_star_exports_without_name() {
+    fn type_only_star_exports_without_name() {
         let src = "export type * from 'mod'";
         test_parser(src, Syntax::Typescript(Default::default()), |p| {
             p.parse_module()
