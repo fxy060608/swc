@@ -1,8 +1,8 @@
-function wrapper__1(...args__2) {
+function wrapper__2(...args__3) {
     try {
-        return target(...args__2);
-    } catch (err__4) {
-        switch(err__4.name){
+        return target(...args__3);
+    } catch (err__5) {
+        switch(err__5.name){
         }
     }
 }

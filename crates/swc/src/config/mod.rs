@@ -415,6 +415,74 @@ impl Options {
             });
         }
 
+        if js_minify.is_some() && js_minify.as_ref().unwrap().keep_fnames {
+            js_minify = js_minify.map(|c| {
+                let compress = c
+                    .compress
+                    .unwrap_as_option(|default| match default {
+                        Some(true) => Some(Default::default()),
+                        _ => None,
+                    })
+                    .map(|mut c| {
+                        c.keep_fnames = true;
+                        c
+                    })
+                    .map(BoolOrDataConfig::from_obj)
+                    .unwrap_or_else(|| BoolOrDataConfig::from_bool(false));
+                let mangle = c
+                    .mangle
+                    .unwrap_as_option(|default| match default {
+                        Some(true) => Some(Default::default()),
+                        _ => None,
+                    })
+                    .map(|mut c| {
+                        c.keep_fn_names = true;
+                        c
+                    })
+                    .map(BoolOrDataConfig::from_obj)
+                    .unwrap_or_else(|| BoolOrDataConfig::from_bool(false));
+                JsMinifyOptions {
+                    compress,
+                    mangle,
+                    ..c
+                }
+            });
+        }
+
+        if js_minify.is_some() && js_minify.as_ref().unwrap().keep_classnames {
+            js_minify = js_minify.map(|c| {
+                let compress = c
+                    .compress
+                    .unwrap_as_option(|default| match default {
+                        Some(true) => Some(Default::default()),
+                        _ => None,
+                    })
+                    .map(|mut c| {
+                        c.keep_classnames = true;
+                        c
+                    })
+                    .map(BoolOrDataConfig::from_obj)
+                    .unwrap_or_else(|| BoolOrDataConfig::from_bool(false));
+                let mangle = c
+                    .mangle
+                    .unwrap_as_option(|default| match default {
+                        Some(true) => Some(Default::default()),
+                        _ => None,
+                    })
+                    .map(|mut c| {
+                        c.keep_class_names = true;
+                        c
+                    })
+                    .map(BoolOrDataConfig::from_obj)
+                    .unwrap_or_else(|| BoolOrDataConfig::from_bool(false));
+                JsMinifyOptions {
+                    compress,
+                    mangle,
+                    ..c
+                }
+            });
+        }
+
         let regenerator = transform.regenerator.clone();
 
         let preserve_comments = if preserve_all_comments {
@@ -681,7 +749,13 @@ impl Options {
             custom_before_pass(&program),
             // handle jsx
             Optional::new(
-                react::react(cm.clone(), comments, transform.react, top_level_mark),
+                react::react(
+                    cm.clone(),
+                    comments,
+                    transform.react,
+                    top_level_mark,
+                    unresolved_mark
+                ),
                 syntax.jsx()
             ),
             pass,
@@ -920,10 +994,10 @@ pub struct JsMinifyOptions {
     #[serde(default)]
     pub ecma: TerserEcmaVersion,
 
-    #[serde(default)]
+    #[serde(default, alias = "keep_classnames")]
     pub keep_classnames: bool,
 
-    #[serde(default)]
+    #[serde(default, alias = "keep_fnames")]
     pub keep_fnames: bool,
 
     #[serde(default)]

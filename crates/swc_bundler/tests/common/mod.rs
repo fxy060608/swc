@@ -147,6 +147,7 @@ impl Load for Loader {
                     None,
                     Default::default(),
                     top_level_mark,
+                    unresolved_mark,
                 ))
                 .fold_with(&mut inject_helpers(unresolved_mark))
         });

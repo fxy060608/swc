@@ -43,7 +43,7 @@ pub struct Module {
 
     pub body: Vec<ModuleItem>,
 
-    #[serde(default, rename = "interpreter")]
+    #[cfg_attr(feature = "serde-impl", serde(default, rename = "interpreter"))]
     pub shebang: Option<Atom>,
 }
 
@@ -79,6 +79,7 @@ pub struct Script {
     pub body: Vec<Stmt>,
 
     #[serde(default)]
+    #[cfg_attr(feature = "serde-impl", serde(default, rename = "interpreter"))]
     pub shebang: Option<Atom>,
 }
 
