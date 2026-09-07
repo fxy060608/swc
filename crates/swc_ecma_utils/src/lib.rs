@@ -710,7 +710,24 @@ pub trait ExprExt {
                 return (p, !v);
             }
             Expr::Seq(SeqExpr { exprs, .. }) => exprs.last().unwrap().cast_to_bool(ctx).1,
-
+            Expr::Bin(BinExpr {
+                left,
+                op: op!(bin, "=="),
+                right,
+                ..
+            })
+            | Expr::Bin(BinExpr {
+                left,
+                op: op!(bin, "==="),
+                right,
+                ..
+            }) => {
+                if let Expr::Lit(Lit::Str(left)) = left {
+                    if let Expr::Lit(Lit::Str(right)) = right {
+                        return (Pure, Known(left.value == right.value));
+                    }
+                }
+            }
             Expr::Bin(BinExpr {
                 left,
                 op: op!(bin, "-"),
